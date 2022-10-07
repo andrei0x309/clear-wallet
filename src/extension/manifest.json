@@ -1,0 +1,55 @@
+{
+    "manifest_version": 3,
+    "name": "Clear Wallet EVM",
+    "version": "1.0.0",
+    "icons": {
+      "16": "assets/extension-icon/wallet_16.png",
+      "32": "assets/extension-icon/wallet_32.png",
+      "48": "assets/extension-icon/wallet_48.png",
+      "128": "assets/extension-icon/wallet_128.png"
+    },
+    "action": { 
+      "default_popup": "index.html",
+      "default_icon": {
+        "16": "assets/extension-icon/wallet_16.png",
+        "32": "assets/extension-icon/wallet_32.png",
+        "48": "assets/extension-icon/wallet_48.png",
+        "128": "assets/extension-icon/wallet_128.png"
+    }
+    },
+    "minimum_chrome_version": "93",
+
+    "permissions": [
+      "scripting",
+      "webNavigation",
+      "tabs",
+      "storage",
+      "alarms",
+      "unlimitedStorage",
+      "clipboardRead",
+      "clipboardWrite"
+    ],
+    "host_permissions": [
+      "http://*/",
+      "https://*/"
+    ],
+    "background": {
+        "service_worker": "/src/extension/serviceWorker.ts",
+        "type": "module"
+      },
+      "content_scripts": [
+        {
+          "matches": [
+            "http://*/*",
+            "https://*/*"
+          ],
+          "all_frames": true,
+          "run_at": "document_start",
+          "js": ["/src/extension/content.ts"]
+        }
+      ],
+      "web_accessible_resources": [{
+        "resources": ["src/extension/inject.js"],
+        "matches": ["<all_urls>"]
+      }]
+}
