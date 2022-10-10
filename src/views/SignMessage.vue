@@ -51,16 +51,14 @@ import {
   IonText,
   IonLoading,
   modalController,
-  onIonViewWillEnter
+  onIonViewWillEnter,
 } from "@ionic/vue";
 // import { ethers } from "ethers";
-import {
-  hexTostr,
-} from "@/utils/platform";
+import { hexTostr } from "@/utils/platform";
 import { approve, walletPing } from "@/extension/userRequest";
-import { useRoute } from 'vue-router';
-import { getSelectedAccount } from '@/utils/platform'
-import UnlockModal from '@/views/UnlockModal.vue'
+import { useRoute } from "vue-router";
+import { getSelectedAccount, unBlockLockout, blockLockout } from "@/utils/platform";
+import UnlockModal from "@/views/UnlockModal.vue";
 
 export default defineComponent({
   components: {
@@ -74,23 +72,24 @@ export default defineComponent({
     IonButton,
     IonAlert,
     IonText,
-    IonLoading
+    IonLoading,
   },
   setup: () => {
-    const route = useRoute()
-    const loading = ref(false)
-    const rid = route?.params?.rid as string ?? '';
-    const signMsg = ref(hexTostr(route?.params?.param as string ?? ''));
+    const route = useRoute();
+    const loading = ref(false);
+    const rid = (route?.params?.rid as string) ?? "";
+    const signMsg = ref(hexTostr((route?.params?.param as string) ?? ""));
     const alertOpen = ref(false);
     const alertMsg = ref("");
     const timerReject = ref(140);
-    let interval: any
+    let interval: any;
 
     const onCancel = () => {
       window.close();
-      if(interval) {
+      if (interval) {
         try {
-          clearInterval(interval)
+          unBlockLockout();
+          clearInterval(interval);
         } catch {
           // ignore
         }
@@ -98,48 +97,48 @@ export default defineComponent({
     };
 
     onIonViewWillEnter(async () => {
+      blockLockout();
       interval = setInterval(async () => {
-        if(timerReject.value <= 0) {
-          onCancel()
+        if (timerReject.value <= 0) {
+          onCancel();
           return;
         }
 
-        timerReject.value -= 1
-        walletPing()
-      }, 1000) as any
-
+        timerReject.value -= 1;
+        walletPing();
+      }, 1000) as any;
     });
 
     const openModal = async () => {
-        const modal = await modalController.create({
-          component: UnlockModal,
-          componentProps: {
-            unlockType: 'message'
-          }
-
-        });
-        modal.present();
-        const { role } = await modal.onWillDismiss();
-        if(role === 'confirm') return true
-        return false
-
-    }
+      const modal = await modalController.create({
+        component: UnlockModal,
+        componentProps: {
+          unlockType: "message",
+        },
+      });
+      modal.present();
+      const { role } = await modal.onWillDismiss();
+      if (role === "confirm") return true;
+      return false;
+    };
 
     const onSign = async () => {
-        loading.value = true;
-        const selectedAccount = await getSelectedAccount()
-        if ((selectedAccount.pk ?? '').length !== 66) {
-          const modalResult = await openModal()
-          if(modalResult) {
-            approve(rid)
-          }else {
-            onCancel()
-          }
-        }else {
-          approve(rid)
+      loading.value = true;
+      const selectedAccount = await getSelectedAccount();
+      if ((selectedAccount.pk ?? "").length !== 66) {
+        const modalResult = await openModal();
+        if (modalResult) {
+          unBlockLockout();
+          approve(rid);
+        } else {
+          onCancel();
         }
-        loading.value = false
-    }
+      } else {
+        unBlockLockout();
+        approve(rid);
+      }
+      loading.value = false;
+    };
 
     return {
       signMsg,
@@ -148,7 +147,7 @@ export default defineComponent({
       alertMsg,
       onSign,
       loading,
-      timerReject
+      timerReject,
     };
   },
 });

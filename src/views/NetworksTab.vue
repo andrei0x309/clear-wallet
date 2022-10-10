@@ -16,7 +16,7 @@
     <ion-content class="ion-padding">
         <ion-list v-for="network of networks" :key="network.chainId">
        <ion-item>
-        <ion-avatar v-if="(mainNets as any)[network.chainId].icon" style="margin-right: 1rem; width: 1.8rem; height:1.8rem;">
+        <ion-avatar v-if="(mainNets as any)[network.chainId]?.icon" style="margin-right: 1rem; width: 1.8rem; height:1.8rem;">
     <img :alt="network.name" :src="getUrl('assets/chain-icons/' + (mainNets as any)[network.chainId].icon)" />
   </ion-avatar>
        <ion-label>
@@ -27,8 +27,8 @@
         </ion-label>
        </ion-item>
         <ion-item>
-        <router-link :to="`/add-network/edit/${network.chainId}`" ><ion-chip>Edit</ion-chip></router-link>
-        <ion-chip @click="deleteNetwork">Delete</ion-chip>
+        <ion-chip @click="editNetwork(network.chainId)" button>Edit</ion-chip>
+        <ion-chip @click="deleteNetwork(network.chainId)" button>Delete</ion-chip>
         </ion-item>
         </ion-list>
     </ion-content>
@@ -56,6 +56,7 @@ import {
 } from "@ionic/vue";
 import { mainNets } from "@/utils/networks"
 import { addCircleOutline, copyOutline } from "ionicons/icons";
+import router from '@/router/index'
 import type { Networks } from '@/extension/types'
 
 export default defineComponent({
@@ -96,6 +97,10 @@ export default defineComponent({
         loading.value = false
     }
 
+    const editNetwork = (chainId: number) => {
+      router.push(`add-network/edit/${chainId}`)
+    }
+
     onIonViewWillEnter(() => {
         loadData()
       })
@@ -109,7 +114,8 @@ export default defineComponent({
         getToastRef,
         getUrl,
         mainNets,
-        deleteNetwork
+        deleteNetwork,
+        editNetwork
       }
 
   }

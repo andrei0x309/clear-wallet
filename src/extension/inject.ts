@@ -42,6 +42,7 @@ return new Promise((resolve, reject) => {
     const resId = crypto.randomUUID()
     promResolvers[resId] = { resolve, reject }
     const data = { type: "CLWALLET_CONTENT", data: args, resId};
+    console.log('data in', data)
     window.postMessage(data, "*");
 })
 }

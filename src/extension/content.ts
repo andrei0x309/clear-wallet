@@ -12,6 +12,7 @@ const allowedMethods = {
   'eth_sign': true,
   'net_version': true,
   'eth_sendTransaction': true,
+  'wallet_switchEthereumChain': true
 }
 
 window.addEventListener("message", (event) => {

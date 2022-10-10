@@ -50,4 +50,5 @@ export interface Settings {
     lockOutEnabled: boolean
     theme: 'system' | 'light' | 'dark'
     lastLock: number
+    lockOutBlocked: boolean
 }

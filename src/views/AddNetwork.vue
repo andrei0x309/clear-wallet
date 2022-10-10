@@ -28,7 +28,7 @@
       <ion-item button>
         <ion-icon :icon="clipboardOutline" @click="paste('pasteExplorer')" />
         <ion-label>Explorer(?)</ion-label>
-        <ion-input id="pasteExplorer" placeholder="https://polygon-scan.com" v-model="explorer" ></ion-input>
+        <ion-input id="pasteExplorer" placeholder="https://polygonscan.com" v-model="explorer" ></ion-input>
       </ion-item>
       <ion-item>
         <ion-button  @click="onCancel">Cancel</ion-button>

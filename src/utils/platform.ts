@@ -5,10 +5,10 @@ const defaultSettings = {
     enableStorageEnctyption: false,
     encryptAfterEveryTx: false,
     lockOutEnabled: false,
-    lockOutPeriod: 12e4,
+    lockOutPeriod: 2,
     lockOutBlocked: false,
     theme: 'system',
-    MP: ''
+    lastLock: Date.now()
 }
 
 export const storageSave = async (key: string, value: any): Promise<void> =>{
@@ -87,6 +87,20 @@ export const setSettings = async (settings: Settings): Promise<void> => {
     await storageSave('settings', settings )
 }
 
+export const blockLockout = async (): Promise<Settings> => {
+    const settings = await getSettings()
+    settings.lockOutBlocked = true
+    await setSettings(settings)
+    return settings
+}
+
+export const unBlockLockout = async (): Promise<Settings> => {
+    const settings = await getSettings()
+    settings.lockOutBlocked = false
+    await setSettings(settings)
+    return settings
+}
+
 export const getBalanceCache = async (): Promise<string> => {
     return (await storageGet('balance'))?.balance ?? '0x0'
 }
@@ -125,20 +139,21 @@ export const hexTostr = (hexStr: string) =>
     for (let i = 0, charsLength = hexCodes.length; i < charsLength; i += 2) {
     chunks.push(hexCodes.substring(i, i + 2));
     }
-        return chunks.reduce(
-            (pv, cv) => `${pv}${String.fromCharCode(parseInt(cv, 16))}`,
-            ''
-        ).substring(0, 66)
+    return chunks.reduce(
+    (pv, cv) => `${pv}${String.fromCharCode(parseInt(cv, 16))}`,
+            '')
     }
     return hexStr
  }
 
+export const strToHex = (str: string) =>  `0x${str.split('').map( s => s.charCodeAt(0).toString(16) ).join('')}`
+
 export const numToHexStr = (num: number) => `0x${num.toString(16)}`
 
- export const copyAddress = async (address: string, toastRef: Ref<boolean>) => {
+export const copyAddress = async (address: string, toastRef: Ref<boolean>) => {
     await navigator.clipboard.writeText(address)
     toastRef.value = true
-  }
+}
 
 export const getUrl = (url: string) => chrome.runtime.getURL(url)
 

@@ -1,4 +1,4 @@
-import { getAccounts, getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab } from '@/utils/platform';
+import { getAccounts, getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl } from '@/utils/platform';
 import { userApprove, userReject, rIdWin, rIdData } from '@/extension/userRequest'
 import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber } from '@/utils/wallet'
 import type { RequestArguments } from '@/extension/types'
@@ -40,6 +40,12 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         console.log('Prices updated')
     })
   }
+  getSettings().then((settings) => {
+    if( ((settings.lastLock + settings.lockOutPeriod * 6e4) < Date.now()) && settings.lockOutEnabled && !settings.lockOutBlocked ) {
+        settings.lastLock = Date.now()
+        clearPk()
+    }
+  })
 })
 
 chrome.windows.onRemoved.addListener(async (winId) => {
@@ -89,11 +95,16 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                 }
                 case 'eth_getBlockByNumber': {
                     const params = message?.params?.[0] as any
-                    sendResponse(await getBlockByNumber(params))
+                    const block = await getBlockByNumber(params) as any
+                    block.gasLimit = block.gasLimit.toHexString()
+                    block.gasUsed = block.gasUsed.toHexString()
+                    block.baseFeePerGas  = block.baseFeePerGas.toHexString()
+                    block._difficulty = block._difficulty.toHexString()
+                    sendResponse(block)
                     break;
                 }
                 case 'eth_gasPrice': {
-                    sendResponse(await getGasPrice())
+                    sendResponse((await getGasPrice()).toHexString())
                     break;
                 }
                 case 'eth_getBalance': {
@@ -156,6 +167,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         if(!account || !network) {
                             return
                         }
+                        params.from = account.address
                         const serializeParams = encodeURIComponent(JSON.stringify(params)) ?? ''
                         const pEstimateGas = estimateGas({
                             to: params?.to ?? '',
@@ -178,7 +190,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                             rIdWin[String(win.id)] = String(message.resId)
                             rIdData[String(win.id)] = {}
                         })
-                        
+
                         })
                         try {
                         const tx = await sendTransaction({...params, ...(rIdData?.[String(gWin?.id ?? 0)] ?? {}) }, pEstimateGas, pGasPrice)
@@ -199,14 +211,16 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                                 }
                             }, 6e4)
                         }
-                        chrome.notifications.create({
-                            notificationId,
+                        chrome.notifications.create(notificationId,{
                             message: 'Transaction Confirmed',
                             title: 'Success',
+                            iconUrl: getUrl('assets/extension-icon/wallet_128.png'),
+                            type: 'basic',
                             ...(buttons)
                         } as any)
 
-                        } catch  {
+                        } catch (err) {
+                            console.log(err)
                             sendResponse({
                                 error: true,
                                 code: rpcError.USER_REJECTED,
@@ -215,10 +229,12 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                             chrome.notifications.create({
                                 message: 'Transaction Failed',
                                 title: 'Error',
+                                iconUrl: getUrl('assets/extension-icon/wallet_128.png'),
+                                type: 'basic'
                             } as any)
                         }
                         } catch(err) {
-                            // console.error(err)
+                            // console.log(err)
                             sendResponse({
                                 error: true,
                                 code: rpcError.USER_REJECTED,

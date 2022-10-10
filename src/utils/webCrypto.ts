@@ -51,19 +51,9 @@ async function getKey(passwordBytes: Uint8Array) {
 export const encrypt = async (password: string, data:string) => {
     const enc = new TextEncoder()
     const encData = enc.encode(data)
-    console.log(encData)
     const encKey = enc.encode(password)
-    console.log(encKey)
     const key = await getKey(encKey)
-    console.log(key)
     const iv = await getIv()
-    console.log(iv)
-    console.log({
-      name: "AES-GCM",
-      iv,
-    },
-    key,
-    encData)
     const encResult = await crypto.subtle.encrypt(
       {
         name: "AES-GCM",
@@ -72,7 +62,6 @@ export const encrypt = async (password: string, data:string) => {
       key,
       encData,
     )
-    console.log(JSON.stringify(new Uint8Array(encResult)))
     return JSON.stringify(new Uint8Array(encResult))
 }
 
@@ -82,7 +71,6 @@ export const decrypt = async (encryptedData: string, password: string) => {
     const key = await getKey(encKey)
     const iv = await getIv()
     const encryptedUint= new Uint8Array(Object.values(JSON.parse(encryptedData)));
-    console.log(encryptedUint)
     const contentBytes = new Uint8Array(
       await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encryptedUint)
     );

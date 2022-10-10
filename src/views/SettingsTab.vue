@@ -94,11 +94,12 @@
     <div class="ion-padding" slot="content">
       <ion-item>
           <ion-label>Import Additional Accounts</ion-label>
-          <ion-button color="danger" @click="importAcc">Import</ion-button>
+          <input ref="importFile" type="file"  accept=".json" />
+          <ion-button color="warning" @click="importAcc">Import</ion-button>
         </ion-item>
         <ion-item>
           <ion-label>Export All Accounts</ion-label>
-          <ion-button color="danger" @click="exportAcc">Export</ion-button>
+          <ion-button color="warning" @click="exportAcc">Export</ion-button>
         </ion-item>
     </div>
   </ion-accordion>
@@ -181,7 +182,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive } from "vue";
+import { defineComponent, ref, reactive, Ref } from "vue";
 import { storageWipe, getSettings, setSettings, getAccounts, saveSelectedAccount, replaceAccounts } from "@/utils/platform";
 import { decrypt, encrypt } from "@/utils/webCrypto"
 // import { Account } from '@/extension/type'
@@ -243,6 +244,7 @@ export default defineComponent({
     const alertMsg = ref('');
     const toastState = ref(false);
     const toastMsg = ref('');
+    const importFile = ref(null) as unknown as Ref<HTMLInputElement>
 
     const wipeStorage = async () => {
       loading.value = true;
@@ -333,9 +335,45 @@ export default defineComponent({
     // settings.s.enableStorageEnctyption = true;
     loading.value = false
     }
+
+    const validateFile = () => {
+      return new Promise((resolve) => {
+      try {
+        if (!importFile.value?.value?.length) {
+          return resolve({ 
+            error: 'Import json file is missing'
+          })
+        }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const json = JSON.parse(event?.target?.result as string)
+          if(!json.length){
+            return resolve({ error: 'JSON format is wrong. Corrrect JSON format is: [{ "name": "Account Name", "pk": "Private Key" },{...}]' })
+          }
+          const test = json.some((e:any) => ( !('pk' in e ) || !('name' in e) || !(e.pk.length !== 66 && e.pk.length !== 64)))
+          if(test) {
+            return resolve({ error: 'JSON format is wrong. Corrrect JSON format is: [{ "name": "Account Name", "pk": "Private Key" },{...}], Also PK must be valid' })
+          }
+          return resolve({ error: false })
+        }
+        reader.readAsText(importFile.value?.files?.[0] as File);
+        
+      }catch {
+        return resolve(
+         {
+          error: 'Parsing JSON file'
+        })
+      }
+    })
+    }
     
     const importAcc = async () => {
-      // 
+      const validation = await validateFile() as { error: any }
+      if (validation.error) {
+        alertMsg.value = validation.error
+        alertOpen.value = true
+        return 
+      }
     }
 
     const exportAcc = async () => {
@@ -389,7 +427,8 @@ export default defineComponent({
       toastState,
       toastMsg,
       importAcc,
-      exportAcc
+      exportAcc,
+      importFile
     };
   },
 });

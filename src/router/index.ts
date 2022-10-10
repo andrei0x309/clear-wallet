@@ -20,6 +20,10 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/SwitchNetwork.vue'),
   },
   {
+    path: '/contract-error/:rid/:param/:contract',
+    component: () => import('@/views/ContractError.vue'),
+  },
+  {
     path: '/tabs/',
     component: AppTabs,
     children: [

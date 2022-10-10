@@ -46,7 +46,7 @@
       </ion-item>
       <ion-item>
         <ion-label>Raw TX:</ion-label>
-  <ion-textarea :rows="10" :cols="20" :value="signTxData" readonly></ion-textarea>
+  <ion-textarea style="overflow-y: scroll;" :rows="10" :cols="20" :value="signTxData" readonly></ion-textarea>
       </ion-item>
       <ion-item>
         <ion-button @click="onCancel">Cancel</ion-button>
@@ -151,15 +151,18 @@ import {
   IonLoading,
   IonModal,
   IonButtons,
-  IonInput
+  IonInput,
+  modalController
 } from "@ionic/vue";
 import { ethers } from "ethers";
 import { approve, walletPing, walletSendData } from "@/extension/userRequest";
 import { useRoute } from "vue-router";
-import { getSelectedNetwork, getUrl, getPrices, numToHexStr } from '@/utils/platform'
+import { getSelectedNetwork, getUrl, getPrices, numToHexStr, blockLockout, unBlockLockout, getSelectedAccount, strToHex} from '@/utils/platform'
 import { getBalance, getGasPrice, estimateGas } from '@/utils/wallet'
 import type { Network } from '@/extension/types'
 import { mainNets } from "@/utils/networks";
+import UnlockModal from '@/views/UnlockModal.vue'
+import router from "@/router";
 
 export default defineComponent({
   components: {
@@ -220,14 +223,43 @@ export default defineComponent({
       signTxData.value = JSON.stringify( params, null, 2)
     }
 
-    const onSign = () => {
-      approve(rid);
-    };
+    const openModal = async () => {
+        const modal = await modalController.create({
+          component: UnlockModal,
+          componentProps: {
+            unlockType: 'message'
+          }
+
+        });
+        modal.present();
+        const { role } = await modal.onWillDismiss();
+        if(role === 'confirm') return true
+        return false
+    }
+
+    const onSign = async () => {
+        loading.value = true;
+        const selectedAccount = await getSelectedAccount()
+        if ((selectedAccount.pk ?? '').length !== 66) {
+          const modalResult = await openModal()
+          if(modalResult) {
+            unBlockLockout()
+            approve(rid)
+          }else {
+            onCancel()
+          }
+        }else {
+          unBlockLockout()
+          approve(rid)
+        }
+        loading.value = false
+    }
 
     const onCancel = () => {
       window.close();
       if(interval) {
         try {
+          unBlockLockout()
           clearInterval(interval)
         } catch {
           // ignore
@@ -250,6 +282,7 @@ export default defineComponent({
                             data: params?.data ?? '',
                             value: params?.value ?? '0x0'
                         })
+      blockLockout()
       const pGasPrice = getGasPrice()
       const pBalance =  getBalance()
       const pGetPrices = getPrices()
@@ -257,19 +290,26 @@ export default defineComponent({
       userBalance.value = Number(ethers.utils.formatEther((await pBalance).toString()))
       
       gasPrice.value = parseInt(ethers.utils.formatUnits((await pGasPrice).toString(), "gwei"), 10)
+      try {
       gasLimit.value = parseInt((await pEstimateGas).toString(), 10)
+      } catch (err) {
+        const errorToHex = strToHex(String(err))
+        router.push(`/contract-error/${rid}/${errorToHex}/${contract}`)
+        loading.value = false
+        return
+      }
+      inGasPrice.value = gasPrice.value
+      inGasLimit.value = gasLimit.value
 
-      console.log( 'test', ethers.utils.formatUnits((await pGasPrice).toString(), "gwei"), ethers.utils.formatUnits(ethers.utils.parseUnits(gasPrice.value.toString(), "gwei"), "gwei") )
+      // console.log( 'test', ethers.utils.formatUnits((await pGasPrice).toString(), "gwei"), ethers.utils.formatUnits(ethers.utils.parseUnits(gasPrice.value.toString(), "gwei"), "gwei") )
 
       newGasData()
       if(userBalance.value < totalCost.value){
         insuficientBalance.value = true
       }
       const prices = await pGetPrices
-      console.log('dd', prices, selectedNetwork.value?.priceId)
       if ( (selectedNetwork.value?.priceId ?? 'x') in prices ){
         dollarPrice.value = prices[(selectedNetwork.value?.priceId ?? 'x')]?.usd ?? 0
-       
       }
 
       loading.value=false
