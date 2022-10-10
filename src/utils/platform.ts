@@ -75,7 +75,7 @@ export const setPrices = async (prices: Prices): Promise<void> => {
     await storageSave('prices', prices )
 }
 
-export const getPrices = async (): Promise<void> => {
+export const getPrices = async (): Promise<Prices> => {
     return (await storageGet('prices'))?.prices ?? {} as unknown as Prices
 }
 
@@ -108,6 +108,15 @@ export const smallRandomString = () => {
     return (Math.random() + 1).toString(36).substring(7);
 }
 
+export const clearPk = async (): Promise<void> => {
+    let accounts = await getAccounts()
+    const accProm = accounts.map(async a => {
+      return a
+    })
+    accounts = await Promise.all(accProm)
+    await replaceAccounts(accounts)
+}
+
 export const hexTostr = (hexStr: string) =>
  {  
     if(hexStr.substring(0,2) === '0x') {
@@ -123,6 +132,8 @@ export const hexTostr = (hexStr: string) =>
     }
     return hexStr
  }
+
+export const numToHexStr = (num: number) => `0x${num.toString(16)}`
 
  export const copyAddress = async (address: string, toastRef: Ref<boolean>) => {
     await navigator.clipboard.writeText(address)

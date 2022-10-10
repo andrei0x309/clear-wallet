@@ -35,18 +35,18 @@
                 <ion-item>To</ion-item>
                 <ion-item>
                   <ion-list>
-                    <ion-item>Network Name: {{ (templateNetworks as any)[selectedNetwork?.chainId]?.name }}</ion-item>
+                    <ion-item>Network Name: {{ (templateNetworks as any)[networkId]?.name }}</ion-item>
                     <ion-item>
                       <ion-avatar
-                        v-if="(templateNetworks as any)[selectedNetwork?.chainId]?.icon"
+                        v-if="(templateNetworks as any)[networkId]?.icon"
                         style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
                       >
                         <img
                           :alt="selectedNetwork?.name"
-                          :src="getUrl('assets/chain-icons/' + (templateNetworks as any)[selectedNetwork?.chainId]?.icon)"
+                          :src="getUrl('assets/chain-icons/' + (templateNetworks as any)[networkId]?.icon)"
                         />
                       </ion-avatar>
-                      <ion-label>Network ID: {{ (templateNetworks as any)[selectedNetwork?.chainId]?.chainId }}</ion-label>
+                      <ion-label>Network ID: {{ (templateNetworks as any)[networkId]?.chainId }}</ion-label>
                     </ion-item>
                   </ion-list>
                 </ion-item>
@@ -59,15 +59,16 @@
             </ion-item>
             <ion-item v-else>
             <ion-list>
-                 <ion-item>Request to change to unknown network ID: {{ }}</ion-item>
-                 <ion-item>Do you want to go to {{ }}</ion-item>
+                 <ion-item>Request to change to unknown network ID: {{ networkId }}</ion-item>
+                 <ion-item>Do you want to go to {{ addChainUrl }}</ion-item>
                  <ion-item>To add it manually.</ion-item>
                  <ion-item>
                   <ion-button @click="onCancel">No</ion-button>
-                  <ion-button @click="onSwitchTemplates">Yes</ion-button>
+                  <ion-button @click="onSwitchNotExisting">Yes</ion-button>
                 </ion-item>
             </ion-list>
             </ion-item>
+            <ion-item>Auto-reject Timer: {{ timerReject }}</ion-item>
           </ion-list>
 
       <ion-alert
@@ -108,11 +109,11 @@ import {
   IonList,
 } from "@ionic/vue";
 // import { ethers } from "ethers";
-import { hexTostr } from "@/utils/platform";
 import { useRoute } from "vue-router";
-import { getSelectedNetwork, getNetworks, getUrl } from "@/utils/platform";
-import type { Network } from "@/extension/types";
+import { getSelectedNetwork, getNetworks, getUrl, saveSelectedNetwork, saveNetwork, openTab} from "@/utils/platform";
+import type { Network, Networks } from "@/extension/types";
 import { mainNets, testNets } from "@/utils/networks";
+import { approve, walletPing } from '@/extension/userRequest'
 
 export default defineComponent({
   components: {
@@ -133,55 +134,76 @@ export default defineComponent({
     const route = useRoute();
     const loading = ref(true);
     const rid = (route?.params?.rid as string) ?? "";
-    const networkId = ref(hexTostr((route?.params?.param as string) ?? ""));
+    const networkId = ref(String(Number(route?.params?.param as string ?? "")));
     const alertOpen = ref(false);
     const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
     const alertMsg = ref("");
     const networkCase = ref("");
-    let pnetworks;
+    let pnetworks: Promise<Networks>;
     const templateNetworks = Object.assign({}, mainNets, testNets) ?? {};
+    const addChainUrl = `${chainListPage}${networkId.value}`
+    const timerReject = ref(140);
+    let interval: any
 
     const onCancel = () => {
       window.close();
+      if(interval) {
+        try {
+          clearInterval(interval)
+        } catch {
+          // ignore
+        }
+      }
     };
 
     onIonViewWillEnter(async () => {
+      (window as any)?.resizeTo?.(600, 600)
       pnetworks = getNetworks();
       selectedNetwork.value = await getSelectedNetwork();
-      const chainId = parseInt(networkId.value, 16);
+      console.log(networkId.value)
       const existingNetworks = await pnetworks;
-      if ((chainId ?? "0") in existingNetworks ?? {}) {
+      if ((networkId.value ?? "0") in existingNetworks ?? {}) {
         networkCase.value = "exists";
-      } else if ((chainId ?? "0") in templateNetworks) {
+      } else if ((networkId.value ?? "0") in templateNetworks) {
         networkCase.value = "inTemplates";
       } else {
         networkCase.value = "doesNotExist";
       }
       loading.value = false;
+
+      interval = setInterval(async () => {
+        if(timerReject.value <= 0) {
+          onCancel()
+          return;
+        }
+
+        timerReject.value -= 1
+        walletPing()
+      }, 1000) as any
+
     });
 
     const onSwitchExists = async () => {
       loading.value = true;
-
-      //   const selectedAccount = await getSelectedAccount();
-      //   if ((selectedAccount.pk ?? "").length !== 66) {
-      //     const modalResult = await openModal();
-      //     if (modalResult) {
-      //       approve(rid);
-      //     } else {
-      //       onCancel();
-      //     }
-      //   } else {
-      //     approve(rid);
-      //   }
-      //   loading.value = false;
+      const existingNetworks = await pnetworks;
+      selectedNetwork.value = existingNetworks[Number(networkId.value)]
+      await saveSelectedNetwork(selectedNetwork.value)
+      approve(rid);
+      loading.value = false;
     };
     const onSwitchTemplates = async () => {
+      loading.value = true;
+      selectedNetwork.value = templateNetworks[Number(networkId.value)]
+      saveNetwork(templateNetworks[Number(networkId.value)])
+      saveSelectedNetwork(templateNetworks[Number(networkId.value)])
+      approve(rid);
       loading.value = true;
     };
 
     const onSwitchNotExisting = async () => {
         loading.value = true;
+        openTab(addChainUrl)
+        onCancel()
     };
 
     return {
@@ -196,7 +218,9 @@ export default defineComponent({
       templateNetworks,
       getUrl,
       onSwitchTemplates,
-      onSwitchNotExisting
+      onSwitchNotExisting,
+      addChainUrl,
+      timerReject
     };
   },
 });

@@ -2,27 +2,37 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Add Network</ion-title>
+        <ion-title>{{ isEdit ? 'Edit Network': 'Add Network' }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
       <ion-button @click="templateModal=true" expand="block">Add from popular chain list</ion-button>
       <ion-item>
-        <ion-label>Name</ion-label>
-        <ion-input v-model="name"></ion-input>
+        <ion-label>Name(*)</ion-label>
+        <ion-input v-model="name" placeholder="ex: Polygon"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label>ChainId</ion-label>
-        <ion-input v-model="chainId"  type="number"></ion-input>
+        <ion-label>ChainId(*)</ion-label>
+        <ion-input v-model="chainId" placeholder="137" type="number"></ion-input>
       </ion-item>
       <ion-item button>
         <ion-icon :icon="clipboardOutline" @click="paste('pasteRpc')" />
-        <ion-label>RPC URL</ion-label>
-        <ion-input id="pasteRpc" v-model="rpc" ></ion-input>
+        <ion-label>RPC URL(*)</ion-label>
+        <ion-input id="pasteRpc" placeholder="https://polygon-mainnet.g.alchemy.com/..." v-model="rpc" ></ion-input>
+      </ion-item>
+      <ion-item button>
+        <ion-icon :icon="clipboardOutline" @click="paste('pasteRpc')" />
+        <ion-label>Native Token Symbol(?)</ion-label>
+        <ion-input id="pasteRpc" placeholder="MATIC" v-model="symbol" ></ion-input>
+      </ion-item>
+      <ion-item button>
+        <ion-icon :icon="clipboardOutline" @click="paste('pasteExplorer')" />
+        <ion-label>Explorer(?)</ion-label>
+        <ion-input id="pasteExplorer" placeholder="https://polygon-scan.com" v-model="explorer" ></ion-input>
       </ion-item>
       <ion-item>
         <ion-button  @click="onCancel">Cancel</ion-button>
-        <ion-button @click="onAddNetwork">Add Network</ion-button>
+        <ion-button @click="onAddNetwork">{{ isEdit ? 'Edit Network': 'Add Network' }}</ion-button>
       </ion-item>
       <ion-alert
       :is-open="alertOpen"
@@ -85,13 +95,14 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonButton, IonIcon,
-   IonModal, IonList, IonSegment, IonSegmentButton, IonListHeader, IonButtons, IonAvatar, modalController, IonAlert
+   IonModal, IonList, IonSegment, IonSegmentButton, IonListHeader, IonButtons, IonAvatar, modalController, IonAlert, onIonViewWillEnter
   } from "@ionic/vue";
-import {  getNetworks, saveSelectedNetwork, saveNetwork, getUrl, paste } from "@/utils/platform";
+import {  getNetworks, saveSelectedNetwork, getUrl, paste, replaceNetworks } from "@/utils/platform";
 import router from "@/router";
 import { mainNets, testNets } from "@/utils/networks"
-
+import { useRoute } from 'vue-router'
 import { clipboardOutline } from "ionicons/icons";
+import type { Networks, Network } from '@/extension/types'
 
 export default defineComponent({
   components: { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonButton, IonIcon,
@@ -100,10 +111,33 @@ export default defineComponent({
     const name = ref('')
     const chainId = ref(0)
     const rpc = ref('')
+    const symbol = ref('')
+    const explorer = ref('')
     const templateModal = ref(false)
     const currentSegment = ref('mainnets')
     const alertOpen = ref(false)
     const alertMsg = ref('')
+    const route = useRoute()
+    const isEdit = route.path.includes('/edit')
+    const paramChainId = route.params.chainId ?? ""
+    let networksProm: Promise<Networks | undefined>
+    
+
+    const fillNetworkInputs = (network: Network) => {
+      name.value = network.name
+        chainId.value = network.chainId
+        rpc.value = network.rpc
+        symbol.value = network.symbol ?? ''
+        explorer.value = network.explorer ?? ''
+    }
+
+    onIonViewWillEnter(async () => {
+      if(isEdit && paramChainId) {
+        networksProm = getNetworks()
+        const networks = await networksProm as Networks
+        fillNetworkInputs(networks[Number(paramChainId)])
+      }
+    })
 
     const resetFields = () => {
       name.value = ''
@@ -133,25 +167,27 @@ export default defineComponent({
           }
         }
         let p1 = Promise.resolve()
-        const networks = await getNetworks()
-        if( (Object.keys(networks).length ?? 0) < 1 ){
-            p1 = saveSelectedNetwork({
+        if(!networksProm) {
+          networksProm = getNetworks()
+        }
+        const networks = await networksProm as Networks
+        const network = {
                 name: name.value,
                 chainId: chainId.value,
-                rpc: rpc.value
-            })
+                rpc: rpc.value,
+                ...( symbol.value ? {symbol: symbol.value}:{}),
+                ...( explorer.value ? {explorer: explorer.value}:{})
+            }
+        if( (Object.keys(networks).length ?? 0) < 1 ){
+            p1 = saveSelectedNetwork(network)
         } else {
-
-          if(chainId.value in networks){
+          if((chainId.value in networks) && !isEdit){
             alertMsg.value = "Network already exists."
             return alertOpen.value = true
           }
         }
-        const p2 = saveNetwork({
-                name: name.value,
-                chainId: chainId.value,
-                rpc: rpc.value
-        })
+        networks[chainId.value] = network
+        const p2 = replaceNetworks(networks)
         await Promise.all([p1, p2])
         router.push('/')
         resetFields()
@@ -166,9 +202,7 @@ export default defineComponent({
     }
 
     const fillTemplate = (network: typeof mainNets[1] ) =>{
-      name.value = network.name
-      chainId.value = network.chainId
-      rpc.value = network.rpc
+      fillNetworkInputs(network)
       modalController.dismiss(null, 'cancel')
     }
 
@@ -188,7 +222,10 @@ export default defineComponent({
         getUrl,
         fillTemplate,
         alertOpen,
-        alertMsg
+        alertMsg,
+        symbol,
+        explorer,
+        isEdit
     }
 
   }

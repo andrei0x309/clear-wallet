@@ -25,7 +25,7 @@ export interface Networks {
 
 export interface RequestArguments {
     method: string;
-    params?: unknown[];
+    params?: any[];
     resId?: string
 }
 
@@ -49,5 +49,5 @@ export interface Settings {
     lockOutPeriod: number
     lockOutEnabled: boolean
     theme: 'system' | 'light' | 'dark'
-    MP: string
+    lastLock: number
 }

@@ -59,6 +59,10 @@ const routes: Array<RouteRecordRaw> = [
         path: 'add-network',
         component: () => import('@/views/AddNetwork.vue'),
       },
+      {
+        path: 'add-network/edit/:chainId',
+        component: () => import('@/views/AddNetwork.vue'),
+      },
     ],
   },
 ]

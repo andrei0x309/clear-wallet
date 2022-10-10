@@ -89,6 +89,21 @@
   </ion-accordion>
   <ion-accordion value="4">
     <ion-item slot="header" color="light">
+      <ion-label> Import / Export Accounts</ion-label>
+    </ion-item>
+    <div class="ion-padding" slot="content">
+      <ion-item>
+          <ion-label>Import Additional Accounts</ion-label>
+          <ion-button color="danger" @click="importAcc">Import</ion-button>
+        </ion-item>
+        <ion-item>
+          <ion-label>Export All Accounts</ion-label>
+          <ion-button color="danger" @click="exportAcc">Export</ion-button>
+        </ion-item>
+    </div>
+  </ion-accordion>
+  <ion-accordion value="5">
+    <ion-item slot="header" color="light">
       <ion-label>Danger</ion-label>
     </ion-item>
     <div class="ion-padding" slot="content">
@@ -240,7 +255,6 @@ export default defineComponent({
     
     const saveSettings = async () => {
       loading.value = true
-      settings.s.lockOutPeriod = settings.s.lockOutPeriod * 6e4
       await setSettings(settings.s)
       loading.value = false
     }
@@ -278,11 +292,9 @@ export default defineComponent({
       const accProm = accounts.map(async a => {
         a.encPk = await encrypt(mpPass.value, a.pk)
         a.pk = ''
-        console.log(a)
         return a
       })
       accounts = await Promise.all(accProm)
-      console.log(accounts)
       await replaceAccounts(accounts)
       await saveSelectedAccount(accounts[0])
       setEncryptToggle(true)
@@ -321,13 +333,20 @@ export default defineComponent({
     // settings.s.enableStorageEnctyption = true;
     loading.value = false
     }
-      
+    
+    const importAcc = async () => {
+      // 
+    }
+
+    const exportAcc = async () => {
+      // 
+    }
+
 
     onIonViewWillEnter( () => {
       getSettings().then((storeSettings) =>
       {
         settings.s = storeSettings
-        settings.s.lockOutPeriod = (settings.s.lockOutPeriod / 6e4)
         loading.value = false
       })
       
@@ -368,7 +387,9 @@ export default defineComponent({
       modalDismiss,
       setTime,
       toastState,
-      toastMsg
+      toastMsg,
+      importAcc,
+      exportAcc
     };
   },
 });

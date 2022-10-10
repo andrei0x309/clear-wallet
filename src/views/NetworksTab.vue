@@ -27,8 +27,8 @@
         </ion-label>
        </ion-item>
         <ion-item>
-        <ion-chip>Edit</ion-chip>
-        <ion-chip>Delete</ion-chip>
+        <router-link :to="`/add-network/edit/${network.chainId}`" ><ion-chip>Edit</ion-chip></router-link>
+        <ion-chip @click="deleteNetwork">Delete</ion-chip>
         </ion-item>
         </ion-list>
     </ion-content>
@@ -37,7 +37,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, Ref } from "vue";
-import { getNetworks, copyAddress, getUrl } from "@/utils/platform"
+import { getNetworks, copyAddress, getUrl, replaceNetworks } from "@/utils/platform"
 import {
   IonContent,
   IonHeader,
@@ -75,7 +75,7 @@ export default defineComponent({
   IonAvatar
   },
   setup () {
-    const networks = ref([]) as Ref<Networks>
+    const networks = ref({}) as Ref<Networks>
     const loading = ref(true)
     const toastState = ref(false)
 
@@ -87,6 +87,13 @@ export default defineComponent({
         networks.value = res[0]
         loading.value = false
       })
+    }
+
+    const deleteNetwork = async (chainId: number) => {
+        loading.value = true
+        delete networks.value[chainId]
+        await replaceNetworks(networks.value)
+        loading.value = false
     }
 
     onIonViewWillEnter(() => {
@@ -101,7 +108,8 @@ export default defineComponent({
         copyAddress,
         getToastRef,
         getUrl,
-        mainNets
+        mainNets,
+        deleteNetwork
       }
 
   }

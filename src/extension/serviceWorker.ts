@@ -1,10 +1,12 @@
-import { getAccounts, getSelectedAccount, getSelectedNetwork, smallRandomString, storageSave} from '@/utils/platform';
+import { getAccounts, getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab } from '@/utils/platform';
 import { userApprove, userReject, rIdWin, rIdData } from '@/extension/userRequest'
-import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice } from '@/utils/wallet'
+import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber } from '@/utils/wallet'
 import type { RequestArguments } from '@/extension/types'
 import type { Account } from '@/extension/types'
 import { rpcError } from '@/extension/rpcConstants'
 import { updatePrices } from '@/utils/gecko'
+
+let notificationUrl: string
 
 chrome.runtime.onInstalled.addListener(() => {
     console.log('Service worker installed');
@@ -13,9 +15,9 @@ chrome.runtime.onInstalled.addListener(() => {
     })
 })
 
-chrome.runtime.onConnect.addListener(port => port.onDisconnect.addListener((a) => 
+chrome.runtime.onConnect.addListener(port => port.onDisconnect.addListener(() => 
 {
-    console.log('Service worker connected', storageSave('test-d', a));
+    console.log('Service worker connected');
 }))
 
 
@@ -40,7 +42,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 })
 
-chrome.windows.onRemoved.addListener((winId) => {
+chrome.windows.onRemoved.addListener(async (winId) => {
     if (winId in (userReject ?? {})){
         userReject[winId]?.()
     }
@@ -48,12 +50,28 @@ chrome.windows.onRemoved.addListener((winId) => {
     userApprove[winId] = undefined
     rIdWin[winId] = undefined
     rIdData[winId] = undefined
-    chrome.windows.getAll().then((wins) => {
+    const wins = await chrome.windows.getAll()
     if(wins.length === 0) {
-        storageSave('test-p', 'browser-closed')
+        const s = await getSettings()
+        if(s.enableStorageEnctyption) {
+            await clearPk()
+        }
     }
-    })
 })
+
+const viewTxListner = async (id: string) => {
+    try {
+        const url = new URL(notificationUrl)
+        openTab(url.href)
+        chrome.notifications.clear(id)
+    } catch {
+        // ignore
+    }
+}
+
+if (!chrome.notifications.onButtonClicked.hasListener(viewTxListner)){
+    chrome.notifications.onButtonClicked.addListener(viewTxListner)
+}
 
 chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendResponse) => {
     console.log(message);
@@ -68,6 +86,15 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
             switch (message.method) {
                 case 'eth_call': {
                     break
+                }
+                case 'eth_getBlockByNumber': {
+                    const params = message?.params?.[0] as any
+                    sendResponse(await getBlockByNumber(params))
+                    break;
+                }
+                case 'eth_gasPrice': {
+                    sendResponse(await getGasPrice())
+                    break;
                 }
                 case 'eth_getBalance': {
                     sendResponse(await getBalance())
@@ -153,11 +180,45 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         })
                         
                         })
-                        sendResponse(
-                            await sendTransaction({...params, ...(rIdData?.[String(gWin?.id ?? 0)] ?? {}) }, pEstimateGas, pGasPrice)
-                        )
+                        try {
+                        const tx = await sendTransaction({...params, ...(rIdData?.[String(gWin?.id ?? 0)] ?? {}) }, pEstimateGas, pGasPrice)
+                        sendResponse(tx)
+                        const buttons = {} as any
+                        const network = await getSelectedNetwork()
+                        const notificationId = crypto.randomUUID()
+                        if(network?.explorer) {
+                            notificationUrl = `${network.explorer}/tx/${tx.hash}`.replace('//', '/')
+                            buttons.buttons = [{
+                                title: 'View Transaction',
+                            }]
+                            setTimeout(() => {
+                                try {
+                                    chrome.notifications.clear(notificationId)
+                                } catch {
+                                    // ignore
+                                }
+                            }, 6e4)
+                        }
+                        chrome.notifications.create({
+                            notificationId,
+                            message: 'Transaction Confirmed',
+                            title: 'Success',
+                            ...(buttons)
+                        } as any)
+
+                        } catch  {
+                            sendResponse({
+                                error: true,
+                                code: rpcError.USER_REJECTED,
+                                message: 'TX Failed'
+                            })
+                            chrome.notifications.create({
+                                message: 'Transaction Failed',
+                                title: 'Error',
+                            } as any)
+                        }
                         } catch(err) {
-                            console.error(err)
+                            // console.error(err)
                             sendResponse({
                                 error: true,
                                 code: rpcError.USER_REJECTED,
@@ -223,7 +284,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         chrome.windows.create({
                             height: 450,
                             width: 400,
-                            url: chrome.runtime.getURL(`index.html?route=switch-network&param=${String(message?.params?.[0] ?? '' )}&rid=${String(message?.resId ?? '')}`),
+                            url: chrome.runtime.getURL(`index.html?route=switch-network&param=${String(message?.params?.[0]?.chainId ?? '' )}&rid=${String(message?.resId ?? '')}`),
                             type: 'popup'
                         }).then((win) => {
                             userReject[String(win.id)] = reject
@@ -232,9 +293,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         })
                         
                         })
-                        sendResponse(
-                            await signMsg(String(message?.params?.[0]) ?? '' )
-                        )
+                        sendResponse(null)
                         } catch {
                             sendResponse({
                                 error: true,

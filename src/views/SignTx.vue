@@ -24,25 +24,25 @@
         <ion-label>Transaction to Sign &amp; Send</ion-label>
       </ion-item>
       <ion-item>
-      Last Balance: {{ userBalance }}
+      Last Balance: {{ userBalance }} <span style="opacity:0.7" v-if="dollarPrice > 0">${{ dollarPrice*userBalance }}</span>
       </ion-item>
       <ion-item>
       Contract: {{ contract }}
       </ion-item>
       <ion-item>
-      Tx Total Cost: {{ totalCost }}
+      Tx Total Cost: {{ totalCost }} <span style="opacity:0.7" v-if="dollarPrice > 0">${{ dollarPrice*totalCost }}</span>
       </ion-item>
       <ion-item>
-      Gas Fee:  {{ gasFee }}
+      Gas Fee:  {{ gasFee }} <span style="opacity:0.7" v-if="dollarPrice > 0">${{ dollarPrice*gasFee }}</span>
       </ion-item>
       <ion-item>
       Tx value: {{ txValue }}
       </ion-item>
       <ion-item>
-      Gas Limit: {{ gasLimit }} <ion-button @click="setGasLimit">Set manually</ion-button>
+      Gas Limit: {{ gasLimit }} <ion-button style="margin-left: 1rem" @click="gasLimitModal=true">Set manually</ion-button>
       </ion-item>
       <ion-item>
-      Gas Price: {{ gasPrice}} <ion-button @click="setGasPrice">Set manually</ion-button>
+      Gas Price: {{ gasPrice }} <ion-button style="margin-left: 1rem" @click="gasPriceModal=true">Set manually</ion-button>
       </ion-item>
       <ion-item>
         <ion-label>Raw TX:</ion-label>
@@ -75,6 +75,59 @@
         @didDismiss="loading = false"
       >
       </ion-loading>
+
+      <ion-modal
+        :is-open="gasLimitModal"
+      >
+          <ion-header>
+            <ion-toolbar>
+              <ion-buttons slot="start">
+                <ion-button @click="gasLimitModal=false">Close</ion-button>
+              </ion-buttons>
+              <ion-title>Set Gas Limit</ion-title>
+            </ion-toolbar>
+          </ion-header>
+          <ion-content class="ion-padding">
+            <ion-list>
+          <ion-item>
+            <ion-label>Limit in units</ion-label>
+          </ion-item> 
+          <ion-item>
+          <ion-input v-model="inGasLimit" type="number"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-button @click="setGasLimit">Set Price</ion-button>
+      </ion-item>
+      </ion-list>
+          </ion-content>
+        </ion-modal>
+
+        <ion-modal
+        :is-open="gasPriceModal"
+      >
+          <ion-header>
+            <ion-toolbar>
+              <ion-buttons slot="start">
+                <ion-button @click="gasPriceModal=false">Close</ion-button>
+              </ion-buttons>
+              <ion-title>Set Gas Price</ion-title>
+            </ion-toolbar>
+          </ion-header>
+          <ion-content class="ion-padding">
+            <ion-list>
+          <ion-item>
+            <ion-label>Price in gwei</ion-label>
+          </ion-item> 
+          <ion-item>
+          <ion-input v-model="inGasPrice" type="number"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-button @click="setGasPrice">Set Price</ion-button>
+      </ion-item>
+      </ion-list>
+          </ion-content>
+        </ion-modal> 
+
     </ion-content>
 
   </ion-page>
@@ -95,12 +148,15 @@ import {
   IonTextarea,
   onIonViewWillEnter,
   IonList,
-  IonLoading
+  IonLoading,
+  IonModal,
+  IonButtons,
+  IonInput
 } from "@ionic/vue";
 import { ethers } from "ethers";
 import { approve, walletPing, walletSendData } from "@/extension/userRequest";
 import { useRoute } from "vue-router";
-import { getSelectedNetwork, getUrl } from '@/utils/platform'
+import { getSelectedNetwork, getUrl, getPrices, numToHexStr } from '@/utils/platform'
 import { getBalance, getGasPrice, estimateGas } from '@/utils/wallet'
 import type { Network } from '@/extension/types'
 import { mainNets } from "@/utils/networks";
@@ -118,7 +174,10 @@ export default defineComponent({
     IonAlert,
     IonTextarea,
     IonList,
-    IonLoading
+    IonLoading,
+    IonModal,
+    IonButtons,
+    IonInput
   },
   setup: () => {
     const route = useRoute();
@@ -142,6 +201,12 @@ export default defineComponent({
     const insuficientBalance = ref(false)
     const gasPriceReFetch = ref(true)
     const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
+    const dollarPrice = ref(0)
+    const gasLimitModal = ref(false)
+    const gasPriceModal = ref(false)
+    const inGasPrice = ref(0)
+    const inGasLimit = ref(0)
+
     let interval = 0
     const bars = ref(0)
 
@@ -170,6 +235,12 @@ export default defineComponent({
       }
     };
 
+    const newGasData = () => {
+        gasFee.value = Number(ethers.utils.formatUnits(String(gasLimit.value * gasPrice.value), "gwei"))
+        txValue.value = Number(ethers.utils.formatEther(params?.value ?? '0x0'))
+        totalCost.value = gasFee.value + txValue.value
+    }
+
     onIonViewWillEnter(async () => {
       console.log(params.value);
       (window as any)?.resizeTo?.(600, 800)
@@ -181,19 +252,26 @@ export default defineComponent({
                         })
       const pGasPrice = getGasPrice()
       const pBalance =  getBalance()
+      const pGetPrices = getPrices()
       selectedNetwork.value = await getSelectedNetwork()
       userBalance.value = Number(ethers.utils.formatEther((await pBalance).toString()))
-      console.log(userBalance.value)
       
       gasPrice.value = parseInt(ethers.utils.formatUnits((await pGasPrice).toString(), "gwei"), 10)
-      console.log(gasPrice.value)
       gasLimit.value = parseInt((await pEstimateGas).toString(), 10)
-      gasFee.value = Number(ethers.utils.formatUnits(String(gasLimit.value * gasPrice.value), "gwei"))
-      txValue.value = Number(ethers.utils.formatEther(params?.value ?? '0x0'))
-      totalCost.value = gasFee.value + txValue.value
+
+      console.log( 'test', ethers.utils.formatUnits((await pGasPrice).toString(), "gwei"), ethers.utils.formatUnits(ethers.utils.parseUnits(gasPrice.value.toString(), "gwei"), "gwei") )
+
+      newGasData()
       if(userBalance.value < totalCost.value){
         insuficientBalance.value = true
       }
+      const prices = await pGetPrices
+      console.log('dd', prices, selectedNetwork.value?.priceId)
+      if ( (selectedNetwork.value?.priceId ?? 'x') in prices ){
+        dollarPrice.value = prices[(selectedNetwork.value?.priceId ?? 'x')]?.usd ?? 0
+       
+      }
+
       loading.value=false
 
       interval = setInterval(async () => {
@@ -207,8 +285,7 @@ export default defineComponent({
             timerFee.value = 20
             loading.value=true
             gasPrice.value = parseInt(ethers.utils.formatUnits((await getGasPrice()).toString(), "gwei"), 10)
-            gasFee.value = Number(ethers.utils.formatUnits(String(gasLimit.value * gasPrice.value), "gwei"))
-            txValue.value = Number(ethers.utils.formatEther(params?.value ?? '0x0'))
+            newGasData()
             loading.value=false
           }
         }
@@ -218,13 +295,25 @@ export default defineComponent({
         walletPing()
       }, 1000) as any
     })
+
     
     const setGasLimit = () => {
-      // TODO
+      gasLimit.value = inGasLimit.value
+      walletSendData(rid, {
+        gas: numToHexStr(gasLimit.value)
+      })
+      newGasData()
+      gasLimitModal.value = false
     }
 
     const setGasPrice = () => {
-      // TODO
+      gasPrice.value = inGasPrice.value
+      gasPriceReFetch.value = false
+      walletSendData(rid, {
+        gasPrice: ethers.utils.parseUnits(gasPrice.value.toString(), "gwei")
+      })
+      newGasData()
+      gasPriceModal.value = false
     }
 
 
@@ -252,7 +341,12 @@ export default defineComponent({
       mainNets,
       getUrl,
       setGasLimit,
-      setGasPrice
+      setGasPrice,
+      dollarPrice,
+      gasLimitModal,
+      gasPriceModal,
+      inGasPrice,
+      inGasLimit
     };
   },
 });

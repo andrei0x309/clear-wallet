@@ -59,8 +59,8 @@ export const mainNets: {[key: number]: Network} = {
 }
 
 export const testNets = {
-    1: {
-        name: 'TESTNET Ethereum oerli',
+    5: {
+        name: 'TESTNET Ethereum Goerli',
         rpc: 'https://rpc.ankr.com/eth_goerli',
         chainId: 5,
         explorer: 'https://goerli.etherscan.io',
@@ -69,8 +69,8 @@ export const testNets = {
     4: {
         name: 'TESTNET Ethereum Rinkeby',
         rpc: 'https://rpc.ankr.com/eth_rinkeby',
-        chainId: 5,
-        explorer: 'https://goerli.etherscan.io',
+        chainId: 4,
+        explorer: 'https://rinkeby.etherscan.io',
         icon: 'eth.webp'
     },
     80001: {

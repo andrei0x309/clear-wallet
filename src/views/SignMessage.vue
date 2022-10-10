@@ -17,6 +17,7 @@
         <ion-button @click="onCancel">Cancel</ion-button>
         <ion-button @click="onSign">Sign</ion-button>
       </ion-item>
+      <ion-item>Auto-reject Timer: {{ timerReject }}</ion-item>
       <ion-alert
         :is-open="alertOpen"
         header="Error"
@@ -49,13 +50,14 @@ import {
   IonAlert,
   IonText,
   IonLoading,
-  modalController
+  modalController,
+  onIonViewWillEnter
 } from "@ionic/vue";
 // import { ethers } from "ethers";
 import {
   hexTostr,
 } from "@/utils/platform";
-import { approve } from "@/extension/userRequest";
+import { approve, walletPing } from "@/extension/userRequest";
 import { useRoute } from 'vue-router';
 import { getSelectedAccount } from '@/utils/platform'
 import UnlockModal from '@/views/UnlockModal.vue'
@@ -81,10 +83,32 @@ export default defineComponent({
     const signMsg = ref(hexTostr(route?.params?.param as string ?? ''));
     const alertOpen = ref(false);
     const alertMsg = ref("");
+    const timerReject = ref(140);
+    let interval: any
 
     const onCancel = () => {
-      window.close()
+      window.close();
+      if(interval) {
+        try {
+          clearInterval(interval)
+        } catch {
+          // ignore
+        }
+      }
     };
+
+    onIonViewWillEnter(async () => {
+      interval = setInterval(async () => {
+        if(timerReject.value <= 0) {
+          onCancel()
+          return;
+        }
+
+        timerReject.value -= 1
+        walletPing()
+      }, 1000) as any
+
+    });
 
     const openModal = async () => {
         const modal = await modalController.create({
@@ -123,7 +147,8 @@ export default defineComponent({
       alertOpen,
       alertMsg,
       onSign,
-      loading
+      loading,
+      timerReject
     };
   },
 });

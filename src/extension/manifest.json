@@ -23,6 +23,7 @@
       "scripting",
       "webNavigation",
       "tabs",
+      "notifications",
       "storage",
       "alarms",
       "unlimitedStorage",

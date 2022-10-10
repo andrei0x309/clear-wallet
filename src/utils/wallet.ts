@@ -26,6 +26,12 @@ export const getBlockNumber = async () => {
     return await provider.getBlockNumber()
 }
 
+export const getBlockByNumber = async (blockNum: number) => {
+    const network = await getSelectedNetwork()
+    const provider = new ethers.providers.JsonRpcProvider(network.rpc)
+    return await provider.getBlock(blockNum)
+}
+
 export const estimateGas = async ({to = '', from = '', data = '', value = '0x0' }: {to: string, from: string, data: string, value: string}) => {
     const network = await getSelectedNetwork()
     const provider = new ethers.providers.JsonRpcProvider(network.rpc)
