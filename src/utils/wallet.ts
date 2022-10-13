@@ -38,6 +38,7 @@ export const estimateGas = async ({to = '', from = '', data = '', value = '0x0' 
     return await provider.estimateGas({to, from, data, value})
 }
 
+
 export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', value='0x0', gasPrice='0x0'}: 
 {to: string, from: string, data: string, value: string, gas: string, gasPrice: string}, 
 gasEstimate: Promise<BigNumber> | null = null, pGasPrice : Promise<BigNumber> | null) => {

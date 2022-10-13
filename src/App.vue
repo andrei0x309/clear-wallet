@@ -41,6 +41,12 @@ switch (route?.query?.route ?? "") {
     });
     break;
   }
+  case "wallet-error": {
+    router.push({
+      path: `/wallet-error"/${rid}/${param}`
+    });
+    break;
+  }
   default: {
     router.push({ path: "/", })
   }

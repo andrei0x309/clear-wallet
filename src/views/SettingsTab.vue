@@ -13,7 +13,8 @@
     </ion-item>
     <div class="ion-padding" slot="content">
       <ion-list>
-      <ion-list>
+      <ion-item v-if="noAccounts">You need at least one account to touch this settings</ion-item>
+      <ion-list :disabled="noAccounts">
             <ion-item>
               <ion-label>Enable Storage Encryption</ion-label>
               <ion-toggle :key="updateKey" @ion-change="changeEncryption" slot="end" :checked="settings.s.enableStorageEnctyption"></ion-toggle>
@@ -24,16 +25,16 @@
           </ion-list>
           <ion-item :disabled="!settings.s.enableStorageEnctyption">
             <ion-label>Enable Auto Lock</ion-label>
-            <ion-toggle :key="updateKey"  slot="end" :checked="settings.s.lockOutEnabled"></ion-toggle>
+            <ion-toggle :key="updateKey" @ion-change="changeAutoLock" slot="end" :checked="settings.s.lockOutEnabled"></ion-toggle>
           </ion-item>
           <ion-list>
-          <ion-item  :disabled="!settings.s.enableStorageEnctyption || settings.s.lockOutEnabled">
+          <ion-item  :disabled="!settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled">
             <ion-label>Auto-lock Period: (2-120) minutes</ion-label>
           </ion-item> 
-          <ion-item  :disabled="!settings.s.enableStorageEnctyption || settings.s.lockOutEnabled">
+          <ion-item  :disabled="!settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled">
           <ion-input :key="updateKey"  v-model="settings.s.lockOutPeriod" type="number"></ion-input>
         </ion-item>
-        <ion-item  :disabled="!settings.s.enableStorageEnctyption || settings.s.lockOutEnabled">
+        <ion-item  :disabled="!settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled">
           <ion-button @click="setTime">Set Auto-lock</ion-button>
       </ion-item>
       </ion-list>
@@ -136,9 +137,10 @@
           <ion-header>
             <ion-toolbar>
               <ion-buttons slot="start">
-                <ion-button @click="mpModal=false">Close</ion-button>
+                <ion-button @click="modalGetPassword?.reject ? (() => { modalGetPassword.reject(); modalGetPassword = null })() : mpModal=false">Close</ion-button>
               </ion-buttons>
-              <ion-title>Create Encryption Password</ion-title>
+              <ion-title v-if="!settings.s.enableStorageEnctyption">Create Encryption Password</ion-title>
+              <ion-title v-else>Enter Encryption Password</ion-title>
             </ion-toolbar>
           </ion-header>
           <ion-content class="ion-padding">
@@ -166,13 +168,13 @@
       </ion-list>
     </div>
       <ion-item>
-          <ion-button @click="confirmModal">Confirm</ion-button>
+          <ion-button @click="modalGetPassword?.resolve ? (() => { modalGetPassword.resolve(); modalGetPassword = null })() : confirmModal()">Confirm</ion-button>
         </ion-item>
           </ion-content>
       </ion-modal>
       <ion-alert
       :is-open="alertOpen"
-      header="Error"
+      :header="alertHeader"
       :message="alertMsg"
       :buttons="['OK']"
       @didDismiss="alertOpen=false"
@@ -184,8 +186,9 @@
 <script lang="ts">
 import { defineComponent, ref, reactive, Ref } from "vue";
 import { storageWipe, getSettings, setSettings, getAccounts, saveSelectedAccount, replaceAccounts } from "@/utils/platform";
-import { decrypt, encrypt } from "@/utils/webCrypto"
-// import { Account } from '@/extension/type'
+import { decrypt, encrypt, getCryptoParams } from "@/utils/webCrypto"
+import { Account } from '@/extension/types'
+import { exportFile } from '@/utils/misc'
 import type { Settings } from "@/extension/types"
 import {
   IonContent,
@@ -244,7 +247,11 @@ export default defineComponent({
     const alertMsg = ref('');
     const toastState = ref(false);
     const toastMsg = ref('');
+    const alertHeader = ref('Error')
     const importFile = ref(null) as unknown as Ref<HTMLInputElement>
+    type ModalPromisePassword =  null | { resolve: ((p?: unknown) => void), reject: ((p?: unknown) => void)}
+    const modalGetPassword = ref(null) as Ref<ModalPromisePassword>
+    const noAccounts = ref(true)
 
     const wipeStorage = async () => {
       loading.value = true;
@@ -266,6 +273,12 @@ export default defineComponent({
       updateKey.value++
     }
 
+    const changeAutoLock = async () => {
+      settings.s.lockOutEnabled = !settings.s.lockOutEnabled
+      updateKey.value++
+      await saveSettings()
+    }
+
     const changeEncryption = async () => {
       loading.value = true
       mpModal.value = true
@@ -276,6 +289,7 @@ export default defineComponent({
       loading.value = true
       if(mpPass.value.length  < 3) {
         loading.value = false
+        alertHeader.value = 'Error'
         alertMsg.value = 'Password is too short. More than 3 characters are required.';
         alertOpen.value = true
         setEncryptToggle(settings.s.enableStorageEnctyption)
@@ -285,14 +299,16 @@ export default defineComponent({
       if (!settings.s.enableStorageEnctyption) {
         if (mpPass.value !== mpConfirm.value) {
         loading.value = false
+        alertHeader.value = 'Error'
         alertMsg.value = 'Password and confirm password do not match';
         alertOpen.value = true
         setEncryptToggle(settings.s.enableStorageEnctyption)
         return
       }
       let accounts = await getAccounts()
+      const cryptoParams = await getCryptoParams(mpPass.value)
       const accProm = accounts.map(async a => {
-        a.encPk = await encrypt(mpPass.value, a.pk)
+        a.encPk = await encrypt(a.pk, cryptoParams)
         a.pk = ''
         return a
       })
@@ -307,12 +323,14 @@ export default defineComponent({
       } else {
         try {
         let accounts = await getAccounts()
+        const cryptoParams = await getCryptoParams(mpPass.value)
         const accProm = accounts.map(async a => {
           if(a.encPk) {
-            a.pk = await decrypt(a.encPk, mpPass.value)
+            a.pk = await decrypt(a.encPk, cryptoParams)
           }
           return a
         })
+        accProm.forEach( a => a.catch(e => console.log(e)) )
         accounts = await Promise.all(accProm)
         await replaceAccounts(accounts)
         await saveSelectedAccount(accounts[0])
@@ -323,8 +341,10 @@ export default defineComponent({
         mpPass.value = ''
         mpConfirm.value = ''
         mpModal.value = false
-        } catch {
+        } catch(error) {
+        console.log(error)
         loading.value = false
+        alertHeader.value = 'Error'
         alertMsg.value = 'Decryption failed, password is not correct.';
         alertOpen.value = true
         setEncryptToggle(settings.s.enableStorageEnctyption)
@@ -348,13 +368,13 @@ export default defineComponent({
         reader.onload = (event) => {
           const json = JSON.parse(event?.target?.result as string)
           if(!json.length){
-            return resolve({ error: 'JSON format is wrong. Corrrect JSON format is: [{ "name": "Account Name", "pk": "Private Key" },{...}]' })
+            return resolve({ error: 'JSON format is wrong. Corrrect JSON format is: [{ "name": "Account Name", "pk": "Private Key", "address": "0x..." },{...}]' })
           }
-          const test = json.some((e:any) => ( !('pk' in e ) || !('name' in e) || !(e.pk.length !== 66 && e.pk.length !== 64)))
+          const test = json.some((e:any) => ( !('pk' in e ) || !('name' in e) || !('address' in e) || !(e.pk.length === 66 || e.pk.length === 64)))
           if(test) {
-            return resolve({ error: 'JSON format is wrong. Corrrect JSON format is: [{ "name": "Account Name", "pk": "Private Key" },{...}], Also PK must be valid' })
+            return resolve({ error: 'JSON format is wrong. Corrrect JSON format is: [{ "name": "Account Name", "pk": "Private Key", "address": "0x..."  },{...}], Also PK must be valid (66 || 64 length) !' })
           }
-          return resolve({ error: false })
+          return resolve({ error: false, json })
         }
         reader.readAsText(importFile.value?.files?.[0] as File);
         
@@ -366,6 +386,42 @@ export default defineComponent({
       }
     })
     }
+
+    const getPassword = () => {
+      return new Promise( (resolve, reject) => {
+        modalGetPassword.value = { resolve, reject }
+        mpModal.value = true
+      })
+    }
+
+    const promptForPassword = async (accounts: Account[]) => {
+      let isCorectPass = false
+              do {
+              try {
+              await getPassword()
+              modalGetPassword.value = null
+            } catch {
+              alertHeader.value = 'Error'
+              alertMsg.value = "Password is required!"
+              alertOpen.value = true
+              mpModal.value = false
+              return false
+            }
+            try {
+              const cryptoParams = await getCryptoParams(mpPass.value)
+              if(accounts?.[0]?.encPk) {
+                await decrypt(accounts[0].encPk, cryptoParams)
+              }
+            isCorectPass = true
+              } catch {
+                isCorectPass = false
+                alertHeader.value = 'Error'
+                alertMsg.value = "Password is wrong!"
+                alertOpen.value = true
+              }
+            } while (!isCorectPass);
+            return true
+    }
     
     const importAcc = async () => {
       const validation = await validateFile() as { error: any }
@@ -374,20 +430,71 @@ export default defineComponent({
         alertOpen.value = true
         return 
       }
+      const accounts = await getAccounts()
+      const newAccounts = (validation as unknown as { json: Account[] }).json
+      if(settings.s.enableStorageEnctyption) {
+              const hasPass = await promptForPassword(accounts)      
+              if(hasPass) {
+              const cryptoParams = await getCryptoParams(mpPass.value)
+              const accProm = newAccounts.map(async a => {
+              if(a.pk.length === 64) {
+                a.pk = `0x${a.pk}`
+              }
+              a.encPk = await encrypt(a.pk, cryptoParams)
+              return a
+               })
+              const encNewAccounts = await Promise.all(accProm)
+              await replaceAccounts([...accounts, ...encNewAccounts])
+              alertHeader.value = 'Success'
+              alertMsg.value = "Successfully imported new accounts."
+              alertOpen.value = true
+              noAccounts.value = false
+              }
+              return false
+            } else {
+              await replaceAccounts([...accounts, ...newAccounts.map( a => { a.encPk = ''; return a })])
+              alertHeader.value = 'Success'
+              alertMsg.value = "Successfully imported new accounts."
+              alertOpen.value = true
+              noAccounts.value = false
+            }
     }
 
     const exportAcc = async () => {
-      // 
+      const accounts = await getAccounts()
+      if(!accounts.length) {
+        alertMsg.value = "You need at least one account to export."
+        alertOpen.value = true
+      }
+      if(settings.s.enableStorageEnctyption) {
+        const hasPass = await promptForPassword(accounts)   
+        if(hasPass) {
+          const cryptoParams = await getCryptoParams(mpPass.value)
+          const accProm = accounts.map(async a => {
+              a.pk = await decrypt(a.encPk, cryptoParams)
+              return a
+               })
+              const encNewAccounts = await Promise.all(accProm)
+              exportFile('wallet_export.json', JSON.stringify(encNewAccounts, null, 2))
+        }
+        return false
+      } else {
+        exportFile('wallet_export.json', JSON.stringify(accounts, null, 2))
+      }
     }
 
 
-    onIonViewWillEnter( () => {
-      getSettings().then((storeSettings) =>
+    onIonViewWillEnter(async () => {
+      await Promise.all([getSettings().then((storeSettings) =>
       {
         settings.s = storeSettings
-        loading.value = false
-      })
-      
+      }),
+      getAccounts().then((accounts) => {
+        if(accounts.length) {
+          noAccounts.value = false
+        }
+      })])
+      loading.value = false
     })
 
     const setTime = async () => {
@@ -428,7 +535,11 @@ export default defineComponent({
       toastMsg,
       importAcc,
       exportAcc,
-      importFile
+      importFile,
+      modalGetPassword,
+      noAccounts,
+      alertHeader,
+      changeAutoLock
     };
   },
 });

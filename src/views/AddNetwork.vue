@@ -189,7 +189,11 @@ export default defineComponent({
         networks[chainId.value] = network
         const p2 = replaceNetworks(networks)
         await Promise.all([p1, p2])
-        router.push('/')
+        if(isEdit) {
+          router.push('networks')
+        }else {
+          router.push('/')
+        }
         resetFields()
     }
 
@@ -198,7 +202,11 @@ export default defineComponent({
     }
 
     const onCancel = () => {
+      if(isEdit) {
+        router.push('networks')
+      }else {
         router.push('/')
+      }
     }
 
     const fillTemplate = (network: typeof mainNets[1] ) =>{

@@ -1,4 +1,4 @@
-import { getAccounts, getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl } from '@/utils/platform';
+import { getAccounts, getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl, addToHistory } from '@/utils/platform';
 import { userApprove, userReject, rIdWin, rIdData } from '@/extension/userRequest'
 import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber } from '@/utils/wallet'
 import type { RequestArguments } from '@/extension/types'
@@ -164,7 +164,22 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                             break
                         }
                         const [account, network] = await Promise.all([getSelectedAccount(), getSelectedNetwork()])
-                        if(!account || !network) {
+                        if(!account || !('address' in account)) {
+                            await chrome.windows.create({
+                                height: 450,
+                                width: 400,
+                                url: chrome.runtime.getURL(`index.html?route=sign-tx&param=${encodeURIComponent('No account is selected you need to have an account selected before trying to make a transaction')}&rid=${String(message?.resId ?? '')}`),
+                                type: 'popup'
+                            })
+                            return
+                        }
+                        if(!network || !('chainId' in network)) {
+                            await chrome.windows.create({
+                                height: 450,
+                                width: 400,
+                                url: chrome.runtime.getURL(`index.html?route=sign-tx&param=${encodeURIComponent('No network is selected you need to have a network selected before trying to make a transaction')}&rid=${String(message?.resId ?? '')}`),
+                                type: 'popup'
+                            })
                             return
                         }
                         params.from = account.address
@@ -197,6 +212,13 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         sendResponse(tx)
                         const buttons = {} as any
                         const network = await getSelectedNetwork()
+                        addToHistory({
+                            date: Date.now(),
+                            txHash: tx.hash,
+                            chainId: network.chainId,
+                            ...(network.explorer ? {txUrl: `${network.explorer}/tx/${tx.hash}`.replace('//', '/') } : {}),
+                            webiste: (message?.website)
+                        })
                         const notificationId = crypto.randomUUID()
                         if(network?.explorer) {
                             notificationUrl = `${network.explorer}/tx/${tx.hash}`.replace('//', '/')
@@ -246,6 +268,18 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                 case ('personal_sign' || 'eth_sign'): {
                     try {
                     
+                    const account = await getSelectedAccount()
+                    
+                    if(!account || !('address' in account)) {
+                        await chrome.windows.create({
+                            height: 450,
+                            width: 400,
+                            url: chrome.runtime.getURL(`index.html?route=sign-tx&param=${encodeURIComponent('No account is selected you need to have an account selected before trying sign a message')}&rid=${String(message?.resId ?? '')}`),
+                            type: 'popup'
+                        })
+                        return
+                    }
+
                     await new Promise((resolve, reject) => {
                     chrome.windows.create({
                         height: 450,

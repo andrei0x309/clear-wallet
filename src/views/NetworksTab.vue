@@ -14,6 +14,11 @@
     </ion-header>
 
     <ion-content class="ion-padding">
+      <ion-item v-if="loading || Object.keys(networks).length < 1">
+        <ion-label>No EVM Networks found</ion-label>
+        <ion-button @click="goToAddNetwork">Add Network</ion-button>
+      </ion-item>
+
         <ion-list v-for="network of networks" :key="network.chainId">
        <ion-item>
         <ion-avatar v-if="(mainNets as any)[network.chainId]?.icon" style="margin-right: 1rem; width: 1.8rem; height:1.8rem;">
@@ -101,6 +106,12 @@ export default defineComponent({
       router.push(`add-network/edit/${chainId}`)
     }
 
+
+    const goToAddNetwork = () => {
+      router.push("/tabs/add-network");
+    };
+
+
     onIonViewWillEnter(() => {
         loadData()
       })
@@ -115,7 +126,9 @@ export default defineComponent({
         getUrl,
         mainNets,
         deleteNetwork,
-        editNetwork
+        editNetwork,
+        loading,
+        goToAddNetwork
       }
 
   }

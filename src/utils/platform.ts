@@ -1,4 +1,4 @@
-import type { Network, Account, Prices, Settings, Networks } from '@/extension/types'
+import type { Network, Account, Prices, Settings, Networks, HistoryItem } from '@/extension/types'
 import type { Ref } from 'vue'
 
 const defaultSettings = {
@@ -77,6 +77,21 @@ export const setPrices = async (prices: Prices): Promise<void> => {
 
 export const getPrices = async (): Promise<Prices> => {
     return (await storageGet('prices'))?.prices ?? {} as unknown as Prices
+}
+
+export const getHistory = async (): Promise<HistoryItem[]> => {
+    return (await storageGet('history'))?.history ?? [] as unknown as Prices
+}
+
+export const addToHistory = async (historyItem: HistoryItem): Promise<void> => {
+    const history = await getHistory()
+    if (history.length >= 100) {
+        history.pop()
+        history.unshift(historyItem)
+    } else {
+        history.unshift(historyItem)
+    }
+    await storageSave('history', history)
 }
 
 export const getSettings = async (): Promise<Settings> => {

@@ -2,7 +2,8 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Add Account</ion-title>
+        <ion-title v-if="!isEdit" >Add Account</ion-title>
+        <ion-title v-else >Edit Account</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -15,11 +16,12 @@
       <ion-label>Get Random Name</ion-label>
       <ion-button @click="getRandomName" >Generate</ion-button>
       </ion-item>
-      <ion-item>
-        <ion-icon style="margin-right: 0.5rem;" @click="paste('pasteRpc')" :icon="clipboardOutline" button /><ion-label>PK</ion-label>
+      <ion-item v-if="!isEdit">
+        <ion-icon style="margin-right: 0.5rem;" @click="paste('pastePk')" :icon="clipboardOutline" button/>
+        <ion-label button>PK</ion-label>
         <ion-input id="pastePk" v-model="pk"></ion-input>
       </ion-item>
-      <ion-item>
+      <ion-item v-if="!isEdit">
       <ion-label>Get Random PK</ion-label>
       <ion-button @click="generateRandomPk" >Generate</ion-button>
       </ion-item>
@@ -40,10 +42,12 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonButton, IonAlert, IonIcon } from "@ionic/vue";
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonButton, IonAlert, IonIcon, onIonViewWillEnter } from "@ionic/vue";
 import { ethers } from "ethers"
 import { saveSelectedAccount, getAccounts, saveAccount, getRandomPk, smallRandomString, paste } from "@/utils/platform";
 import router from "@/router";
+import { useRoute } from 'vue-router'
+import type { Account } from '@/extension/types'
 
 import { clipboardOutline } from "ionicons/icons";
 
@@ -54,11 +58,26 @@ export default defineComponent({
     const pk = ref('')
     const alertOpen = ref(false)
     const alertMsg = ref('')
+    const route = useRoute()
+    const isEdit = route.path.includes('/edit')
+    const paramAddress = route.params.address ?? ""
+    let accountsProm: Promise<Account[] | undefined>
 
     const resetFields = () => {
       name.value = ''
       pk.value = ''
     }
+
+    onIonViewWillEnter(async () => {
+      if(isEdit && paramAddress) {
+        accountsProm = getAccounts()
+        const accounts = await accountsProm as Account[]
+        const acc = accounts.find(account => account.address === paramAddress)
+        if(acc) {
+          name.value = acc.name
+        }
+      }
+    })
 
     const onAddAccount = async () => {
         let p1 = Promise.resolve()
@@ -73,7 +92,10 @@ export default defineComponent({
 
 
         const wallet = new ethers.Wallet(pk.value)
-        const accounts = await getAccounts()
+        if(!accountsProm) {
+          accountsProm = getAccounts()
+        }
+        const accounts = await accountsProm as Account[]
         if((accounts.length ?? 0) < 1 ){
             p1 = saveSelectedAccount({
                 address: wallet.address,
@@ -94,7 +116,11 @@ export default defineComponent({
                 encPk: ''
         })
         await Promise.all([p1, p2])
-        router.push('/')
+        if(isEdit) {
+          router.push('accounts')
+        }else {
+          router.push('/')
+        }
         resetFields()
     }
 
@@ -107,7 +133,11 @@ export default defineComponent({
     }
 
     const onCancel = () => {
-        router.push('/')
+        if(isEdit) {
+          router.push('accounts')
+        }else {
+          router.push('/')
+        }
     }
 
     return {
@@ -120,7 +150,8 @@ export default defineComponent({
         generateRandomPk,
         getRandomName,
         clipboardOutline,
-        paste
+        paste,
+        isEdit
     }
 
   }

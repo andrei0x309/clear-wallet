@@ -20,6 +20,10 @@
     message="Copied to clipboard"
     :duration="1500"
   ></ion-toast>
+      <ion-item v-if="loading || accounts.length < 1">
+        <ion-label>No EVM accounts found</ion-label>
+        <ion-button @click="goToAddAccount">Add Account</ion-button>
+      </ion-item>
         <ion-list v-for="account of accounts" :key="account.address">
        <ion-item>
        <ion-label>
@@ -32,7 +36,7 @@
         <ion-item>
         <ion-chip>View Pk</ion-chip>
         <ion-chip @click="deleteAccount(account.address)">Delete</ion-chip>
-        <ion-chip @click="editName(account.address)">Edit Name</ion-chip>
+        <ion-chip @click="editAccount(account.address)">Edit Name</ion-chip>
         </ion-item>
         </ion-list>
     </ion-content>
@@ -60,6 +64,7 @@ import {
 } from "@ionic/vue";
 
 import { addCircleOutline, copyOutline } from "ionicons/icons";
+import router from "@/router";
 import type { Account } from '@/extension/types'
 
 export default defineComponent({
@@ -102,9 +107,14 @@ export default defineComponent({
         await replaceAccounts([...accounts.value])
         loading.value = false
     }
-    const editName = async (name: string) => {
-      // do nothing
+
+    const editAccount = (address: string) => {
+      router.push(`add-account/edit/${address}`)
     }
+
+    const goToAddAccount = () => {
+      router.push("/tabs/add-account");
+    };
 
     onIonViewWillEnter(() => {
         loadData()
@@ -118,7 +128,9 @@ export default defineComponent({
         copyAddress,
         getToastRef,
         deleteAccount,
-        editName
+        editAccount,
+        loading,
+        goToAddAccount
       }
 
   }

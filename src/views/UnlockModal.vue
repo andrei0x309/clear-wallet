@@ -69,7 +69,7 @@ import {
   replaceAccounts,
   saveSelectedAccount
 } from "@/utils/platform";
-import { decrypt } from "@/utils/webCrypto"
+import { decrypt, getCryptoParams } from "@/utils/webCrypto"
 
 export default defineComponent({
   props: {
@@ -107,8 +107,9 @@ export default defineComponent({
         try {
         loading.value = true
         let accounts = await getAccounts()
+        const cryptoParams = await getCryptoParams(mpPass.value)
         const accProm = accounts.map(async a => {
-          a.pk = await decrypt(a.encPk, mpPass.value)
+          a.pk = await decrypt(a.encPk, cryptoParams)
           return a
         })
         accounts = await Promise.all(accProm)

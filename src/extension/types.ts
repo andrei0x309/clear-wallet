@@ -27,6 +27,7 @@ export interface RequestArguments {
     method: string;
     params?: any[];
     resId?: string
+    website?: string
 }
 
 export interface ProviderRpcError extends Error {
@@ -51,4 +52,14 @@ export interface Settings {
     theme: 'system' | 'light' | 'dark'
     lastLock: number
     lockOutBlocked: boolean
+}
+
+export type listnerType = 'accountsChanged' | 'connect' | 'disconnect' | 'chainChanged'
+
+export interface HistoryItem {
+    date: number
+    txUrl?: string
+    chainId?: number
+    webiste?: string
+    txHash: string
 }

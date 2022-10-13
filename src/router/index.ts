@@ -24,6 +24,10 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/ContractError.vue'),
   },
   {
+    path: '/wallet-error/:rid/:error',
+    component: () => import('@/views/WalletError.vue'),
+  },
+  {
     path: '/tabs/',
     component: AppTabs,
     children: [
@@ -57,6 +61,10 @@ const routes: Array<RouteRecordRaw> = [
       },
       {
         path: 'add-account',
+        component: () => import('@/views/AddAccount.vue'),
+      },
+      {
+        path: 'add-account/edit/:address',
         component: () => import('@/views/AddAccount.vue'),
       },
       {

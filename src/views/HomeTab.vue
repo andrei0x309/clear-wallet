@@ -15,7 +15,7 @@
           <ion-label>Selected Account: {{ selectedAccount?.name }}</ion-label>
           <ion-button @click="accountsModal = true">Select</ion-button>
         </ion-item>
-        <ion-item button @click="copyAddress(selectedAccount.address, getToastRef())">
+        <ion-item button @click="copyAddress(selectedAccount?.address, getToastRef())">
           <p style="font-size: 0.7rem">{{ selectedAccount?.address }}</p>
           <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
         </ion-item>
@@ -67,7 +67,7 @@
           </ion-header>
           <ion-content class="ion-padding">
             <ion-list style="margin-bottom: 4rem">
-              <ion-radio-group :value="selectedAccount.address">
+              <ion-radio-group :value="selectedAccount?.address ?? ''">
                 <ion-list-header>
                   <ion-label>Accounts</ion-label>
                 </ion-list-header>
@@ -168,10 +168,12 @@ import {
   replaceNetworks,
   getUrl,
   saveSelectedNetwork,
+  numToHexStr
 } from "@/utils/platform";
 import type { Network, Account, Networks } from "@/extension/types";
 import { mainNets } from "@/utils/networks";
 import router from "@/router";
+import { triggerListner } from '@/extension/listners'
 
 import { copyOutline } from "ionicons/icons";
 
@@ -251,8 +253,9 @@ export default defineComponent({
         // console.log(({ [address]: accounts.value[address], ...accounts.value}))
         accounts.value.splice(findIndex, 1);
         accounts.value.splice(0,0,selectedAccount.value)
-        await replaceAccounts([...accounts.value])
-        
+        const newAccounts = [...accounts.value]
+        await replaceAccounts(newAccounts)
+        triggerListner('accountsChanged', newAccounts.map(a => a.address)) 
       }
       accountsModal.value = false;
       loading.value = false;
@@ -266,6 +269,7 @@ export default defineComponent({
           Object.assign({ [chainId]: networks.value[chainId] }, networks.value)
         );
         selectedNetwork.value = networks.value[chainId];
+        triggerListner('chainChanged', numToHexStr(chainId))
       }
       networksModal.value = false;
       loading.value = false;

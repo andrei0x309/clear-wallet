@@ -48,31 +48,30 @@ async function getKey(passwordBytes: Uint8Array) {
     );
   }
 
-export const encrypt = async (password: string, data:string) => {
+export const getCryptoParams = async(password: string): Promise<{ key: CryptoKey, iv: any }> => {
+  const enc = new TextEncoder()
+  const encKey = enc.encode(password)
+  return { key: await getKey(encKey), iv:await getIv() }
+}
+
+export const encrypt = async (data: string, cryptoParams: { key: CryptoKey, iv: any }) => {
     const enc = new TextEncoder()
     const encData = enc.encode(data)
-    const encKey = enc.encode(password)
-    const key = await getKey(encKey)
-    const iv = await getIv()
     const encResult = await crypto.subtle.encrypt(
       {
         name: "AES-GCM",
-        iv,
+        iv: cryptoParams.iv,
       },
-      key,
+      cryptoParams.key,
       encData,
     )
     return JSON.stringify(new Uint8Array(encResult))
 }
 
-export const decrypt = async (encryptedData: string, password: string) => {
-    const enc = new TextEncoder()
-    const encKey = enc.encode(password)
-    const key = await getKey(encKey)
-    const iv = await getIv()
-    const encryptedUint= new Uint8Array(Object.values(JSON.parse(encryptedData)));
+export const decrypt = async (encryptedData: string, cryptoParams: { key: CryptoKey, iv: any }) => {
+    const encryptedUint = new Uint8Array(Object.values(JSON.parse(encryptedData)));
     const contentBytes = new Uint8Array(
-      await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encryptedUint)
+      await crypto.subtle.decrypt({ name: "AES-GCM", iv:cryptoParams.iv }, cryptoParams.key, encryptedUint)
     );
     return new TextDecoder().decode(contentBytes)
   }

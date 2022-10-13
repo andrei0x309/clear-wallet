@@ -1,3 +1,4 @@
+import { getSelectedNetwork, numToHexStr } from "@/utils/platform";
 
 const allowedMethods = {
   'eth_accounts': true,
@@ -19,18 +20,33 @@ window.addEventListener("message", (event) => {
   if (event.source != window)
       return;
 
-  if (event.data.type && (event.data.type == "CLWALLET_CONTENT")) {
+  if (event.data.type && (event.data.type === "CLWALLET_CONTENT")) {
     event.data.data.resId = event.data.resId
     if((event?.data?.data?.method ?? 'x') in allowedMethods) {
     chrome.runtime.sendMessage(event.data.data, (res) => {
-      const data = { type: "CLWALLET_PAGE", data: res, resId: event.data.resId };
+      const data = { type: "CLWALLET_PAGE", data: res, resId: event.data.resId, website: window?.location?.href ?? '' };
       console.log('data back', data)
       window.postMessage(data, "*");
     })
-  } else {
+  }
+   else {
     const data = { type: "CLWALLET_PAGE", data: { error: true, message: 'Unknown method requested'}, resId: event.data.resId };
     window.postMessage(data, "*");
   }
+  } else if (event.data.type && (event.data.type === "CLWALLET_PING")) {
+    getSelectedNetwork().then(network => {
+      const data = { type: "CLWALLET_PAGE_LISTENER", data: {
+        listener: 'connected',
+        data: {
+          chainId: numToHexStr(network.chainId ?? 0)
+        }
+      }};
+      window.postMessage(data, "*");
+    })
+  } else if (event.data.type && (event.data.type === "CLWALLET_EXT_LISTNER")) {
+    const data = { type: "CLWALLET_PAGE_LISTENER", data: event.data.data,  };
+    console.log('data listner', data)
+    window.postMessage(data, "*");
   }
 });
 
