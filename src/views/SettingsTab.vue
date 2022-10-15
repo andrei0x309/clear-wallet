@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <ion-accordion-group v-if="!loading">
+  <ion-accordion-group :value="defaultAccordionOpen" v-if="!loading">
   <ion-accordion value="1">
     <ion-item slot="header" color="light">
       <ion-label>Security</ion-label>
@@ -28,7 +28,7 @@
             <ion-toggle :key="updateKey" @ion-change="changeAutoLock" slot="end" :checked="settings.s.lockOutEnabled"></ion-toggle>
           </ion-item>
           <ion-list>
-          <ion-item  :disabled="!settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled">
+          <ion-item :disabled="!settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled">
             <ion-label>Auto-lock Period: (2-120) minutes</ion-label>
           </ion-item> 
           <ion-item  :disabled="!settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled">
@@ -41,7 +41,7 @@
           <ion-list>
             <ion-item>
               <ion-label>Permanent Lock</ion-label>
-              <ion-toggle :key="updateKey" slot="end" :disabled="!settings.s.enableStorageEnctyption" :checked="settings.s.encryptAfterEveryTx"></ion-toggle>
+              <ion-toggle  @ion-change="changePermaLock" :key="updateKey" slot="end" :disabled="!settings.s.enableStorageEnctyption" :checked="settings.s.encryptAfterEveryTx"></ion-toggle>
             </ion-item>
             <ion-item>Will require decrypt pass before any sign or transaction</ion-item>
           </ion-list>
@@ -54,11 +54,12 @@
     </ion-item>
     <div class="ion-padding" slot="content">
       <ion-list>
-              <ion-radio-group :value="settings.s.theme">
+              <ion-radio-group :value="radioTheme">
                   <ion-item>
                     <ion-radio
                       slot="start"
                       value="system"
+                      @click="changeTheme('system')"
                     />
                     <ion-label>System Default</ion-label>
                   </ion-item>
@@ -66,6 +67,7 @@
                     <ion-radio
                       slot="start"
                       value="dark"
+                      @click="changeTheme('dark')"
                     />
                     <ion-label>Dark</ion-label>
                   </ion-item>
@@ -73,6 +75,7 @@
                     <ion-radio
                       slot="start"
                       value="light"
+                      @click="changeTheme('light')"
                     />
                     <ion-label>Light</ion-label>
                   </ion-item>
@@ -85,7 +88,16 @@
       <ion-label>About</ion-label>
     </ion-item>
     <div class="ion-padding" slot="content">
-      About text
+      <p>Clear EVM Wallet (CLW) is a fully open-source wallet built with Vue, Ionic, and Ethers.</p>
+      <p>It emulates Metamask Wallet and can be used as a drop-in replacement, right now if you have both extensions, CLW will overwrite Metamask.</p>
+      <p>Main philosophy of the wallet is: no trackers, full control, export/import JSONs with accounts, fast generate new accounts, and wipe everything with one click.</p>
+      <p>Github Repo: <a href="#" @click="openTab('https://github.com/andrei0x309/clear-wallet')">LINK</a></p>
+      <br/>
+      <p style="margin-bottom: 0.2rem">Some Web3 Projects I personally appreciate:</p>
+      <p>YUP - web3 social platform <a href="#" @click="openTab('https://app.yup.io')">LINK</a></p>
+      <p>Crypto-Leftists: web3 left-wing crypto community <a href="#" @click="openTab('https://discord.gg/gzA4bTCdhb')">LINK</a></p>
+      <p>Idena: web3 fully private identity provider blockchain <a href="#" @click="openTab('https://www.idena.io/')">LINK</a></p>
+      <p>Mirror: web3 publishing platform <a href="#" @click="openTab('https://mirror.xyz')">LINK</a></p>
     </div>
   </ion-accordion>
   <ion-accordion value="4">
@@ -146,7 +158,7 @@
           <ion-content class="ion-padding">
             <ion-list v-if="settings.s.enableStorageEnctyption">
           <ion-item>
-            <ion-label>Old Passord</ion-label>
+            <ion-label>Old Password</ion-label>
           </ion-item> <ion-item>
           <ion-input v-model="mpPass" type="password"></ion-input>
         </ion-item>
@@ -185,7 +197,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, reactive, Ref } from "vue";
-import { storageWipe, getSettings, setSettings, getAccounts, saveSelectedAccount, replaceAccounts } from "@/utils/platform";
+import { storageWipe, getSettings, setSettings, getAccounts, saveSelectedAccount, replaceAccounts, openTab } from "@/utils/platform";
 import { decrypt, encrypt, getCryptoParams } from "@/utils/webCrypto"
 import { Account } from '@/extension/types'
 import { exportFile } from '@/utils/misc'
@@ -252,6 +264,8 @@ export default defineComponent({
     type ModalPromisePassword =  null | { resolve: ((p?: unknown) => void), reject: ((p?: unknown) => void)}
     const modalGetPassword = ref(null) as Ref<ModalPromisePassword>
     const noAccounts = ref(true)
+    const defaultAccordionOpen = ref("0")
+    const radioTheme = ref('system') as Ref<'system' | 'light' | 'dark'>
 
     const wipeStorage = async () => {
       loading.value = true;
@@ -271,12 +285,30 @@ export default defineComponent({
     const setEncryptToggle = (state: boolean) => {
       settings.s.enableStorageEnctyption = state
       updateKey.value++
+      defaultAccordionOpen.value = "1"
     }
 
     const changeAutoLock = async () => {
       settings.s.lockOutEnabled = !settings.s.lockOutEnabled
       updateKey.value++
       await saveSettings()
+      defaultAccordionOpen.value = "1"
+    }
+
+    const changePermaLock = async () => {
+      settings.s.lockOutEnabled = !settings.s.encryptAfterEveryTx
+      updateKey.value++
+      await saveSettings()
+      defaultAccordionOpen.value = "1"
+    }
+
+    const changeTheme = async (theme: 'system' | 'light' | 'dark') => {
+      document.body.classList.remove(radioTheme.value)
+      document.body.classList.add(theme)
+      radioTheme.value = theme
+      settings.s.theme = theme
+      await saveSettings()
+      defaultAccordionOpen.value = "2"
     }
 
     const changeEncryption = async () => {
@@ -352,7 +384,6 @@ export default defineComponent({
         }
       }
 
-    // settings.s.enableStorageEnctyption = true;
     loading.value = false
     }
 
@@ -488,6 +519,7 @@ export default defineComponent({
       await Promise.all([getSettings().then((storeSettings) =>
       {
         settings.s = storeSettings
+        radioTheme.value = settings.s.theme
       }),
       getAccounts().then((accounts) => {
         if(accounts.length) {
@@ -539,7 +571,12 @@ export default defineComponent({
       modalGetPassword,
       noAccounts,
       alertHeader,
-      changeAutoLock
+      changeAutoLock,
+      defaultAccordionOpen,
+      changeTheme,
+      openTab,
+      radioTheme,
+      changePermaLock
     };
   },
 });

@@ -6,8 +6,9 @@
 
 <script lang="ts">
 import { IonApp, IonRouterOutlet } from "@ionic/vue";
-import { defineComponent } from "vue";
-import { useRoute, useRouter} from "vue-router";
+import { defineComponent, onBeforeMount } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { getSettings } from '@/utils/platform'
 
 export default defineComponent({
   name: "App",
@@ -21,6 +22,14 @@ const router = useRouter()
 const { param, rid } = route.query;
 console.log(route?.query,'zzzzzzzzzzzzzzz')
 
+onBeforeMount( () => {
+  getSettings().then((settings) => {
+  if(settings.theme !== 'system') {
+    document.body.classList.remove(settings.theme === 'dark' ? 'light': 'dark')
+    document.body.classList.add(settings.theme)
+  }
+})
+})
 
 switch (route?.query?.route ?? "") {
   case "sign-msg": {
@@ -43,7 +52,7 @@ switch (route?.query?.route ?? "") {
   }
   case "wallet-error": {
     router.push({
-      path: `/wallet-error"/${rid}/${param}`
+      path: `/wallet-error/${rid}/${param}`
     });
     break;
   }

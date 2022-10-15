@@ -1,4 +1,5 @@
 import { getSelectedNetwork, numToHexStr } from "@/utils/platform";
+import type { RequestArguments  } from '@/extension/types'
 
 const allowedMethods = {
   'eth_accounts': true,
@@ -22,10 +23,11 @@ window.addEventListener("message", (event) => {
 
   if (event.data.type && (event.data.type === "CLWALLET_CONTENT")) {
     event.data.data.resId = event.data.resId
+    event.data.data.type = "CLWALLET_CONTENT_MSG"
     if((event?.data?.data?.method ?? 'x') in allowedMethods) {
     chrome.runtime.sendMessage(event.data.data, (res) => {
       const data = { type: "CLWALLET_PAGE", data: res, resId: event.data.resId, website: window?.location?.href ?? '' };
-      console.log('data back', data)
+      // console.log('data back', data)
       window.postMessage(data, "*");
     })
   }
@@ -36,18 +38,24 @@ window.addEventListener("message", (event) => {
   } else if (event.data.type && (event.data.type === "CLWALLET_PING")) {
     getSelectedNetwork().then(network => {
       const data = { type: "CLWALLET_PAGE_LISTENER", data: {
-        listener: 'connected',
+        listner: 'connect',
         data: {
           chainId: numToHexStr(network.chainId ?? 0)
         }
       }};
       window.postMessage(data, "*");
     })
-  } else if (event.data.type && (event.data.type === "CLWALLET_EXT_LISTNER")) {
-    const data = { type: "CLWALLET_PAGE_LISTENER", data: event.data.data,  };
-    console.log('data listner', data)
+  }
+});
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+chrome.runtime.onMessage.addListener((message: RequestArguments , sender, sendResponse) => {
+  if(message.type === "CLWALLET_EXT_LISTNER") {
+    const data = { type: "CLWALLET_PAGE_LISTENER", data: message.data  };
+    // console.log('data listner', data)
     window.postMessage(data, "*");
   }
+  return true
 });
 
 (function() {

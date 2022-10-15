@@ -80,7 +80,9 @@ if (!chrome.notifications.onButtonClicked.hasListener(viewTxListner)){
 }
 
 chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendResponse) => {
-    console.log(message);
+    if(message?.type !== "CLWALLET_CONTENT_MSG") {
+        return true
+    }
     (async () => {
         if (!('method' in message)) {
             sendResponse({
@@ -147,7 +149,6 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                 }
                 case 'eth_chainId': {
                     const network = await getSelectedNetwork()
-                    console.log(network, 'network')
                     const chainId = network?.chainId ?? 0
                     sendResponse(`0x${chainId.toString(16)}`)
                     break
@@ -168,7 +169,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                             await chrome.windows.create({
                                 height: 450,
                                 width: 400,
-                                url: chrome.runtime.getURL(`index.html?route=sign-tx&param=${encodeURIComponent('No account is selected you need to have an account selected before trying to make a transaction')}&rid=${String(message?.resId ?? '')}`),
+                                url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${encodeURIComponent('No account is selected you need to have an account selected before trying to make a transaction')}&rid=${String(message?.resId ?? '')}`),
                                 type: 'popup'
                             })
                             return
@@ -177,7 +178,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                             await chrome.windows.create({
                                 height: 450,
                                 width: 400,
-                                url: chrome.runtime.getURL(`index.html?route=sign-tx&param=${encodeURIComponent('No network is selected you need to have a network selected before trying to make a transaction')}&rid=${String(message?.resId ?? '')}`),
+                                url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${encodeURIComponent('No network is selected you need to have a network selected before trying to make a transaction')}&rid=${String(message?.resId ?? '')}`),
                                 type: 'popup'
                             })
                             return
@@ -242,11 +243,16 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         } as any)
 
                         } catch (err) {
-                            console.log(err)
                             sendResponse({
                                 error: true,
                                 code: rpcError.USER_REJECTED,
                                 message: 'TX Failed'
+                            })
+                            chrome.windows.create({
+                                height: 450,
+                                width: 400,
+                                url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${encodeURIComponent(String(err))}&rid=${String(message?.resId ?? '')}`),
+                                type: 'popup'
                             })
                             chrome.notifications.create({
                                 message: 'Transaction Failed',
@@ -274,7 +280,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         await chrome.windows.create({
                             height: 450,
                             width: 400,
-                            url: chrome.runtime.getURL(`index.html?route=sign-tx&param=${encodeURIComponent('No account is selected you need to have an account selected before trying sign a message')}&rid=${String(message?.resId ?? '')}`),
+                            url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${encodeURIComponent('No account is selected you need to have an account selected before trying sign a message')}&rid=${String(message?.resId ?? '')}`),
                             type: 'popup'
                         })
                         return
@@ -360,7 +366,8 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                     }
                     try {
                         chrome.windows.remove(sender.tab?.windowId ?? 0)
-                    }catch{
+                    }catch (e) {
+                        console.log(e)
                         // ignore
                     }
                     break

@@ -34,18 +34,42 @@
         <p style="font-size:0.7rem">{{ account.address }}</p><ion-icon :icon="copyOutline"></ion-icon>
         </ion-item>
         <ion-item>
-        <ion-chip>View Pk</ion-chip>
+        <ion-chip @click="viewPk(account.address)">View Pk</ion-chip>
         <ion-chip @click="deleteAccount(account.address)">Delete</ion-chip>
         <ion-chip @click="editAccount(account.address)">Edit Name</ion-chip>
         </ion-item>
         </ion-list>
+
+
+        <ion-modal
+        :is-open="pkModal"
+        @didDismiss="shownPk=''"
+      >
+          <ion-header>
+            <ion-toolbar>
+              <ion-buttons slot="start">
+                <ion-button @click="pkModal=false">Close</ion-button>
+              </ion-buttons>
+              <ion-title>View PK</ion-title>
+            </ion-toolbar>
+          </ion-header>
+          <ion-content class="ion-padding">
+        <ion-item @click="copyAddress(shownPk, getToastRef())" button>
+        <ion-icon style="margin-right: 0.5rem;" :icon="copyOutline" />
+        <ion-label button>PK</ion-label>
+        <ion-input id="pastePk" v-model="shownPk" readonly></ion-input>
+      </ion-item>
+          </ion-content>
+      </ion-modal>
+
+
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, Ref } from "vue";
-import { getAccounts, copyAddress, replaceAccounts } from "@/utils/platform"
+import { getAccounts, copyAddress, replaceAccounts, getSettings, clearPk } from "@/utils/platform"
 import {
   IonContent,
   IonHeader,
@@ -60,12 +84,17 @@ import {
   IonButtons,
   IonButton,
   onIonViewWillEnter,
-  IonToast
+  IonToast,
+  modalController,
+  IonInput,
+  IonModal
 } from "@ionic/vue";
 
 import { addCircleOutline, copyOutline } from "ionicons/icons";
 import router from "@/router";
-import type { Account } from '@/extension/types'
+import UnlockModal from '@/views/UnlockModal.vue'
+
+import type { Account, Settings } from '@/extension/types'
 
 export default defineComponent({
   components: {
@@ -81,19 +110,26 @@ export default defineComponent({
     IonChip,
     IonButtons,
   IonButton,
-  IonToast
+  IonToast,
+  IonInput,
+  IonModal
   },
   setup () {
-    const accounts = ref({}) as Ref<Account[]>
+    const accounts = ref([]) as Ref<Account[]>
     const loading = ref(true)
     const toastState = ref(false)
+    const shownPk = ref('')
+    const pkModal = ref(false)
+    const settings = ref({}) as Ref<Settings>
 
     const getToastRef = () => toastState
     
     const loadData = () => {
       const pAccounts = getAccounts()
-      Promise.all([pAccounts]).then(( res )  => {
+      const pGetSettings = getSettings()
+      Promise.all([pAccounts, pGetSettings]).then(( res )  => {
         accounts.value = res[0]
+        settings.value = res[1]
         loading.value = false
       })
     }
@@ -120,6 +156,45 @@ export default defineComponent({
         loadData()
       })
 
+      const openModal = async () => {
+        const modal = await modalController.create({
+          component: UnlockModal,
+          componentProps: {
+            unlockType: 'viewPk'
+          }
+
+        });
+        modal.present();
+        const { role } = await modal.onWillDismiss();
+        if(role === 'confirm') return true
+        return false
+    }
+
+      const viewPk = async (addr: string) => {
+        let pk = ''
+        const account = accounts.value.find(a => a.address === addr)
+        if(settings.value.enableStorageEnctyption) {
+           if(account?.encPk) {
+            const modalR = await openModal()
+            if(modalR){
+              const account = (await getAccounts()).find(a => a.address === addr)
+              pk = account?.pk ?? ''
+            }
+           }else {
+            pk = account?.pk ?? ''
+           }
+        }else {
+          pk = account?.pk ?? ''
+        }
+        if(pk) {
+          shownPk.value = pk
+          if(settings.value.encryptAfterEveryTx) {
+            clearPk()
+          }
+          pkModal.value = true
+        }
+      }
+
       return {
         accounts,
         addCircleOutline,
@@ -130,7 +205,10 @@ export default defineComponent({
         deleteAccount,
         editAccount,
         loading,
-        goToAddAccount
+        goToAddAccount,
+        viewPk,
+        pkModal,
+        shownPk
       }
 
   }

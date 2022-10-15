@@ -157,7 +157,7 @@ import {
 import { ethers } from "ethers";
 import { approve, walletPing, walletSendData } from "@/extension/userRequest";
 import { useRoute } from "vue-router";
-import { getSelectedNetwork, getUrl, getPrices, numToHexStr, blockLockout, unBlockLockout, getSelectedAccount, strToHex} from '@/utils/platform'
+import { getSelectedNetwork, getUrl, getPrices, numToHexStr, blockLockout, unBlockLockout, getSelectedAccount, strToHex, getSettings, clearPk } from '@/utils/platform'
 import { getBalance, getGasPrice, estimateGas } from '@/utils/wallet'
 import type { Network } from '@/extension/types'
 import { mainNets } from "@/utils/networks";
@@ -209,6 +209,7 @@ export default defineComponent({
     const gasPriceModal = ref(false)
     const inGasPrice = ref(0)
     const inGasLimit = ref(0)
+    let pSettings = getSettings()
 
     let interval = 0
     const bars = ref(0)
@@ -227,7 +228,7 @@ export default defineComponent({
         const modal = await modalController.create({
           component: UnlockModal,
           componentProps: {
-            unlockType: 'message'
+            unlockType: 'transaction'
           }
 
         });
@@ -240,10 +241,18 @@ export default defineComponent({
     const onSign = async () => {
         loading.value = true;
         const selectedAccount = await getSelectedAccount()
+        loading.value = false
         if ((selectedAccount.pk ?? '').length !== 66) {
           const modalResult = await openModal()
           if(modalResult) {
             unBlockLockout()
+            if(!pSettings) {
+              pSettings = getSettings()
+            }
+            const settings = await pSettings
+            if(settings.encryptAfterEveryTx) {
+              clearPk()
+            }
             approve(rid)
           }else {
             onCancel()
@@ -287,9 +296,9 @@ export default defineComponent({
       const pBalance =  getBalance()
       const pGetPrices = getPrices()
       selectedNetwork.value = await getSelectedNetwork()
-      userBalance.value = Number(ethers.utils.formatEther((await pBalance).toString()))
+      userBalance.value = Number(ethers.utils.formatEther((await pBalance).toString() ?? '0x0'))
       
-      gasPrice.value = parseInt(ethers.utils.formatUnits((await pGasPrice).toString(), "gwei"), 10)
+      gasPrice.value = parseInt(ethers.utils.formatUnits((await pGasPrice).toString() ?? '0x0', "gwei"), 10)
       try {
       gasLimit.value = parseInt((await pEstimateGas).toString(), 10)
       } catch (err) {

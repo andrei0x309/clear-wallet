@@ -24,16 +24,18 @@ export interface Networks {
 }
 
 export interface RequestArguments {
-    method: string;
-    params?: any[];
+    method: string
+    type: string
+    params?: any[]
     resId?: string
     website?: string
+    data?: any
 }
 
 export interface ProviderRpcError extends Error {
-    message: string;
-    code: number;
-    data?: unknown;
+    message: string
+    code: number
+    data?: unknown
   }
   
 export interface Price {

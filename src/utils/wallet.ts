@@ -10,8 +10,8 @@ export const signMsg = async (msg: string) => {
 export const getBalance = async () =>{
     const account = await getSelectedAccount()
     const network = await getSelectedNetwork()
-    const wallet = new ethers.Wallet(account.pk, new ethers.providers.JsonRpcProvider(network.rpc))
-    return await wallet.getBalance()    
+    const provider = new ethers.providers.JsonRpcProvider(network.rpc)
+    return await provider.getBalance(account.address)    
 }
 
 export const getGasPrice = async () => {

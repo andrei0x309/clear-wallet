@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "Clear EVM Wallet (CLW)",
+    "description": "This is an open-source EVM wallet based on ethers, ionic, vue, that implements the metamask API."
+  },
+  "appDesc": {
+    "message": "Clear EVM Wallet (CLW)",
+    "description": "This is an open-source EVM wallet based on ethers, ionic, vue, that implements the metamask API."
+  }
+}

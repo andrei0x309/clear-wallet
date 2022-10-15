@@ -27,7 +27,7 @@
       </ion-item>
       <ion-item>
         <ion-button @click="onCancel">Cancel</ion-button>
-        <ion-button @click="onAddAccount">Add Account</ion-button>
+        <ion-button @click="onAddAccount">{{ isEdit ? 'Edit Account' : 'Add Account' }}</ion-button>
       </ion-item>
       <ion-alert
       :is-open="alertOpen"
@@ -42,12 +42,14 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonButton, IonAlert, IonIcon, onIonViewWillEnter } from "@ionic/vue";
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonItem, IonLabel, IonInput, IonButton, IonAlert, IonIcon, onIonViewWillEnter, modalController } from "@ionic/vue";
 import { ethers } from "ethers"
-import { saveSelectedAccount, getAccounts, saveAccount, getRandomPk, smallRandomString, paste } from "@/utils/platform";
+import { saveSelectedAccount, getAccounts, saveAccount, getRandomPk, smallRandomString, paste, getSettings } from "@/utils/platform";
 import router from "@/router";
 import { useRoute } from 'vue-router'
-import type { Account } from '@/extension/types'
+import type { Account, Settings } from '@/extension/types'
+import UnlockModal from '@/views/UnlockModal.vue'
+import { encrypt, getCryptoParams } from '@/utils/webCrypto'
 
 import { clipboardOutline } from "ionicons/icons";
 
@@ -62,15 +64,31 @@ export default defineComponent({
     const isEdit = route.path.includes('/edit')
     const paramAddress = route.params.address ?? ""
     let accountsProm: Promise<Account[] | undefined>
+    let settingsProm: Promise<Settings | undefined>
 
     const resetFields = () => {
       name.value = ''
       pk.value = ''
     }
 
+    const openModal = async () => {
+        const modal = await modalController.create({
+          component: UnlockModal,
+          componentProps: {
+            unlockType: 'addAccount'
+          }
+
+        });
+        modal.present();
+        const { role, data } = await modal.onWillDismiss();
+        if(role === 'confirm') return data
+        return false
+    }
+
     onIonViewWillEnter(async () => {
       if(isEdit && paramAddress) {
         accountsProm = getAccounts()
+        settingsProm = getSettings()
         const accounts = await accountsProm as Account[]
         const acc = accounts.find(account => account.address === paramAddress)
         if(acc) {
@@ -95,7 +113,40 @@ export default defineComponent({
         if(!accountsProm) {
           accountsProm = getAccounts()
         }
+        if(!settingsProm) {
+          settingsProm = getSettings()
+        }
         const accounts = await accountsProm as Account[]
+        const settings = await settingsProm as Settings
+        if( settings.enableStorageEnctyption) {
+          const pass = await openModal()
+          if(!pass){
+            alertMsg.value = "Cannot add account with encryption password."
+            alertOpen.value = true
+            return
+          }
+          const cryptoParams = await getCryptoParams(pass)
+          if((accounts.length ?? 0) < 1 ){
+            p1 = saveSelectedAccount({
+                address: wallet.address,
+                name: name.value,
+                pk: pk.value,
+                encPk: await encrypt(pk.value, cryptoParams)
+            })
+        } else {
+          if(accounts.find(account => account.address === wallet.address)){
+            alertMsg.value = "Account already exists."
+            return alertOpen.value = true
+          }
+        }
+        const p2 = saveAccount({
+                address: wallet.address,
+                name: name.value,
+                pk: pk.value,
+                encPk: await encrypt(pk.value, cryptoParams)
+        })
+        await Promise.all([p1, p2])
+        }else {
         if((accounts.length ?? 0) < 1 ){
             p1 = saveSelectedAccount({
                 address: wallet.address,
@@ -116,10 +167,11 @@ export default defineComponent({
                 encPk: ''
         })
         await Promise.all([p1, p2])
+        }
         if(isEdit) {
-          router.push('accounts')
+          router.push('/tabs/accounts')
         }else {
-          router.push('/')
+          router.push('/tabs/home')
         }
         resetFields()
     }
@@ -134,9 +186,9 @@ export default defineComponent({
 
     const onCancel = () => {
         if(isEdit) {
-          router.push('accounts')
+          router.push('/tabs/accounts')
         }else {
-          router.push('/')
+          router.push('/tabs/home')
         }
     }
 

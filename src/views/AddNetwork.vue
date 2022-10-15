@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <ion-button @click="templateModal=true" expand="block">Add from popular chain list</ion-button>
+      <ion-button v-if="!isEdit" @click="templateModal=true" expand="block">Add from popular chain list</ion-button>
       <ion-item>
         <ion-label>Name(*)</ion-label>
         <ion-input v-model="name" placeholder="ex: Polygon"></ion-input>
@@ -190,9 +190,9 @@ export default defineComponent({
         const p2 = replaceNetworks(networks)
         await Promise.all([p1, p2])
         if(isEdit) {
-          router.push('networks')
+          router.push('/tabs/networks')
         }else {
-          router.push('/')
+          router.push('/tabs/home')
         }
         resetFields()
     }
@@ -203,9 +203,9 @@ export default defineComponent({
 
     const onCancel = () => {
       if(isEdit) {
-        router.push('networks')
+        router.push('/tabs/networks')
       }else {
-        router.push('/')
+        router.push('/tabs/home')
       }
     }
 

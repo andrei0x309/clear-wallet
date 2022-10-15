@@ -194,10 +194,10 @@ export default defineComponent({
     const onSwitchTemplates = async () => {
       loading.value = true;
       selectedNetwork.value = templateNetworks[Number(networkId.value)]
-      saveNetwork(templateNetworks[Number(networkId.value)])
-      saveSelectedNetwork(templateNetworks[Number(networkId.value)])
+      await saveNetwork(templateNetworks[Number(networkId.value)])
+      await saveSelectedNetwork(templateNetworks[Number(networkId.value)])
       approve(rid);
-      loading.value = true;
+      loading.value = false;
     };
 
     const onSwitchNotExisting = async () => {

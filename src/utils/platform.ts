@@ -94,6 +94,10 @@ export const addToHistory = async (historyItem: HistoryItem): Promise<void> => {
     await storageSave('history', history)
 }
 
+export const wipeHistory = async (): Promise<void> => {
+    await storageSave('history', [])
+}
+
 export const getSettings = async (): Promise<Settings> => {
     return (await storageGet('settings'))?.settings ?? defaultSettings as unknown as Settings
 }
@@ -140,6 +144,9 @@ export const smallRandomString = () => {
 export const clearPk = async (): Promise<void> => {
     let accounts = await getAccounts()
     const accProm = accounts.map(async a => {
+        if(a.encPk) {
+            a.pk = ''
+        }
       return a
     })
     accounts = await Promise.all(accProm)

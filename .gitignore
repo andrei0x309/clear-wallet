@@ -30,4 +30,6 @@ npm-debug.log*
 /plugins
 /www
 /src/extension/inject.js
-readme.md
+README.md
+PRIVACY_POLICY.md
+LICENSE

@@ -24,7 +24,7 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/ContractError.vue'),
   },
   {
-    path: '/wallet-error/:rid/:error',
+    path: '/wallet-error/:rid/:param',
     component: () => import('@/views/WalletError.vue'),
   },
   {

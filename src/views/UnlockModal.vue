@@ -8,20 +8,29 @@
         <ion-title>Unlock to Proceed</ion-title>
       </ion-toolbar>
     </ion-header>
-
+    
     <ion-content class="ion-padding">
         <ion-list>
          <ion-list v-if="unlockType === 'message'">
          <ion-item>To continue signing the message, unlock wallet.</ion-item>
-            <ion-item>Closing will reject sigining the message</ion-item>
+            <ion-item>Closing will reject sigining the message.</ion-item>
+         </ion-list>
+         <ion-list v-else-if="unlockType === 'viewPk'">
+         <ion-item>To view the PK, unlock wallet.</ion-item>
+            <ion-item>Closing will not show the PK.</ion-item>
+         </ion-list>
+         <ion-list v-else-if="unlockType === 'addAccount'">
+         <ion-item>Storage Encrypted, Unlock to add account.</ion-item>
+            <ion-item>Closing will not add the account.</ion-item>
          </ion-list>
          <ion-list v-else>
             <ion-item>To continue sending the transaction, unlock wallet.</ion-item>
-            <ion-item>Closing will reject sending the tranzaction.</ion-item>
+            <ion-item>Closing will reject sending the transaction.</ion-item>
          </ion-list>
           <ion-item>
             <ion-label>Unlock Password</ion-label>
-          </ion-item> <ion-item>
+          </ion-item> 
+          <ion-item>
           <ion-input v-model="mpPass" type="password"></ion-input>
         </ion-item>
       </ion-list>
@@ -100,7 +109,7 @@ export default defineComponent({
     const alertMsg = ref('');
 
     const close = () => {
-        return modalController.dismiss(null, 'cancel');
+        return modalController?.dismiss(null, 'cancel');
     }
 
     const unlock = async () => {
@@ -109,14 +118,16 @@ export default defineComponent({
         let accounts = await getAccounts()
         const cryptoParams = await getCryptoParams(mpPass.value)
         const accProm = accounts.map(async a => {
-          a.pk = await decrypt(a.encPk, cryptoParams)
+          if(a.encPk) {
+            a.pk = await decrypt(a.encPk, cryptoParams)
+          }
           return a
         })
         accounts = await Promise.all(accProm)
         await replaceAccounts(accounts)
         await saveSelectedAccount(accounts[0])
         loading.value = false
-        return modalController.dismiss(null, 'confirm');
+        return modalController?.dismiss(mpPass.value, 'confirm');
         } catch {
         loading.value = false
         alertMsg.value = 'Decryption failed, password is not correct, try again.';
