@@ -1,6 +1,6 @@
 {
   "name": "clear-wallet",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -8,7 +8,7 @@
     "preview": "vite preview",
     "release": "yarn config set version-tag-prefix clear-wallet@v &&  yarn config set version-git-message 'clear-wallet@v%s' && yarn version --patch && yarn postversion",
     "postversion": "git push",
-    "pub": "yarn build && yarn release && ts-node ./scripts/create-release.ts"
+    "pub": "yarn build && yarn release && ts-node ./release-scripts/create-release.ts"
   },
   "dependencies": {
     "@capacitor/app": "^4.0.1",
