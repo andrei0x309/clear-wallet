@@ -24,7 +24,6 @@
 
     "permissions": [
       "scripting",
-      "webNavigation",
       "tabs",
       "notifications",
       "storage",
