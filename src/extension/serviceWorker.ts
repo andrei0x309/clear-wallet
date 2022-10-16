@@ -96,6 +96,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                     break
                 }
                 case 'eth_getBlockByNumber': {
+                    try {
                     const params = message?.params?.[0] as any
                     const block = await getBlockByNumber(params) as any
                     block.gasLimit = block.gasLimit.toHexString()
@@ -103,29 +104,77 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                     block.baseFeePerGas  = block.baseFeePerGas.toHexString()
                     block._difficulty = block._difficulty.toHexString()
                     sendResponse(block)
+                    } catch {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'No network or user selected'
+                        })
+                    }
                     break;
                 }
                 case 'eth_getTransactionByHash': {
+                    try {
                     sendResponse(await getTxByHash(message?.params?.[0] as string))
+                    } catch {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'No network or user selected'
+                        })
+                    }
                     break
                 }
                 case 'eth_getTransactionReceipt':{
+                    try {
                     sendResponse(await getTxReceipt(message?.params?.[0] as string))
+                    } catch {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'No network or user selected'
+                        })
+                    }
                     break
                 }
                 case 'eth_gasPrice': {
+                    try {
                     sendResponse((await getGasPrice()).toHexString())
+                    } catch {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'No network or user selected'
+                        })
+                    }
                     break;
                 }
                 case 'eth_getBalance': {
+                    try {
                     sendResponse(await getBalance())
+                    } catch {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'No network or user selected'
+                        })
+                    }
                     break
                 }
                 case 'eth_blockNumber': {
+                    try {
                     sendResponse(await getBlockNumber())
+                    } catch {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'No network or user selected'
+                        })
+                    }
                     break               
                 }
                 case 'eth_estimateGas': {
+                    try { 
                     const params = message?.params?.[0] as any
                     if(!params) {
                         sendResponse({
@@ -141,7 +190,14 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         data: params?.data ?? '',
                         value: params?.value ?? '0x0'
                     }))
-                    break             
+                    } catch {
+                    sendResponse({
+                        error: true,
+                        code: rpcError.USER_REJECTED,
+                        message: 'No network or user selected'
+                    })
+                }
+                    break          
                 }
                 case 'eth_requestAccounts':
                 case 'eth_accounts': {

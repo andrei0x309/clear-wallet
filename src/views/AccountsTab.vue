@@ -69,7 +69,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, Ref } from "vue";
-import { getAccounts, copyAddress, replaceAccounts, getSettings, clearPk } from "@/utils/platform"
+import { getAccounts, copyAddress, replaceAccounts, getSettings, clearPk, getSelectedAccount, saveSelectedAccount } from "@/utils/platform"
 import {
   IonContent,
   IonHeader,
@@ -136,11 +136,23 @@ export default defineComponent({
 
     const deleteAccount = async (address: string) => {
         loading.value = true
+        if(settings.value.enableStorageEnctyption) {
+          const modalR = await openModal('delAcc')
+          if(!modalR){
+            return
+          }
+        }
         const findIndex = accounts.value.findIndex(a => a.address === address)
+        const selectedAccount = await getSelectedAccount()
+        const pArr: Array<Promise<void>> = []
         if (findIndex !== -1) {
           accounts.value.splice(findIndex, 1)
+          pArr.push(replaceAccounts([...accounts.value]))
         }
-        await replaceAccounts([...accounts.value])
+        if(selectedAccount.address === address) {
+          pArr.push(saveSelectedAccount({ name: '', pk: '', encPk: '', address: ''}))
+        }
+        await Promise.all(pArr)
         loading.value = false
     }
 
@@ -156,11 +168,11 @@ export default defineComponent({
         loadData()
       })
 
-      const openModal = async () => {
+      const openModal = async (type: string) => {
         const modal = await modalController.create({
           component: UnlockModal,
           componentProps: {
-            unlockType: 'viewPk'
+            unlockType: type
           }
 
         });
@@ -175,7 +187,7 @@ export default defineComponent({
         const account = accounts.value.find(a => a.address === addr)
         if(settings.value.enableStorageEnctyption) {
            if(account?.encPk) {
-            const modalR = await openModal()
+            const modalR = await openModal('viewPk')
             if(modalR){
               const account = (await getAccounts()).find(a => a.address === addr)
               pk = account?.pk ?? ''

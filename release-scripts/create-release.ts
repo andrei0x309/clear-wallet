@@ -1,10 +1,16 @@
-import archiver from 'archiver';
-import fs from 'fs';
-import { spawn } from 'child_process';
+const pFs = import('fs')
+const pCps = import ('child_process') 
 
-async function ghRelease(changes) {
+async function ghRelease(changes: string[]) {
+  const fs = (await pFs).default
+
+  if (!fs.existsSync('releases')){
+    fs.mkdirSync('releases');
+  }
+
   const pkg = JSON.parse(fs.readFileSync('package.json').toString());
 
+  const archiver = (await import('archiver')).default
   const archive = archiver('zip', { zlib: { level: 9 } });
   const dirPipes = ['dist'];
 
@@ -20,7 +26,7 @@ async function ghRelease(changes) {
     filePipes.forEach((file) => {
       arch = arch.file(file, { name: file });
     });
-    arch.on('error', (err) => reject(err)).pipe(outputZip);
+    arch.on('error', (err: unknown) => reject(err)).pipe(outputZip);
 
     outputZip.on('close', () => resolve(true));
     arch.finalize();
@@ -31,14 +37,14 @@ async function ghRelease(changes) {
   fs.writeFileSync(
     changeLogPath,
     `# ${pkg.version} \n
-  ${changes.reduce((acc, change) => {
+  ${changes.reduce((acc: string, change: string) => {
     return acc + `- ${change}\n`;
   }, '')}`,
   );
-
+  const cps = (await pCps)
   console.log(
     await new Promise((resolve) => {
-      const p = spawn('gh', ['release', 'create', `v${pkg.version}`, `./${outputPath}`, '-F', `./${changeLogPath}`], {
+      const p = cps.spawn('gh', ['release', 'create', `v${pkg.version}`, `./${outputPath}`, '-F', `./${changeLogPath}`], {
         shell: true,
       });
       // const p = spawn('pwd');

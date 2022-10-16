@@ -1,6 +1,6 @@
 {
   "name": "clear-wallet",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -27,6 +27,7 @@
   "devDependencies": {
     "@capacitor/cli": "^4.3.0",
     "@crxjs/vite-plugin": "^1.0.14",
+    "@types/archiver": "^5.3.1",
     "@types/jest": "^29.0.3",
     "@types/node": "^18.7.19",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
