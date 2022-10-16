@@ -2,13 +2,13 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Contract Error</ion-title>
+        <ion-title>Wallet Error</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
       <ion-item>
-        <ion-label>Transaction was aboreted before being sent</ion-label>
+        <ion-label>Operation Aborted</ion-label>
       </ion-item>
       <ion-item>
         <ion-label>Error:</ion-label>
@@ -71,7 +71,6 @@ export default defineComponent({
     const route = useRoute();
     const error = decodeURIComponent((route.params?.param as string) ?? "");
     const loading = ref(true);
-    const contract = (route.params?.contract as string) ?? "";
 
     const onCancel = () => {
       window.close();
@@ -84,7 +83,6 @@ export default defineComponent({
 
     return {
       onCancel,
-      contract,
       loading,
       error,
     };

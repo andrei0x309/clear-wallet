@@ -157,7 +157,7 @@ import {
 import { ethers } from "ethers";
 import { approve, walletPing, walletSendData } from "@/extension/userRequest";
 import { useRoute } from "vue-router";
-import { getSelectedNetwork, getUrl, getPrices, numToHexStr, blockLockout, unBlockLockout, getSelectedAccount, strToHex, getSettings, clearPk } from '@/utils/platform'
+import { getSelectedNetwork, getUrl, getPrices, numToHexStr, blockLockout, unBlockLockout, getSelectedAccount, strToHex } from '@/utils/platform'
 import { getBalance, getGasPrice, estimateGas } from '@/utils/wallet'
 import type { Network } from '@/extension/types'
 import { mainNets } from "@/utils/networks";
@@ -209,7 +209,6 @@ export default defineComponent({
     const gasPriceModal = ref(false)
     const inGasPrice = ref(0)
     const inGasLimit = ref(0)
-    let pSettings = getSettings()
 
     let interval = 0
     const bars = ref(0)
@@ -246,13 +245,7 @@ export default defineComponent({
           const modalResult = await openModal()
           if(modalResult) {
             unBlockLockout()
-            if(!pSettings) {
-              pSettings = getSettings()
-            }
-            const settings = await pSettings
-            if(settings.encryptAfterEveryTx) {
-              clearPk()
-            }
+            loading.value = true
             approve(rid)
           }else {
             onCancel()

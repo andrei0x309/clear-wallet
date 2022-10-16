@@ -14,7 +14,19 @@ const allowedMethods = {
   'eth_sign': true,
   'net_version': true,
   'eth_sendTransaction': true,
-  'wallet_switchEthereumChain': true
+  'wallet_switchEthereumChain': true,
+  'eth_call': true,
+  'eth_getBalance': true,
+  'eth_getTransactionByHash': true,
+  'eth_getTransactionReceipt': true,
+  'signTypedData': true,
+  'eth_signTypedData': true,
+  'signTypedData_v1': true,
+  'eth_signTypedData_v1': true,
+  'signTypedData_v3': true,
+  'eth_signTypedData_V3': true,
+  'signTypedData_v4': true,
+  'eth_signTypedData_v4': true,
 }
 
 window.addEventListener("message", (event) => {

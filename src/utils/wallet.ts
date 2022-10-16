@@ -7,6 +7,20 @@ export const signMsg = async (msg: string) => {
     return await wallet.signMessage( msg.startsWith('0x') ? ethers.utils.arrayify(msg): msg)
 }
 
+export const signTypedData = async (msg: string) => {
+    const account = await getSelectedAccount()
+    const wallet = new ethers.Wallet(account.pk)
+    const parsedMsg = JSON.parse(msg)
+    if(parsedMsg?.primaryType) {
+        if(parsedMsg.primaryType in parsedMsg.types){
+            parsedMsg.types = {
+                [parsedMsg.primaryType]: parsedMsg.types[parsedMsg.primaryType]
+            }
+        }
+    }
+    return await wallet._signTypedData(parsedMsg.domain, parsedMsg.types, parsedMsg.message)
+}
+
 export const getBalance = async () =>{
     const account = await getSelectedAccount()
     const network = await getSelectedNetwork()
@@ -38,6 +52,23 @@ export const estimateGas = async ({to = '', from = '', data = '', value = '0x0' 
     return await provider.estimateGas({to, from, data, value})
 }
 
+export const evmCall = async ({to = '', from = '', data = '', value = '0x0' }: {to: string, from: string, data: string, value: string}) => {
+    const network = await getSelectedNetwork()
+    const provider = new ethers.providers.JsonRpcProvider(network.rpc)
+    return await provider.call({to, from, data, value})
+}
+
+export const getTxByHash = async (hash: string) => {
+    const network = await getSelectedNetwork()
+    const provider = new ethers.providers.JsonRpcProvider(network.rpc)
+    return await provider.getTransaction(hash)
+}
+
+export const getTxReceipt = async (hash: string) => {
+    const network = await getSelectedNetwork()
+    const provider = new ethers.providers.JsonRpcProvider(network.rpc)
+    return await provider.getTransactionReceipt(hash)
+}
 
 export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', value='0x0', gasPrice='0x0'}: 
 {to: string, from: string, data: string, value: string, gas: string, gasPrice: string}, 

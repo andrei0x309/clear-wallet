@@ -20,7 +20,6 @@ export default defineComponent({
     const route = useRoute()
 const router = useRouter()
 const { param, rid } = route.query;
-console.log(route?.query,'zzzzzzzzzzzzzzz')
 
 onBeforeMount( () => {
   getSettings().then((settings) => {

@@ -296,7 +296,7 @@ export default defineComponent({
     }
 
     const changePermaLock = async () => {
-      settings.s.lockOutEnabled = !settings.s.encryptAfterEveryTx
+      settings.s.encryptAfterEveryTx = !settings.s.encryptAfterEveryTx
       updateKey.value++
       await saveSettings()
       defaultAccordionOpen.value = "1"

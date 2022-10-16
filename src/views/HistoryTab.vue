@@ -19,7 +19,7 @@
         </ion-item>
       <ion-item v-if="item.chainId"><b style="margin-right: 0.5rem">ChainId:</b> {{ item.chainId }}</ion-item>
       <ion-item v-if="item.webiste"><b style="margin-right: 0.5rem">Website:</b> {{ item.webiste }}</ion-item>
-      <ion-item v-if="item.txUrl"><b style="margin-right: 0.5rem">ViewTx:</b> <a :href="item.txUrl">LINK</a></ion-item>
+      <ion-item v-if="item.txUrl"><b style="margin-right: 0.5rem">ViewTx:</b> <a href="#" @click="openTab(item.txUrl as string)">LINK</a></ion-item>
       </ion-list>
       </ion-item>
       <ion-item>
@@ -50,7 +50,7 @@
 <script lang="ts">
 import { defineComponent, Ref, ref } from "vue";
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, onIonViewWillEnter, IonItem, IonList, IonToast, IonLoading, IonButton, IonIcon } from "@ionic/vue";
-import { getHistory, copyAddress, wipeHistory } from '@/utils/platform'
+import { getHistory, copyAddress, wipeHistory, openTab } from '@/utils/platform'
 import type { HistoryItem } from '@/extension/types'
 
 import { copyOutline } from "ionicons/icons";
@@ -85,7 +85,8 @@ export default defineComponent({
       getToastRef,
       toastState,
       copyOutline,
-      onWipeHistory
+      onWipeHistory,
+      openTab
     }
   }
 });

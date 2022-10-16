@@ -50,85 +50,6 @@ return new Promise((resolve, reject) => {
 })
 }
 
-// chainId
-// : 
-// "0x89"
-// enable
-// : 
-// ƒ ()
-// isMetaMask
-// : 
-// true
-// networkVersion
-// : 
-// "137"
-// request
-// : 
-// ƒ ()
-// selectedAddress
-// : 
-// null
-// send
-// : 
-// ƒ ()
-// sendAsync
-// : 
-// ƒ ()
-// _events
-// : 
-// {connect: ƒ}
-// _eventsCount
-// : 
-// 1
-// _handleAccountsChanged
-// : 
-// ƒ ()
-// _handleChainChanged
-// : 
-// ƒ ()
-// _handleConnect
-// : 
-// ƒ ()
-// _handleDisconnect
-// : 
-// ƒ ()
-// _handleStreamDisconnect
-// : 
-// ƒ ()
-// _handleUnlockStateChanged
-// : 
-// ƒ ()
-// _jsonRpcConnection
-// : 
-// {events: s, stream: d, middleware: ƒ}
-// _log
-// : 
-// u {name: undefined, levels: {…}, methodFactory: ƒ, getLevel: ƒ, setLevel: ƒ, …}
-// _maxListeners
-// : 
-// 100
-// _metamask
-// : 
-// Proxy {isUnlocked: ƒ, requestBatch: ƒ}
-// _rpcEngine
-// : 
-// o {_events: {…}, _eventsCount: 0, _maxListeners: undefined, _middleware: Array(3)}
-// _rpcRequest
-// : 
-// ƒ ()
-// _sendSync
-// : 
-// ƒ ()
-// _sentWarnings
-// : 
-// {enable: false, experimentalMethods: false, send: false, events: {…}}
-// _state
-// : 
-// {accounts: Array(0), isConnected: true, isUnlocked: true, initialized: true, isPermanentlyDisconnected: false}
-// _warnOfDeprecation
-// : 
-// ƒ (
-
 const eth = new Proxy({
     isConnected: () => {
         return true
@@ -141,6 +62,31 @@ const eth = new Proxy({
     request: (args: RequestArguments): Promise<unknown> => {
         return sendMessage(args)
          
+    },
+    // Deprecated
+    sendAsync: (arg1: RequestArguments, arg2: any): void => {
+        sendMessage(arg1 as RequestArguments).then(result => {
+            if (typeof arg2 === 'function'){
+                (arg2 as (r?: any) => any )(result)
+            }
+        })
+    },
+    // Deprecated
+    send: (arg1: unknown, arg2: unknown): unknown => {
+        if( typeof arg1 === 'string' ) {
+            return sendMessage({
+                method: arg1,
+                params: arg2 as object
+            })
+        } else if (arg2 === undefined) {
+            console.error('Clear Wallet: Sync calling is deprecated and not supported')
+        }else {
+            sendMessage(arg1 as RequestArguments).then(result => {
+                if (typeof arg2 === 'function'){
+                    (arg2 as (r?: any) => any )(result)
+                }
+            })
+        }
     },
     on: (eventName: string, callback: () => void) => {
         switch (eventName) {
@@ -156,12 +102,12 @@ const eth = new Proxy({
             case 'disconnect':
                 listners.disconnect.add(callback)
                 break;
+            // Deprecated  - chainIdChanged -networkChanged
             case 'chainChanged':
+            case 'chainIdChanged':
+            case 'networkChanged':
                 listners.chainChanged.add(callback)
                 break;
-
-            default:
-                return
         }
     },
     removeListener: (eventName: string, callback: () => void) => {
@@ -175,24 +121,29 @@ const eth = new Proxy({
             case 'disconnect':
                 listners.disconnect.delete(callback)
                 break;
+            // Deprecated  - chainIdChanged -networkChanged
             case 'chainChanged':
+            case 'chainIdChanged':
+            case 'networkChanged':
                 listners.chainChanged.delete(callback)
                 break;
             default:
                 return
         }
     },
-    // Simulate Metamask
+    // Internal Simulate Metamask 
     _warnOfDeprecation: () => null,
     _state: {},
     _sentWarnings: () => null,
     _rpcRequest: () => null,
     _handleAccountsChanged: () => null,
+    // Deprecated - hardcoded for now, websites should not access this directly since is deprecated for a long time
     chainId: "0x89",
+    // Deprecated - hardcoded for now, websites should not access this directly since is deprecated for a long time
     networkVersion: "137",
     selectedAddress: null,
-    send: () => null,
-    sendAsync: async () => null,
+    autoRefreshOnNetworkChange: false,
+    // Internal Simulate Metamask 
     _events: {},
     _eventsCount: 0,
     _handleChainChanged: () => null,
@@ -205,10 +156,15 @@ const eth = new Proxy({
     _maxListeners: 100,
     _metamask: new Proxy({}, {}),
     _rpcEngine: {}
-
-    
 }, {
-    set: () => { return false },
+    set: () => { return true },
+    // get: function(target, name, receiver) {
+    //         if (!(name in target)) {
+    //             console.log(`Getting non-existant property '" + ${name.toString()} + "'`);
+    //             return undefined;
+    //         }
+    //         console.log(target, name, receiver)
+    // },
     deleteProperty: () => { return false },
 })
 
@@ -218,7 +174,7 @@ const injectWallet = (win: any) => {
         return eth
     },
     set: function () {
-        return
+        return true
     }
 });
 // console.log('Clear wallet injected', (window as any).ethereum, win)

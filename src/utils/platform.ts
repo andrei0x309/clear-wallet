@@ -150,7 +150,7 @@ export const clearPk = async (): Promise<void> => {
       return a
     })
     accounts = await Promise.all(accProm)
-    await replaceAccounts(accounts)
+    await Promise.all([replaceAccounts(accounts), saveSelectedAccount(accounts[0])])
 }
 
 export const hexTostr = (hexStr: string) =>

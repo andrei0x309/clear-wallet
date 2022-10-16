@@ -1,8 +1,7 @@
-import { getAccounts, getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl, addToHistory } from '@/utils/platform';
+import { getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl, addToHistory } from '@/utils/platform';
 import { userApprove, userReject, rIdWin, rIdData } from '@/extension/userRequest'
-import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber } from '@/utils/wallet'
+import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber, evmCall, getTxByHash, getTxReceipt, signTypedData } from '@/utils/wallet'
 import type { RequestArguments } from '@/extension/types'
-import type { Account } from '@/extension/types'
 import { rpcError } from '@/extension/rpcConstants'
 import { updatePrices } from '@/utils/gecko'
 
@@ -93,6 +92,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
             // ETH API
             switch (message.method) {
                 case 'eth_call': {
+                    sendResponse(await evmCall(message?.params?.[0]))
                     break
                 }
                 case 'eth_getBlockByNumber': {
@@ -104,6 +104,14 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                     block._difficulty = block._difficulty.toHexString()
                     sendResponse(block)
                     break;
+                }
+                case 'eth_getTransactionByHash': {
+                    sendResponse(await getTxByHash(message?.params?.[0] as string))
+                    break
+                }
+                case 'eth_getTransactionReceipt':{
+                    sendResponse(await getTxReceipt(message?.params?.[0] as string))
+                    break
                 }
                 case 'eth_gasPrice': {
                     sendResponse((await getGasPrice()).toHexString())
@@ -135,13 +143,9 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                     }))
                     break             
                 }
+                case 'eth_requestAccounts':
                 case 'eth_accounts': {
-                    const accounts = await getAccounts()
-                    const addresses = accounts.map((a: Account) => a.address) ?? []
-                    sendResponse(addresses)
-                    break
-                }
-                case 'eth_requestAccounts': {
+                    // give only the selected address for better privacy
                     const account = await getSelectedAccount()
                     const address = account?.address ? [account?.address] : []
                     sendResponse(address)
@@ -210,7 +214,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         })
                         try {
                         const tx = await sendTransaction({...params, ...(rIdData?.[String(gWin?.id ?? 0)] ?? {}) }, pEstimateGas, pGasPrice)
-                        sendResponse(tx)
+                        sendResponse(tx.hash)
                         const buttons = {} as any
                         const network = await getSelectedNetwork()
                         addToHistory({
@@ -242,6 +246,11 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                             ...(buttons)
                         } as any)
 
+                        const settings = await getSettings()
+                        if(settings.encryptAfterEveryTx) {
+                          clearPk()
+                        }
+
                         } catch (err) {
                             sendResponse({
                                 error: true,
@@ -271,7 +280,16 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         }
                     break
                 }
-                case ('personal_sign' || 'eth_sign'): {
+                case 'signTypedData':
+                case 'eth_signTypedData':
+                case 'signTypedData_v1':
+                case 'eth_signTypedData_v1':
+                case 'signTypedData_v3': 
+                case 'eth_signTypedData_v3':
+                case 'signTypedData_v4':
+                case 'eth_signTypedData_v4':
+                case 'personal_sign':
+                case 'eth_sign': {
                     try {
                     
                     const account = await getSelectedAccount()
@@ -286,11 +304,22 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         return
                     }
 
+                    const isTypedSigned = [
+                    'signTypedData', 
+                    'eth_signTypedData', 
+                    'signTypedData_v1', 
+                    'eth_signTypedData_v1',
+                    'signTypedData_v3',
+                    'eth_signTypedData_v3',
+                    'signTypedData_v4',
+                    'eth_signTypedData_v4'].includes(message?.method);
+                    const signMsgData = isTypedSigned ? String(message?.params?.[1] ?? '' ) : String(message?.params?.[0] ?? '' );
+
                     await new Promise((resolve, reject) => {
                     chrome.windows.create({
                         height: 450,
                         width: 400,
-                        url: chrome.runtime.getURL(`index.html?route=sign-msg&param=${String(message?.params?.[0] ?? '' )}&rid=${String(message?.resId ?? '')}`),
+                        url: chrome.runtime.getURL(`index.html?route=sign-msg&param=${signMsgData}&rid=${String(message?.resId ?? '')}`),
                         type: 'popup'
                     }).then((win) => {
                         userReject[String(win.id)] = reject
@@ -300,16 +329,22 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                     
                     })
                     sendResponse(
-                        await signMsg(String(message?.params?.[0]) ?? '' )
+                        isTypedSigned ?
+                        await signTypedData(signMsgData):
+                        await signMsg(signMsgData)
                     )
-                    } catch {
+                    const settings = await getSettings()
+                    if(settings.encryptAfterEveryTx) {
+                      clearPk()
+                    }
+                    } catch (e) {
+                        console.error(e)
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
                             message: 'User Rejected Signature'
                         })
                     }
-                    
                     break
                 }
                 // NON Standard  metamask API

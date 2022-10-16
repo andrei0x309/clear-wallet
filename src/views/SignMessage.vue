@@ -57,7 +57,7 @@ import {
 import { hexTostr } from "@/utils/platform";
 import { approve, walletPing } from "@/extension/userRequest";
 import { useRoute } from "vue-router";
-import { getSelectedAccount, unBlockLockout, blockLockout, clearPk, getSettings } from "@/utils/platform";
+import { getSelectedAccount, unBlockLockout, blockLockout } from "@/utils/platform";
 import UnlockModal from "@/views/UnlockModal.vue";
 
 export default defineComponent({
@@ -83,7 +83,6 @@ export default defineComponent({
     const alertMsg = ref("");
     const timerReject = ref(140);
     let interval: any;
-    let pSettings = getSettings()
 
     const onCancel = () => {
       window.close();
@@ -126,17 +125,12 @@ export default defineComponent({
     const onSign = async () => {
       loading.value = true;
       const selectedAccount = await getSelectedAccount();
+      loading.value = false;
       if ((selectedAccount.pk ?? "").length !== 66) {
         const modalResult = await openModal();
         if (modalResult) {
           unBlockLockout();
-          if(!pSettings) {
-            pSettings = getSettings()
-          }
-          const settings = await pSettings
-          if(settings.encryptAfterEveryTx) {
-              clearPk()
-            }
+          loading.value = true
           approve(rid);
         } else {
           onCancel();

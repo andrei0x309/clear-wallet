@@ -1,11 +1,14 @@
 {
   "name": "clear-wallet",
-  "version": "0.0.1",
+  "version": "1.0.5",
   "private": true,
   "scripts": {
     "dev": "vite",
     "build": "tsc --out src/extension/inject.js src/extension/inject.ts && vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "yarn config set version-tag-prefix clear-wallet@v &&  yarn config set version-git-message 'clear-wallet@v%s' && yarn version --patch && yarn postversion",
+    "postversion": "git push",
+    "pub": "yarn build && yarn release && ts-node ./scripts/create-release.ts"
   },
   "dependencies": {
     "@capacitor/app": "^4.0.1",
@@ -39,11 +42,13 @@
     "sass": "^1.55.0",
     "stream-browserify": "^3.0.0",
     "ts-jest": "^29.0.1",
+    "ts-node": "^10.9.1",
     "typescript": "^4.8.3",
     "util": "^0.12.4",
     "vite": "^3.1.3",
     "vue-tsc": "^0.40.13",
-    "yarn-upgrade-all": "^0.7.1"
+    "yarn-upgrade-all": "^0.7.1",
+    "archiver": "^5.3.1"
   },
   "description": "An Ionic project"
 }
