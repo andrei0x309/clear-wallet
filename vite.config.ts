@@ -27,7 +27,7 @@ export default defineConfig({
     rollupOptions: {
       plugins: [nodePolyfills()]
     },
-    sourcemap: true,
+    sourcemap: false,
     chunkSizeWarningLimit: 1000,
     commonjsOptions: {
       transformMixedEsModules: true
