@@ -45,7 +45,7 @@ return new Promise((resolve, reject) => {
     if (ping) {
         data.type = 'CLWALLET_PING'
     }
-    // console.log('data in', data)
+    console.log('data in', data)
     window.postMessage(data, "*");
 })
 }

@@ -201,17 +201,33 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                 }
                 case 'eth_requestAccounts':
                 case 'eth_accounts': {
+                try {
                     // give only the selected address for better privacy
                     const account = await getSelectedAccount()
                     const address = account?.address ? [account?.address] : []
                     sendResponse(address)
-                    break
+                 } catch {
+                    sendResponse({
+                        error: true,
+                        code: rpcError.USER_REJECTED,
+                        message: 'No network or user selected'
+                    })
+                }
+                break
                 }
                 case 'eth_chainId': {
+                try {
                     const network = await getSelectedNetwork()
                     const chainId = network?.chainId ?? 0
                     sendResponse(`0x${chainId.toString(16)}`)
-                    break
+                } catch {
+                    sendResponse({
+                        error: true,
+                        code: rpcError.USER_REJECTED,
+                        message: 'No network or user selected'
+                    })
+                }
+                break
                 }
                 case 'eth_sendTransaction': {
                     try {

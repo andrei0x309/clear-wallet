@@ -39,7 +39,7 @@ window.addEventListener("message", (event) => {
     if((event?.data?.data?.method ?? 'x') in allowedMethods) {
     chrome.runtime.sendMessage(event.data.data, (res) => {
       const data = { type: "CLWALLET_PAGE", data: res, resId: event.data.resId, website: window?.location?.href ?? '' };
-      // console.log('data back', data)
+      console.log('data back', data)
       window.postMessage(data, "*");
     })
   }
