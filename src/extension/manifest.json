@@ -23,7 +23,6 @@
     "minimum_chrome_version": "93",
 
     "permissions": [
-      "tabs",
       "notifications",
       "storage",
       "alarms",

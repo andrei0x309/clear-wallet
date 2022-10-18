@@ -37,6 +37,17 @@
         <ion-label>Selected Network ID: {{ selectedNetwork?.chainId }}</ion-label>
         <ion-button @click="networksModal = true">Select</ion-button>
       </ion-item>
+      <ion-item v-if="!loading && selectedNetwork?.explorer && selectedAccount?.address">
+        <ion-button
+          @click="
+            openTab(
+              `${selectedNetwork.explorer}/${selectedAccount?.address}`.replace('//', '/')
+            )
+          "
+          expand="block"
+          >View Address on {{ selectedNetwork.explorer }}
+        </ion-button>
+      </ion-item>
 
       <ion-loading
         :is-open="loading"
@@ -54,82 +65,78 @@
       ></ion-toast>
     </ion-content>
 
-    <ion-modal
-        :is-open="accountsModal"
-      >
-          <ion-header>
-            <ion-toolbar>
-              <ion-buttons slot="start">
-                <ion-button @click="accountsModal=false">Close</ion-button>
-              </ion-buttons>
-              <ion-title>Select</ion-title>
-            </ion-toolbar>
-          </ion-header>
-          <ion-content class="ion-padding">
-            <ion-list style="margin-bottom: 4rem">
-              <ion-radio-group :value="selectedAccount?.address ?? ''">
-                <ion-list-header>
-                  <ion-label>Accounts</ion-label>
-                </ion-list-header>
+    <ion-modal :is-open="accountsModal">
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button @click="accountsModal = false">Close</ion-button>
+          </ion-buttons>
+          <ion-title>Select</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-list style="margin-bottom: 4rem">
+          <ion-radio-group :value="selectedAccount?.address ?? ''">
+            <ion-list-header>
+              <ion-label>Accounts</ion-label>
+            </ion-list-header>
 
-                <ion-list
-                  @click="changeSelectedAccount(account.address)"
-                  class="ion-padding"
-                  v-for="account of accounts"
-                  :key="account.address"
-                  button
-                >
-                  <ion-item>
-                    <ion-radio slot="start" :value="account.address" />
-                    <ion-label>{{ account.name }}</ion-label>
-                  </ion-item>
-                  <ion-item>
-                    <ion-text style="font-size:0.8rem;">{{ account.address }}</ion-text>
-                  </ion-item>
-                </ion-list>
-              </ion-radio-group>
+            <ion-list
+              @click="changeSelectedAccount(account.address)"
+              class="ion-padding"
+              v-for="account of accounts"
+              :key="account.address"
+              button
+            >
+              <ion-item>
+                <ion-radio slot="start" :value="account.address" />
+                <ion-label>{{ account.name }}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-text style="font-size: 0.8rem">{{ account.address }}</ion-text>
+              </ion-item>
             </ion-list>
-          </ion-content>
-          </ion-modal>
-          <ion-modal
-        :is-open="networksModal"
-      >
-          <ion-header>
-            <ion-toolbar>
-              <ion-buttons slot="start">
-                <ion-button @click="networksModal=false">Close</ion-button>
-              </ion-buttons>
-              <ion-title>Select</ion-title>
-            </ion-toolbar>
-          </ion-header>
-          <ion-content class="ion-padding">
-            <ion-list style="margin-bottom: 4rem">
-              <ion-radio-group :value="selectedNetwork.chainId">
-                <ion-list-header>
-                  <ion-label>Networks</ion-label>
-                </ion-list-header>
+          </ion-radio-group>
+        </ion-list>
+      </ion-content>
+    </ion-modal>
+    <ion-modal :is-open="networksModal">
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button @click="networksModal = false">Close</ion-button>
+          </ion-buttons>
+          <ion-title>Select</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-list style="margin-bottom: 4rem">
+          <ion-radio-group :value="selectedNetwork.chainId">
+            <ion-list-header>
+              <ion-label>Networks</ion-label>
+            </ion-list-header>
 
-                <ion-list
-                  class="ion-padding"
-                  v-for="network of networks"
-                  :key="network.chainId"
-                >
-                  <ion-item>
-                    <ion-radio
-                      @click="changeSelectedNetwork(network.chainId)"
-                      slot="start"
-                      :value="network.chainId"
-                    />
-                    <ion-label>{{ network.name }}</ion-label>
-                  </ion-item>
-                  <ion-item>
-                    <ion-text>{{ network.rpc }}</ion-text>
-                  </ion-item>
-                </ion-list>
-              </ion-radio-group>
+            <ion-list
+              class="ion-padding"
+              v-for="network of networks"
+              :key="network.chainId"
+            >
+              <ion-item>
+                <ion-radio
+                  @click="changeSelectedNetwork(network.chainId)"
+                  slot="start"
+                  :value="network.chainId"
+                />
+                <ion-label>{{ network.name }}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-text>{{ network.rpc }}</ion-text>
+              </ion-item>
             </ion-list>
-          </ion-content>
-      </ion-modal>
+          </ion-radio-group>
+        </ion-list>
+      </ion-content>
+    </ion-modal>
   </ion-page>
 </template>
 
@@ -168,12 +175,13 @@ import {
   replaceNetworks,
   getUrl,
   saveSelectedNetwork,
-  numToHexStr
+  numToHexStr,
+  openTab,
 } from "@/utils/platform";
 import type { Network, Account, Networks } from "@/extension/types";
 import { mainNets } from "@/utils/networks";
 import router from "@/router";
-import { triggerListner } from '@/extension/listners'
+import { triggerListner } from "@/extension/listners";
 
 import { copyOutline } from "ionicons/icons";
 
@@ -243,19 +251,21 @@ export default defineComponent({
       router.push("/tabs/add-network");
     };
 
-
     const changeSelectedAccount = async (address: string) => {
       loading.value = true;
-      const findIndex = accounts.value.findIndex(a => a.address == address)
+      const findIndex = accounts.value.findIndex((a) => a.address == address);
       if (findIndex > -1) {
-        selectedAccount.value = accounts.value[findIndex]
-        await saveSelectedAccount(selectedAccount.value)
+        selectedAccount.value = accounts.value[findIndex];
+        await saveSelectedAccount(selectedAccount.value);
         // console.log(({ [address]: accounts.value[address], ...accounts.value}))
         accounts.value.splice(findIndex, 1);
-        accounts.value.splice(0,0,selectedAccount.value)
-        const newAccounts = [...accounts.value]
-        await replaceAccounts(newAccounts)
-        triggerListner('accountsChanged', newAccounts.map(a => a.address)) 
+        accounts.value.splice(0, 0, selectedAccount.value);
+        const newAccounts = [...accounts.value];
+        await replaceAccounts(newAccounts);
+        triggerListner(
+          "accountsChanged",
+          newAccounts.map((a) => a.address)
+        );
       }
       accountsModal.value = false;
       loading.value = false;
@@ -269,7 +279,7 @@ export default defineComponent({
           Object.assign({ [chainId]: networks.value[chainId] }, networks.value)
         );
         selectedNetwork.value = networks.value[chainId];
-        triggerListner('chainChanged', numToHexStr(chainId))
+        triggerListner("chainChanged", numToHexStr(chainId));
       }
       networksModal.value = false;
       loading.value = false;
@@ -293,6 +303,7 @@ export default defineComponent({
       networksModal,
       mainNets,
       getUrl,
+      openTab,
     };
   },
 });
