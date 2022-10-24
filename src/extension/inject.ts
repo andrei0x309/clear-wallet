@@ -13,12 +13,11 @@ const listners = {
 const promResolvers = {} as any
 
 const listner =  function(event: any) {
-    if (event.source != window)
-        return;
+    if (event.source != window) return;
+
     if (event.data.type && (event.data.type === "CLWALLET_PAGE")) {
         if(event?.data?.data?.error){
             promResolvers[event.data.resId].reject(event.data.data);
-            // console.log('rejected')
         }else {
             promResolvers[event.data.resId].resolve(event.data.data);
         }
@@ -38,16 +37,22 @@ const listner =  function(event: any) {
 window.addEventListener("message",listner)
 
 const sendMessage = (args: RequestArguments, ping = false) => {
-return new Promise((resolve, reject) => {
-    const resId = crypto.randomUUID()
-    promResolvers[resId] = { resolve, reject }
-    const data = { type: "CLWALLET_CONTENT", data: args, resId};
-    if (ping) {
-        data.type = 'CLWALLET_PING'
+if(Object.values(promResolvers).filter(r=> r).length < 10 ) {
+    return new Promise((resolve, reject) => {
+        const resId = crypto.randomUUID()
+        promResolvers[resId] = { resolve, reject }
+        const data = { type: "CLWALLET_CONTENT", data: args, resId};
+        if (ping) {
+            data.type = 'CLWALLET_PING'
+        }
+        // console.log('data in', data)
+        window.postMessage(data, "*");
+    })
+    } else {
+        return new Promise((resolve, reject) => {
+            reject(new Error("You have reached the maximum number of concurent wallet messeges."))
+        })
     }
-    console.log('data in', data)
-    window.postMessage(data, "*");
-})
 }
 
 const eth = new Proxy({
@@ -61,7 +66,6 @@ const eth = new Proxy({
     },
     request: (args: RequestArguments): Promise<unknown> => {
         return sendMessage(args)
-         
     },
     // Deprecated
     sendAsync: (arg1: RequestArguments, arg2: any): void => {
@@ -138,9 +142,9 @@ const eth = new Proxy({
     _rpcRequest: () => null,
     _handleAccountsChanged: () => null,
     // Deprecated - hardcoded for now, websites should not access this directly since is deprecated for a long time
-    chainId: "0x89",
+    chainId: "0xa",
     // Deprecated - hardcoded for now, websites should not access this directly since is deprecated for a long time
-    networkVersion: "137",
+    networkVersion: 10,
     selectedAddress: null,
     autoRefreshOnNetworkChange: false,
     // Internal Simulate Metamask 

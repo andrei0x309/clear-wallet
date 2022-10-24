@@ -109,3 +109,7 @@ export const testNets = {
         icon: 'arbitrum.webp'
     },
 }
+
+export const chainIdToPriceId = (chainId: number): string => {
+    return mainNets?.[chainId]?.priceId ?? 'x'
+}

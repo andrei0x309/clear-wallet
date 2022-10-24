@@ -19,6 +19,25 @@
           <p style="font-size: 0.7rem">{{ selectedAccount?.address }}</p>
           <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
         </ion-item>
+        <ion-item
+          v-if="!loading && selectedNetwork?.explorer && selectedAccount?.address"
+        >
+          <ion-button
+            @click="
+              openTab(
+                `${selectedNetwork.explorer}/address/${selectedAccount?.address}`.replace(
+                  '//',
+                  '/'
+                )
+              )
+            "
+            expand="block"
+            >View Address on
+            {{
+              `${selectedNetwork.explorer}`.replace("https://", "").replace("http://", "")
+            }}
+          </ion-button>
+        </ion-item>
       </ion-list>
       <ion-item v-if="loading || Object.keys(networks).length < 1">
         <ion-label>No EVM Networks found</ion-label>
@@ -36,17 +55,6 @@
         </ion-avatar>
         <ion-label>Selected Network ID: {{ selectedNetwork?.chainId }}</ion-label>
         <ion-button @click="networksModal = true">Select</ion-button>
-      </ion-item>
-      <ion-item v-if="!loading && selectedNetwork?.explorer && selectedAccount?.address">
-        <ion-button
-          @click="
-            openTab(
-              `${selectedNetwork.explorer}/${selectedAccount?.address}`.replace('//', '/')
-            )
-          "
-          expand="block"
-          >View Address on {{ selectedNetwork.explorer }}
-        </ion-button>
       </ion-item>
 
       <ion-loading
