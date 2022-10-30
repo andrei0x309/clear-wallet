@@ -187,6 +187,7 @@ import {
   unBlockLockout,
   getSelectedAccount,
   strToHex,
+  hexTostr,
 } from "@/utils/platform";
 import { getBalance, getGasPrice, estimateGas } from "@/utils/wallet";
 import type { Network } from "@/extension/types";
@@ -216,7 +217,7 @@ export default defineComponent({
     const route = useRoute();
     const rid = (route?.params?.rid as string) ?? "";
     let isError = false;
-    const decodedParam = decodeURIComponent((route.params?.param as string) ?? "");
+    const decodedParam = hexTostr((route.params?.param as string) ?? "");
     const params = JSON.parse(decodedParam);
     const signTxData = ref("");
     const alertOpen = ref(false);

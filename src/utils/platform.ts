@@ -137,8 +137,16 @@ export const getRandomPk = () => {
     ).substring(0, 66)
 }
 
-export const smallRandomString = () => {
-    return (Math.random() + 1).toString(36).substring(7);
+export const smallRandomString = (size = 7) => {
+    if(size <= 7) {
+    return (Math.random() + 1).toString(36).substring(0,7);
+    } else {
+        let str = ''
+        for(let i = 0; i < (size / 7) << 0; i++){
+            str+=(Math.random() + i).toString(36).substring(0,7);
+        }
+        return str.substring(0, size)
+    }
 }
 
 export const clearPk = async (): Promise<void> => {

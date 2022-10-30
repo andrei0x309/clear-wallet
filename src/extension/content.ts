@@ -1,5 +1,28 @@
-import { getSelectedNetwork, numToHexStr } from "@/utils/platform";
-import type { RequestArguments  } from '@/extension/types'
+
+(() =>{
+  try {
+    const metamaskStub = `
+    // Add MetamaskAPI STUB for wallets lib to detect wallet exists
+    window.ethereum = {
+      isMetaMask: true,
+      isConnected: () => false
+  }`;
+document.documentElement.setAttribute('onreset', metamaskStub);
+document.documentElement.dispatchEvent(new CustomEvent('reset'));
+document.documentElement.removeAttribute('onreset');
+      const container = document.documentElement;
+      const script = document.createElement('script');
+      script.setAttribute('async', "false")
+      script.setAttribute('fetchpriority', "high")
+      script.src = chrome.runtime.getURL('src/extension/webInject.js')
+      container.prepend(script)
+  } catch (error) {
+    console.error('MetaMask: Provider injection failed.', error);
+  }
+  chrome.runtime.connect({ 
+      name: 'content'
+  })
+})()
 
 const allowedMethods = {
   'eth_accounts': true,
@@ -27,41 +50,46 @@ const allowedMethods = {
   'eth_signTypedData_V3': true,
   'signTypedData_v4': true,
   'eth_signTypedData_v4': true,
+  'web3_clientVersion': true,
+  'wallet_getPermissions': true,
+  'net_listening': true,
+  'eth_coinbase': true,
+  'wallet_addEthereumChain': true
 }
 
 window.addEventListener("message", (event) => {
   if (event.source != window)
       return;
-
+  console.log(event)
   if (event.data.type && (event.data.type === "CLWALLET_CONTENT")) {
     event.data.data.resId = event.data.resId
     event.data.data.type = "CLWALLET_CONTENT_MSG"
+    event.data.data.website =  document?.location?.href ?? ''
     if((event?.data?.data?.method ?? 'x') in allowedMethods) {
     chrome.runtime.sendMessage(event.data.data, (res) => {
-      const data = { type: "CLWALLET_PAGE", data: res, resId: event.data.resId, website: window?.location?.href ?? '' };
-      // console.log('data back', data)
+      const data = { type: "CLWALLET_PAGE", data: res, resId: event.data.resId };
+      console.log('data back', data)
       window.postMessage(data, "*");
     })
   }
    else {
-    const data = { type: "CLWALLET_PAGE", data: { error: true, message: 'Unknown method requested'}, resId: event.data.resId };
+    const data = { type: "CLWALLET_PAGE", data: { error: true, message: 'ClearWallet: Unknown method requested ' + event?.data?.data?.method ?? ''}, resId: event.data.resId };
     window.postMessage(data, "*");
   }
   } else if (event.data.type && (event.data.type === "CLWALLET_PING")) {
-    getSelectedNetwork().then(network => {
-      const data = { type: "CLWALLET_PAGE_LISTENER", data: {
-        listner: 'connect',
-        data: {
-          chainId: numToHexStr(network.chainId ?? 0)
-        }
-      }};
-      window.postMessage(data, "*");
+    event.data.data.resId = event.data.resId
+    event.data.data.type = "CLWALLET_CONTENT_MSG"
+    event.data.data.method = "wallet_connect"
+    event.data.data.params =  Array(0)
+    chrome.runtime.sendMessage(event.data.data , async (res) => {
+        window.postMessage(res, "*");
+
     })
   }
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-chrome.runtime.onMessage.addListener((message: RequestArguments , sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: any , sender, sendResponse) => {
   if(message.type === "CLWALLET_EXT_LISTNER") {
     const data = { type: "CLWALLET_PAGE_LISTENER", data: message.data  };
     // console.log('data listner', data)
@@ -70,12 +98,3 @@ chrome.runtime.onMessage.addListener((message: RequestArguments , sender, sendRe
   return true
 });
 
-(function() {
-    chrome.runtime.connect({ 
-      name: 'content'
-    })
-    const script = document.createElement('script')
-    script.src =  chrome.runtime.getURL('src/extension/inject.js')
-    document.documentElement.appendChild(script)
-  })()
-  

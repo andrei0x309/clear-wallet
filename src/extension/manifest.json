@@ -21,7 +21,6 @@
     }
     },
     "minimum_chrome_version": "93",
-
     "permissions": [
       "tabs",
       "notifications",
@@ -50,8 +49,9 @@
           "js": ["/src/extension/content.ts"]
         }
       ],
+
       "web_accessible_resources": [{
-        "resources": ["src/extension/inject.js"],
+        "resources": ["src/extension/inject.js", "src/extension/webInject.js", "src/extension/content.js"],
         "matches": ["<all_urls>"]
       }]
 }

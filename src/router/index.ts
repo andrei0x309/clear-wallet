@@ -28,6 +28,10 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/WalletError.vue'),
   },
   {
+    path: '/request-network/:rid/:param',
+    component: () => import('@/views/RequestNetwork.vue'),
+  },
+  {
     path: '/tabs/',
     component: AppTabs,
     children: [

@@ -30,4 +30,6 @@ npm-debug.log*
 /plugins
 /www
 /src/extension/inject.js
+/src/extension/content.js
+/src/extension/webInject.js
 releases

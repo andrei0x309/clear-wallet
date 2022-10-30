@@ -78,7 +78,7 @@ export default defineComponent({
     const route = useRoute();
     const loading = ref(false);
     const rid = (route?.params?.rid as string) ?? "";
-    const signMsg = ref(hexTostr((route?.params?.param as string) ?? ""));
+    const signMsg = ref(hexTostr(hexTostr((route?.params?.param as string) ?? "")));
     const alertOpen = ref(false);
     const alertMsg = ref("");
     const timerReject = ref(140);
@@ -130,7 +130,7 @@ export default defineComponent({
         const modalResult = await openModal();
         if (modalResult) {
           unBlockLockout();
-          loading.value = true
+          loading.value = true;
           approve(rid);
         } else {
           onCancel();

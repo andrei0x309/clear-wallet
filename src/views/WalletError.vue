@@ -52,7 +52,7 @@ import {
   IonLoading,
 } from "@ionic/vue";
 import { useRoute } from "vue-router";
-
+import { hexTostr } from "@/utils/platform";
 
 export default defineComponent({
   components: {
@@ -69,7 +69,7 @@ export default defineComponent({
   },
   setup: () => {
     const route = useRoute();
-    const error = decodeURIComponent((route.params?.param as string) ?? "");
+    const error = hexTostr((route.params?.param as string) ?? "");
     const loading = ref(true);
 
     const onCancel = () => {

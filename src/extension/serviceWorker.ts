@@ -1,24 +1,25 @@
-import { getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl, addToHistory } from '@/utils/platform';
+import { getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl, addToHistory, getNetworks, strToHex } from '@/utils/platform';
 import { userApprove, userReject, rIdWin, rIdData } from '@/extension/userRequest'
 import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber, evmCall, getTxByHash, getTxReceipt, signTypedData } from '@/utils/wallet'
 import type { RequestArguments } from '@/extension/types'
 import { rpcError } from '@/extension/rpcConstants'
 import { updatePrices } from '@/utils/gecko'
+import { mainNets, testNets } from '@/utils/networks'
 
 let notificationUrl: string
 
 chrome.runtime.onInstalled.addListener(() => {
     console.log('Service worker installed');
+
+    chrome.runtime.onConnect.addListener(port => port.onDisconnect.addListener(() => 
+    {
+        console.log('Service worker connected');
+    }))
+
     chrome.runtime.connect(null as unknown as string, {
         name:'sw-connection'
     })
 })
-
-chrome.runtime.onConnect.addListener(port => port.onDisconnect.addListener(() => 
-{
-    console.log('Service worker connected');
-}))
-
 
 chrome.runtime.onStartup.addListener(() => {
     console.log('Service worker startup');
@@ -78,12 +79,12 @@ if (!chrome.notifications.onButtonClicked.hasListener(viewTxListner)){
     chrome.notifications.onButtonClicked.addListener(viewTxListner)
 }
 
-chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendResponse) => {
+const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: any) => any) => {
     if(message?.type !== "CLWALLET_CONTENT_MSG") {
         return true
     }
     (async () => {
-        if (!('method' in message)) {
+        if (!(message?.method)) {
             sendResponse({
                 code: 500,
                 message: 'Invalid request method'
@@ -245,7 +246,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                             await chrome.windows.create({
                                 height: 450,
                                 width: 400,
-                                url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${encodeURIComponent('No account is selected you need to have an account selected before trying to make a transaction')}&rid=${String(message?.resId ?? '')}`),
+                                url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${strToHex('No account is selected you need to have an account selected before trying to make a transaction')}&rid=${String(message?.resId ?? '')}`),
                                 type: 'popup'
                             })
                             return
@@ -254,13 +255,13 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                             await chrome.windows.create({
                                 height: 450,
                                 width: 400,
-                                url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${encodeURIComponent('No network is selected you need to have a network selected before trying to make a transaction')}&rid=${String(message?.resId ?? '')}`),
+                                url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${strToHex('No network is selected you need to have a network selected before trying to make a transaction')}&rid=${String(message?.resId ?? '')}`),
                                 type: 'popup'
                             })
                             return
                         }
                         params.from = account.address
-                        const serializeParams = encodeURIComponent(JSON.stringify(params)) ?? ''
+                        const serializeParams = strToHex(JSON.stringify(params)) ?? ''
                         const pEstimateGas = estimateGas({
                             to: params?.to ?? '',
                             from: params?.from ?? '',
@@ -332,7 +333,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                             chrome.windows.create({
                                 height: 450,
                                 width: 400,
-                                url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${encodeURIComponent(String(err))}&rid=${String(message?.resId ?? '')}`),
+                                url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${strToHex(String(err))}&rid=${String(message?.resId ?? '')}`),
                                 type: 'popup'
                             })
                             chrome.notifications.create({
@@ -370,7 +371,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                         await chrome.windows.create({
                             height: 450,
                             width: 400,
-                            url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${encodeURIComponent('No account is selected you need to have an account selected before trying sign a message')}&rid=${String(message?.resId ?? '')}`),
+                            url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${strToHex('No account is selected you need to have an account selected before trying sign a message')}&rid=${String(message?.resId ?? '')}`),
                             type: 'popup'
                         })
                         return
@@ -391,7 +392,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                     chrome.windows.create({
                         height: 450,
                         width: 400,
-                        url: chrome.runtime.getURL(`index.html?route=sign-msg&param=${signMsgData}&rid=${String(message?.resId ?? '')}`),
+                        url: chrome.runtime.getURL(`index.html?route=sign-msg&param=${strToHex(signMsgData)}&rid=${String(message?.resId ?? '')}`),
                         type: 'popup'
                     }).then((win) => {
                         userReject[String(win.id)] = reject
@@ -419,19 +420,34 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                     }
                     break
                 }
-                // NON Standard  metamask API
+                // NON Standard / metamask API
+                case 'eth_coinbase': {
+                    const account = await getSelectedAccount()
+                    const address = account?.address ?? null
+                    sendResponse(address)
+                    break
+                }
+                case 'net_listening': {
+                    sendResponse(true)
+                    break
+                }
+                case 'web3_clientVersion': {
+                    sendResponse("MetaMask/v10.20.0")
+                    break
+                }
+                case 'wallet_getPermissions':
                 case 'wallet_requestPermissions': {
                     const account = await getSelectedAccount()
                     const address = account?.address ? [account?.address] : []
                     sendResponse([{
-                        caveats: {
-                            type:'',
+                        id: smallRandomString(21),
+                        parentCapability: 'eth_accounts',
+                        invoker: message?.website?.split('/').slice(0,3).join('/') ?? '',
+                        caveats: [{
+                            type:'restrictReturnedAccounts',
                             value: address
-                        },
-                        invoker: '',
+                        }],
                         date: Date.now(),
-                        id: smallRandomString(),
-                        parentCapability: Object.keys(message?.params?.[0] ?? {})?.[0] ?? 'unknown'
                     }])
                     break
                 }
@@ -443,6 +459,10 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                 }
                 case 'wallet_switchEthereumChain': {
                     try {
+                        const currentChainId = `0x${((await getSelectedNetwork())?.chainId ?? 0).toString(16)}`
+                        if(currentChainId === String(message?.params?.[0]?.chainId ?? '' )) {
+                            sendResponse(null)
+                        }else {
                         await new Promise((resolve, reject) => {
                         chrome.windows.create({
                             height: 450,
@@ -454,19 +474,89 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                             userApprove[String(win.id)] = resolve
                             rIdWin[String(win.id)] = String(message.resId)
                         })
-                        
                         })
                         sendResponse(null)
+                        }
                         } catch {
                             sendResponse({
                                 error: true,
                                 code: rpcError.USER_REJECTED,
-                                message: 'User Rejected Signature'
+                                message: 'User Rejected chain switch'
                             })
                         }
                     break
                 }
+                case 'wallet_addEthereumChain': {
+                    const userNetworks = await getNetworks()
+                    const networks = {...mainNets, ...testNets, ...userNetworks}
+                    const chainId = Number(message?.params?.[0]?.chainId ?? '0')
+                    if(!chainId) {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'Invalid Network'
+                        })
+                    }
+                    if( chainId in networks ) {
+                        mainListner({...message, method:'wallet_switchEthereumChain', params: [{
+                            chainId: `0x${(chainId).toString(16)}`
+                        }] }, sender, sendResponse)
+                    } else {
+                        if ( !message?.params?.[0]?.chainId || 
+                             !message?.params?.[0]?.chainName || 
+                             !message?.params?.[0]?.rpcUrls ||
+                             !message?.params?.[0]?.blockExplorerUrls ||
+                             !message?.params?.[0]?.nativeCurrency?.symbol 
+                            ){
+                                sendResponse({
+                                    error: true,
+                                    code: rpcError.USER_REJECTED,
+                                    message: 'Invalid Network params chainId, chainName, rpcUrls, blockExplorerUrls, and nativeCurrency are required'
+                                })
+                            }else {
+                                try {
+                                    await new Promise((resolve, reject) => {
+                                    chrome.windows.create({
+                                        height: 450,
+                                        width: 400,
+                                        url: chrome.runtime.getURL(`index.html?route=request-network&param=${strToHex(JSON.stringify({...{website: message?.website ?? ''}, ...(message?.params?.[0] ?? {})}) ?? '')}&rid=${String(message?.resId ?? '')}`),
+                                        type: 'popup'
+                                    }).then((win) => {
+                                        userReject[String(win.id)] = reject
+                                        userApprove[String(win.id)] = resolve
+                                        rIdWin[String(win.id)] = String(message.resId)
+                                    })
+                                    })
+                                    sendResponse(null)
+                                    } catch (err) {
+                                        console.log('err')
+                                        sendResponse({
+                                            error: true,
+                                            code: rpcError.USER_REJECTED,
+                                            message: 'User Rejected adding network'
+                                        })
+                                    }
+                            }
+                    }
+                    break
+                }
                 // internal messeges
+                case 'wallet_connect': {
+                    const pNetwork =  getSelectedNetwork()
+                    const pAccount =  getSelectedAccount()
+                    const [network, account] = await Promise.all([pNetwork, pAccount])
+                    const address = account?.address ? [account?.address] : []
+                    const chainId = `0x${(network?.chainId ?? 0).toString(16)}`
+                    const data = { type: "CLWALLET_PAGE_LISTENER", data: {
+                        listner: 'connect',
+                        data: {
+                            chainId
+                        },
+                        address
+                      }};
+                    sendResponse(data)
+                    break
+                }
                 case 'wallet_approve': {
                     if(String(sender.tab?.windowId) in rIdWin){
                         userApprove[String(sender.tab?.windowId)]?.(true)
@@ -500,7 +590,7 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
                     sendResponse({
                         error: true,
                         code: rpcError.INVALID_PARAM,
-                        message: 'Invalid request method'
+                        message: 'ClearWallet: Invalid request method ' + message?.method ?? '' 
                     })
                     break
                 }
@@ -509,4 +599,6 @@ chrome.runtime.onMessage.addListener((message: RequestArguments, sender, sendRes
     }
     )();
     return true;
-});
+}
+
+chrome.runtime.onMessage.addListener(mainListner);
