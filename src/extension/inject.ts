@@ -278,7 +278,7 @@ const listner =  function(event: any) {
         }
         promResolvers.delete(event.data.resId)
     } catch (e) {
-        console.log('Failed to connect resolve msg', e)
+        // console.log('Failed to connect resolve msg', e)
     }
     } else if( event.data.type && (event.data.type === "CLWALLET_PAGE_LISTENER")) {
         if((event?.data?.data?.listner ?? 'x') in listners ) {
@@ -290,7 +290,7 @@ const listner =  function(event: any) {
                     (<any>eth).selectedAddress = event?.data?.data?.address ?? null;
                     (<any>eth).isConnected = () => true;
                 } else if( listnerName === 'chainChanged' ) {
-                    console.log(event?.data?.data?.data);
+                    // console.log(event?.data?.data?.data);
                     (<any>eth).networkVersion = event?.data?.data?.data.toString(10) ?? '137';
                     (<any>eth).chainId = event?.data?.data?.data ?? '0x89';
                 } else if ( listnerName === 'accountsChanged' ) {
@@ -302,7 +302,7 @@ const listner =  function(event: any) {
                     listners.once[listnerName].delete(listner)
                 });
             } catch (e) {
-                console.error(e)
+                // console.error(e)
                 // ignore
             }
         }   
@@ -311,41 +311,23 @@ const listner =  function(event: any) {
 
 window.addEventListener("message",listner)
 
-const proxy1 = new Proxy({
-    // on: (event: any, callback:any) => { if (event === 'message') {
-    //     debugger;
-    //     callback(true, true)
-    // } }
-}, {
-    get: function(target, name, receiver) {
-        if (typeof (<any>target)[name] == 'function') {
-            return function (...args: any) {
-              console.dir({ call: [name, ...args] });
-            }
-            }
+// const proxy1 = new Proxy({
+//     // on: (event: any, callback:any) => { if (event === 'message') {
+//     //     debugger;
+//     //     callback(true, true)
+//     // } }
+// }, {
+//     get: function(target, name, receiver) {
+//         if (typeof (<any>target)[name] == 'function') {
+//             return function (...args: any) {
+//               console.dir({ call: [name, ...args] });
+//             }
+//             }
 
-        console.log('ETH', name.toString() , target, receiver);
-        return undefined
-    }
-})
-
-const proxy2 = new Proxy({
-    // on: (event: any, callback:any) => { if (event === 'message') {
-    //     debugger;
-    //     callback(true, true)
-    // } }
-}, {
-    get: function(target, name, receiver) {
-        if (typeof (<any>target)[name] == 'function') {
-            return function (...args: any) {
-              console.dir({ call: [name, ...args] });
-            }
-            }
-
-            console.log('web3', name.toString() , target, receiver);
-        return undefined
-    }
-})
+//         console.log('ETH', name.toString() , target, receiver);
+//         return undefined
+//     }
+// })
 
 const web3Shim = {
     currentProvider: eth,
@@ -362,7 +344,7 @@ Object.defineProperty(win, 'web3', {
 sendMessage({
     method: 'wallet_ready'
 }, true)
-console.log('Clear wallet injected', (window as any).ethereum, win)
+// console.log('Clear wallet injected', (window as any).ethereum, win)
 }
 
 injectWallet(this);

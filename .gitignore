@@ -33,3 +33,4 @@ npm-debug.log*
 /src/extension/content.js
 /src/extension/webInject.js
 releases
+rules.json

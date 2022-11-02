@@ -1,14 +1,13 @@
 {
   "name": "clear-wallet",
-  "version": "1.1.5",
+  "version": "1.1.4",
   "private": true,
   "scripts": {
     "dev": "vite",
-    "webInject": "tsc --out src/extension/webInject.js src/extension/webInject.ts",
     "inject": "tsc --out src/extension/inject.js src/extension/inject.ts",
     "content": "tsc --out src/extension/content.js src/extension/content.ts",
-    "manifestContent" : "ts-node ./release-scripts/replace-content-manifest.ts",
-    "build": "yarn inject && yarn webInject && yarn content && vue-tsc --noEmit && vite build && yarn manifestContent",
+    "post-build" : "ts-node ./release-scripts/post-build.ts",
+    "build": "yarn inject && yarn content && vue-tsc --noEmit && vite build && yarn post-build",
     "preview": "vite preview",
     "release": "yarn config set version-tag-prefix clear-wallet@v &&  yarn config set version-git-message 'clear-wallet@v%s' && yarn version --patch && yarn postversion",
     "postversion": "git push",

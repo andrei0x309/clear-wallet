@@ -3,8 +3,8 @@
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
     "default_locale": "en",
-    "version": "1.1.4",
-    "version_name": "1.1.4",
+    "version": "1.1.5",
+    "version_name": "1.1.5",
     "icons": {
       "16": "assets/extension-icon/wallet_16.png",
       "32": "assets/extension-icon/wallet_32.png",
@@ -20,9 +20,8 @@
         "128": "assets/extension-icon/wallet_128.png"
     }
     },
-    "minimum_chrome_version": "93",
+    "minimum_chrome_version": "94",
     "permissions": [
-      "tabs",
       "notifications",
       "storage",
       "alarms",
@@ -31,8 +30,7 @@
       "clipboardWrite"
     ],
     "host_permissions": [
-      "http://*/",
-      "https://*/"
+      "*://*/*"
     ],
     "background": {
         "service_worker": "/src/extension/serviceWorker.ts",
@@ -49,9 +47,8 @@
           "js": ["/src/extension/content.ts"]
         }
       ],
-
       "web_accessible_resources": [{
-        "resources": ["src/extension/inject.js", "src/extension/webInject.js", "src/extension/content.js"],
+        "resources": ["src/extension/inject.js"],
         "matches": ["<all_urls>"]
       }]
 }

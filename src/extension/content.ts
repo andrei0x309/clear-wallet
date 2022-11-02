@@ -1,21 +1,23 @@
 
 (() =>{
-  try {
-    const metamaskStub = `
-    // Add MetamaskAPI STUB for wallets lib to detect wallet exists
-    window.ethereum = {
-      isMetaMask: true,
-      isConnected: () => false
-  }`;
-document.documentElement.setAttribute('onreset', metamaskStub);
-document.documentElement.dispatchEvent(new CustomEvent('reset'));
-document.documentElement.removeAttribute('onreset');
+  try { 
+      // sha256-QANFAnmGYlNymbZUT9oHee/3HE1z/X5Qcngml3GzhVY=
+      const metamaskStub = `
+        // Add MetamaskAPI STUB for wallets lib to detect wallet exists
+        window.ethereum = {
+          isMetaMask: true,
+          isConnected: () => false
+      }`;
+      document.documentElement.setAttribute('onreset', metamaskStub);
+      document.documentElement.dispatchEvent(new CustomEvent('reset'));
+      document.documentElement.removeAttribute('onreset');
       const container = document.documentElement;
       const script = document.createElement('script');
       script.setAttribute('async', "false")
       script.setAttribute('fetchpriority', "high")
-      script.src = chrome.runtime.getURL('src/extension/webInject.js')
+      script.src = chrome.runtime.getURL('src/extension/inject.js')
       container.prepend(script)
+      script.addEventListener('load', () => { container.removeChild(script) } )
   } catch (error) {
     console.error('MetaMask: Provider injection failed.', error);
   }
@@ -60,7 +62,7 @@ const allowedMethods = {
 window.addEventListener("message", (event) => {
   if (event.source != window)
       return;
-  console.log(event)
+  // console.log(event)
   if (event.data.type && (event.data.type === "CLWALLET_CONTENT")) {
     event.data.data.resId = event.data.resId
     event.data.data.type = "CLWALLET_CONTENT_MSG"
@@ -68,7 +70,7 @@ window.addEventListener("message", (event) => {
     if((event?.data?.data?.method ?? 'x') in allowedMethods) {
     chrome.runtime.sendMessage(event.data.data, (res) => {
       const data = { type: "CLWALLET_PAGE", data: res, resId: event.data.resId };
-      console.log('data back', data)
+      // console.log('data back', data)
       window.postMessage(data, "*");
     })
   }
