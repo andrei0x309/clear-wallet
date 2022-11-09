@@ -92,21 +92,14 @@ class MetaMaskAPI {
         return sendMessage(args)
     }
     // Deprecated
-    sendAsync (arg1: any, arg2: any): void {
-        return this.send(arg1, arg2) as any
-    }
-    // Deprecated
-    send (arg1: unknown, arg2: unknown): unknown {
+    sendAsync (arg1: any, arg2: any): void | Promise<unknown>  {
         if( typeof arg1 === 'string' ) {
             return sendMessage({
                 method: arg1,
                 params: arg2 as object
             })
-        } else if (arg2 === undefined) {
-            console.error('Clear Wallet: Sync calling is deprecated and not supported')
-        }else {
-            sendMessage(arg1 as RequestArguments).then(result => {
-                if (typeof arg2 === 'function'){
+        }else if (typeof arg2 === 'function'){
+                sendMessage(arg1 as RequestArguments).then(result => {
                     (arg2 as (e?: any, r?: any) => any )(undefined, {
                             id: (arg1 as RequestArguments)?.id,
                             jsonrpc: '2.0',
@@ -114,17 +107,45 @@ class MetaMaskAPI {
                             result
                           }
                     )
-                }
-            }).catch( e => {
-                (arg2 as (er?: any, r?: any) => any )(new Error(e), {
-                    id: (arg1 as RequestArguments)?.id,
-                    jsonrpc: '2.0',
-                    method: (arg1 as RequestArguments).method,
-                    error: new Error(e)
-                  }
-            )
+                }).catch( e => {
+                    (arg2 as (er?: any, r?: any) => any )(new Error(e), {
+                        id: (arg1 as RequestArguments)?.id,
+                        jsonrpc: '2.0',
+                        method: (arg1 as RequestArguments).method,
+                        error: new Error(e)
+                      }
+                )
+                })
+            } 
+    }
+    // Deprecated
+    send (arg1: unknown, arg2: unknown): unknown {
+        if (arg2 === undefined) {
+            console.error('Clear Wallet: Sync calling is deprecated and not supported')
+        }else if( typeof arg1 === 'string' ) {
+            return sendMessage({
+                method: arg1,
+                params: arg2 as object
             })
-        }
+        }else if (typeof arg2 === 'function'){
+                sendMessage(arg1 as RequestArguments).then(result => {
+                    (arg2 as (e?: any, r?: any) => any )(undefined, {
+                            id: (arg1 as RequestArguments)?.id,
+                            jsonrpc: '2.0',
+                            method: (arg1 as RequestArguments).method,
+                            result
+                          }
+                    )
+                }).catch( e => {
+                    (arg2 as (er?: any, r?: any) => any )(new Error(e), {
+                        id: (arg1 as RequestArguments)?.id,
+                        jsonrpc: '2.0',
+                        method: (arg1 as RequestArguments).method,
+                        error: new Error(e)
+                      }
+                )
+                })
+            } 
     }
     on (eventName: string, callback: () => void) {
         this.addListener(eventName, callback)
@@ -262,7 +283,7 @@ const eth = new Proxy( new MetaMaskAPI(), {
     //             // igmore
     //         }
     // },
-    deleteProperty: () => { return false },
+    deleteProperty: () => { return true },
 })
 
 const listner =  function(event: any) {

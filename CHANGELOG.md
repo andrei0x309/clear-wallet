@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.1.6
+
+- made wallet proxy `return true` on trying to overwrite object (to fix an issue with the official polygon bridge website)
+- change `sendAsync` implementation to `not redirect` to `send` method to improve compatibility
+- added notification on gas estimation error due to invalid decimal trimming from user
+
 ## Manifest Version 1.1.5
 
 - Added multiple new multiple implementations of MetamaskAPI including request to add a network by a website

@@ -191,7 +191,20 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         data: params?.data ?? '',
                         value: params?.value ?? '0x0'
                     }))
-                    } catch {
+                    } catch(err) {
+                    if(String(err).includes('UNPREDICTABLE_GAS_LIMIT')) {
+                        chrome.notifications.create({
+                            message: 'Gas estimate failed likely due to to many decimals substract 0.00001 form the value you have inpputed and try again.',
+                            title: 'Error',
+                            iconUrl: getUrl('assets/extension-icon/wallet_128.png'),
+                            type: 'basic'
+                        } as any)
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'Gas estimate failed'
+                        })
+                    }
                     sendResponse({
                         error: true,
                         code: rpcError.USER_REJECTED,
