@@ -1,6 +1,6 @@
 import { getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl, addToHistory, getNetworks, strToHex } from '@/utils/platform';
 import { userApprove, userReject, rIdWin, rIdData } from '@/extension/userRequest'
-import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber, evmCall, getTxByHash, getTxReceipt, signTypedData } from '@/utils/wallet'
+import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber, evmCall, getTxByHash, getTxReceipt, signTypedData, getCode } from '@/utils/wallet'
 import type { RequestArguments } from '@/extension/types'
 import { rpcError } from '@/extension/rpcConstants'
 import { updatePrices } from '@/utils/gecko'
@@ -153,6 +153,18 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 case 'eth_getBalance': {
                     try {
                     sendResponse(await getBalance())
+                    } catch {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'No network or user selected'
+                        })
+                    }
+                    break
+                }
+                case 'eth_getCode': {
+                    try {
+                    sendResponse(await getCode(message?.params?.[0] as string))
                     } catch {
                         sendResponse({
                             error: true,

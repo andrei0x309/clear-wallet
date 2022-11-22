@@ -56,7 +56,8 @@ const allowedMethods = {
   'wallet_getPermissions': true,
   'net_listening': true,
   'eth_coinbase': true,
-  'wallet_addEthereumChain': true
+  'wallet_addEthereumChain': true,
+  'eth_getCode': true
 }
 
 window.addEventListener("message", (event) => {

@@ -70,6 +70,12 @@ export const getTxReceipt = async (hash: string) => {
     return await provider.getTransactionReceipt(hash)
 }
 
+export const getCode = async (addr: string) => {
+    const network = await getSelectedNetwork()
+    const provider = new ethers.providers.JsonRpcProvider(network.rpc)
+    return await provider.getCode(addr)
+}
+
 export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', value='0x0', gasPrice='0x0'}: 
 {to: string, from: string, data: string, value: string, gas: string, gasPrice: string}, 
 gasEstimate: Promise<BigNumber> | null = null, pGasPrice : Promise<BigNumber> | null) => {
