@@ -6,8 +6,9 @@
 
 Simple EVM wallet chrome extension implementation using ethers, mv3, ionc, vue.
 
-[//]: # Here is an extended article abut this repo:
+### Extended article abut this repo
 
+[Article on Mirror](https://mirror.xyz/andrei0x309.eth/9nc8UXrGIGOvz694ZY2gouS1JM9L8-Z8ITLNtirqD6Q)
 
 ### FAQ
 
