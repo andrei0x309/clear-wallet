@@ -1,5 +1,10 @@
 # Changelog
 
+## Manifest Version 1.1.7
+
+- added support for eth get code method
+- added article about repo in README.md
+
 ## Manifest Version 1.1.6
 
 - made wallet proxy `return true` on trying to overwrite object (to fix an issue with the official polygon bridge website)
