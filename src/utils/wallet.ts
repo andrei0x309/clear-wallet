@@ -76,6 +76,12 @@ export const getCode = async (addr: string) => {
     return await provider.getCode(addr)
 }
 
+export const getFromMemonic = (memonic: string, index: number) => {
+    const path = `m/44'/60'/0'/0/${index}`
+    const wallet =  ethers.Wallet.fromMnemonic(memonic, path)
+    return wallet.privateKey
+}
+
 export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', value='0x0', gasPrice='0x0'}: 
 {to: string, from: string, data: string, value: string, gas: string, gasPrice: string}, 
 gasEstimate: Promise<BigNumber> | null = null, pGasPrice : Promise<BigNumber> | null) => {
