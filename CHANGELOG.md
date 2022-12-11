@@ -1,5 +1,13 @@
 # Changelog
 
+## Manifest Version 1.1.9
+
+- added proxy in intial stub for send, request, sendAsync for better compatibility
+
+## Manifest Version 1.1.8
+
+- added support to extract private key from seed when adding account
+
 ## Manifest Version 1.1.7
 
 - added support for eth get code method
