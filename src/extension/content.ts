@@ -6,8 +6,13 @@
         // Add MetamaskAPI STUB for wallets lib to detect wallet exists
         window.ethereum = {
           isMetaMask: true,
-          isConnected: () => false
-      }`;
+          isConnected: () => true,
+          request: (a,b,c) => window.ethereum.request(a,b,c),
+          sendAsync: (a,b,c) => window.ethereum.sendAsync(a,b,c),
+          send: (a,b,c) => window.ethereum.send(a,b,c),
+      }
+      
+      `;
       document.documentElement.setAttribute('onreset', metamaskStub);
       document.documentElement.dispatchEvent(new CustomEvent('reset'));
       document.documentElement.removeAttribute('onreset');
