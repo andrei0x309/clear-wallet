@@ -1,5 +1,9 @@
 # Changelog
 
+## Manifest Version 1.2.1
+
+- added support fro eth_getTransactionCount method
+
 ## Manifest Version 1.1.9
 
 - added proxy in intial stub for send, request, sendAsync for better compatibility

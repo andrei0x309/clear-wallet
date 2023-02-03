@@ -1,6 +1,6 @@
-import { getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl, addToHistory, getNetworks, strToHex } from '@/utils/platform';
+import { getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl, addToHistory, getNetworks, strToHex, numToHexStr } from '@/utils/platform';
 import { userApprove, userReject, rIdWin, rIdData } from '@/extension/userRequest'
-import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber, evmCall, getTxByHash, getTxReceipt, signTypedData, getCode } from '@/utils/wallet'
+import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber, evmCall, getTxByHash, getTxReceipt, signTypedData, getCode, getTxCount } from '@/utils/wallet'
 import type { RequestArguments } from '@/extension/types'
 import { rpcError } from '@/extension/rpcConstants'
 import { updatePrices } from '@/utils/gecko'
@@ -113,6 +113,23 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         })
                     }
                     break;
+                }
+                case 'eth_getTransactionCount': {
+                    try {
+                     if(message?.params?.[1]) {
+                        sendResponse(numToHexStr(Number(await getTxCount(message?.params?.[0] as string, message?.params?.[1] as string))))
+                     }else {
+                        sendResponse(numToHexStr(Number(await getTxCount(message?.params?.[0] as string))))
+                     }
+                    } catch {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'No network or user selected'
+                        })
+                        
+                    }
+                    break
                 }
                 case 'eth_getTransactionByHash': {
                     try {

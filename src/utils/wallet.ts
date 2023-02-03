@@ -82,6 +82,16 @@ export const getFromMemonic = (memonic: string, index: number) => {
     return wallet.privateKey
 }
 
+export const getTxCount = async (addr: string, block: null | string = null) => {
+    const network = await getSelectedNetwork()
+    const provider = new ethers.providers.JsonRpcProvider(network.rpc)
+    if(block){
+        return await provider.getTransactionCount(addr, block)
+    } else {
+        return await provider.getTransactionCount(addr)
+    }
+}
+
 export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', value='0x0', gasPrice='0x0'}: 
 {to: string, from: string, data: string, value: string, gas: string, gasPrice: string}, 
 gasEstimate: Promise<BigNumber> | null = null, pGasPrice : Promise<BigNumber> | null) => {
