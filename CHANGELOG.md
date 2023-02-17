@@ -1,5 +1,9 @@
 # Changelog
 
+## Manifest Version 1.2.2
+
+- updated dependencies
+
 ## Manifest Version 1.2.1
 
 - added support fro eth_getTransactionCount method
