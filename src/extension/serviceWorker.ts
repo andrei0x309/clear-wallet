@@ -10,23 +10,20 @@ let notificationUrl: string
 
 chrome.runtime.onInstalled.addListener(() => {
     console.log('Service worker installed');
-
-    chrome.runtime.onConnect.addListener(port => port.onDisconnect.addListener(() => 
-    {
-        console.log('Service worker connected');
-    }))
-
-    chrome.runtime.connect(null as unknown as string, {
-        name:'sw-connection'
-    })
 })
 
 chrome.runtime.onStartup.addListener(() => {
     console.log('Service worker startup');
+    if(chrome.runtime.lastError) {
+        console.warn("Whoops.. " + chrome.runtime.lastError.message);
+    }
 })
 
 chrome.runtime.onSuspend.addListener(() => {
     console.log('Service worker suspend');
+    if(chrome.runtime.lastError) {
+        console.warn("Whoops.. " + chrome.runtime.lastError.message);
+    }
 })
 
 

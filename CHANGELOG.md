@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.2.3
+
+- injected stub with chrome feature available in chrome 103 ( register world ) to bypass CSP
+- clear up some console errors
+- pushed minimum version to 103
+
 ## Manifest Version 1.2.2
 
 - updated dependencies

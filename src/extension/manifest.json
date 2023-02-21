@@ -20,7 +20,7 @@
         "128": "assets/extension-icon/wallet_128.png"
     }
     },
-    "minimum_chrome_version": "94",
+    "minimum_chrome_version": "103",
     "permissions": [
       "notifications",
       "storage",
@@ -45,6 +45,16 @@
           "all_frames": true,
           "run_at": "document_start",
           "js": ["/src/extension/content.ts"]
+        },
+        {
+          "matches": [
+            "http://*/*",
+            "https://*/*"
+          ],
+          "all_frames": true,
+          "run_at": "document_start",
+          "js": ["/src/extension/metamask-stub.js"],
+          "world": "MAIN"
         }
       ],
       "web_accessible_resources": [{
