@@ -293,7 +293,7 @@ const listner =  function(event: any) {
     try {
         if(event?.data?.data?.error){
             promResolvers.get(event.data.resId)?.reject(event.data.data);
-            console.error(event?.data?.data)
+            // console.error(event?.data?.data)
         }else {
             promResolvers.get(event.data.resId)?.resolve(event.data.data);
         }

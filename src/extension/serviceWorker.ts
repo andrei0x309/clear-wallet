@@ -450,7 +450,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                       clearPk()
                     }
                     } catch (e) {
-                        console.error(e)
+                        // console.error(e)
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
