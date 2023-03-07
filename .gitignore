@@ -34,3 +34,4 @@ npm-debug.log*
 /src/extension/webInject.js
 releases
 rules.json
+docs

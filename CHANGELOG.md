@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.2.4
+
+- updated showing assets page to use new api
+- removed yup score from assets page
+- change the info modal in settings
+
 ## Manifest Version 1.2.3
 
 - injected stub with chrome feature available in chrome 103 ( register world ) to bypass CSP
