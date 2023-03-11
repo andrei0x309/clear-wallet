@@ -1,5 +1,9 @@
 # Changelog
 
+## Manifest Version 1.2.5
+
+- improve post build script
+  
 ## Manifest Version 1.2.4
 
 - updated showing assets page to use new api
