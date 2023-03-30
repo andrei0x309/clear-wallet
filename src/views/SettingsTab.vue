@@ -190,6 +190,7 @@
         cssClass="my-custom-class"
         message="Please wait..."
         :duration="4000"
+        :key="`k${loading}`"
         @didDismiss="loading = false"
       >
       </ion-loading>
@@ -452,7 +453,6 @@ export default defineComponent({
             }
             return a;
           });
-          accProm.forEach((a) => a.catch((e) => console.log(e)));
           accounts = await Promise.all(accProm);
           await replaceAccounts(accounts);
           await saveSelectedAccount(accounts[0]);
@@ -464,7 +464,6 @@ export default defineComponent({
           mpConfirm.value = "";
           mpModal.value = false;
         } catch (error) {
-          console.log(error);
           loading.value = false;
           alertHeader.value = "Error";
           alertMsg.value = "Decryption failed, password is not correct.";

@@ -1,5 +1,9 @@
 # Changelog
 
+## Manifest Version 1.2.6
+
+- upgrade ionic to v7 and update dependencies
+  
 ## Manifest Version 1.2.5
 
 - improve post build script

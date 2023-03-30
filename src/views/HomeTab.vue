@@ -62,6 +62,7 @@
         cssClass="my-custom-class"
         message="Please wait..."
         :duration="4000"
+        :key="`k${loading}`"
         @didDismiss="loading = false"
       >
       </ion-loading>
@@ -216,7 +217,7 @@ export default defineComponent({
     IonAvatar,
   },
   setup: () => {
-    const loading = ref(true);
+    const loading = ref(false);
     const accounts = ref([]) as Ref<Account[]>;
     const networks = ref({}) as Ref<Networks>;
     const accountsModal = ref(false) as Ref<boolean>;
@@ -228,6 +229,7 @@ export default defineComponent({
     const getToastRef = () => toastState;
 
     const loadData = () => {
+      loading.value = true;
       const pAccounts = getAccounts();
       const pNetworks = getNetworks();
       const pSelectedAccount = getSelectedAccount();
