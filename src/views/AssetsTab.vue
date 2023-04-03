@@ -11,6 +11,7 @@
         cssClass="my-custom-class"
         message="Please wait..."
         :duration="4000"
+        :key="`k${loading}`"
         @didDismiss="loading = false"
       >
       </ion-loading>

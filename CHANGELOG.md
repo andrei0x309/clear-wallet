@@ -1,5 +1,9 @@
 # Changelog
 
+## Manifest Version 1.2.7
+
+- improve compatibility with ionic 7
+
 ## Manifest Version 1.2.6
 
 - upgrade ionic to v7 and update dependencies

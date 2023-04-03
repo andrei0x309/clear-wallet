@@ -31,7 +31,13 @@
       <ion-item> Contract: {{ contract }} </ion-item>
       <ion-item>
         <ion-label>Error From Contract:</ion-label>
-        <ion-textarea style="overflow-y: scroll;" :rows="10" :cols="20" :value="error" readonly></ion-textarea>
+        <ion-textarea
+          style="overflow-y: scroll"
+          :rows="10"
+          :cols="20"
+          :value="error"
+          readonly
+        ></ion-textarea>
       </ion-item>
       <ion-item>
         <ion-button @click="onCancel">Exit</ion-button>
@@ -42,6 +48,7 @@
         cssClass="my-custom-class"
         message="Please wait..."
         :duration="4000"
+        :key="`k${loading}`"
         @didDismiss="loading = false"
       >
       </ion-loading>
@@ -65,7 +72,7 @@ import {
   IonLoading,
 } from "@ionic/vue";
 import { useRoute } from "vue-router";
-import { getSelectedNetwork, getUrl, hexTostr, } from "@/utils/platform";
+import { getSelectedNetwork, getUrl, hexTostr } from "@/utils/platform";
 import type { Network } from "@/extension/types";
 import { mainNets } from "@/utils/networks";
 
@@ -86,17 +93,17 @@ export default defineComponent({
     const route = useRoute();
     const error = hexTostr((route.params?.param as string) ?? "");
     const loading = ref(true);
-    const contract = (route.params?.contract as string) ?? ""
+    const contract = (route.params?.contract as string) ?? "";
     const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
- 
+
     const onCancel = () => {
       window.close();
     };
 
     onIonViewWillEnter(async () => {
-      (window as any)?.resizeTo?.(700, 600)
-      selectedNetwork.value = await getSelectedNetwork()
-      loading.value = false
+      (window as any)?.resizeTo?.(700, 600);
+      selectedNetwork.value = await getSelectedNetwork();
+      loading.value = false;
     });
 
     return {
@@ -106,7 +113,7 @@ export default defineComponent({
       selectedNetwork,
       mainNets,
       getUrl,
-      error
+      error,
     };
   },
 });
