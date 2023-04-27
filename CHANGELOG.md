@@ -1,5 +1,10 @@
 # Changelog
 
+## Manifest Version 1.2.8
+
+- better support for estimate gas
+- added support for deprecated .send method to support more websites
+
 ## Manifest Version 1.2.7
 
 - improve compatibility with ionic 7

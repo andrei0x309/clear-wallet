@@ -211,12 +211,14 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         })
                         break
                     }
-                    sendResponse(await estimateGas({
+                    const gas = await estimateGas({
                         to: params?.to ?? '',
                         from: params?.from ?? '',
                         data: params?.data ?? '',
                         value: params?.value ?? '0x0'
-                    }))
+                    })
+                    const gasHex = gas?._hex ? gas?._hex : gas
+                    sendResponse(gasHex)
                     } catch(err) {
                     if(String(err).includes('UNPREDICTABLE_GAS_LIMIT')) {
                         chrome.notifications.create({

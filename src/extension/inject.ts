@@ -121,7 +121,16 @@ class MetaMaskAPI {
     // Deprecated
     send (arg1: unknown, arg2: unknown): unknown {
         if (arg2 === undefined) {
-            console.error('Clear Wallet: Sync calling is deprecated and not supported')
+            if( typeof arg1 === 'string' ) {
+                return sendMessage({
+                    method: arg1,
+                    params: undefined
+                })
+            } else if (typeof arg1 === 'object') {
+                return sendMessage(arg1 as RequestArguments)
+            } else {
+                console.error('Clear Wallet: faulty request')
+            }
         }else if( typeof arg1 === 'string' ) {
             return sendMessage({
                 method: arg1,
@@ -293,7 +302,7 @@ const listner =  function(event: any) {
     try {
         if(event?.data?.data?.error){
             promResolvers.get(event.data.resId)?.reject(event.data.data);
-            // console.error(event?.data?.data)
+            console.error(event?.data?.data)
         }else {
             promResolvers.get(event.data.resId)?.resolve(event.data.data);
         }
