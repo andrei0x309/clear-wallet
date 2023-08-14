@@ -33,6 +33,7 @@
         <ion-label>Error From Contract:</ion-label>
         <ion-textarea
           style="overflow-y: scroll"
+          label="Error"
           :rows="10"
           :cols="20"
           :value="error"

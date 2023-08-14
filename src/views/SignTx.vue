@@ -119,7 +119,7 @@
               <ion-label>Limit in units</ion-label>
             </ion-item>
             <ion-item>
-              <ion-input v-model="inGasLimit" type="number"></ion-input>
+              <ion-input label="gas limit" v-model="inGasLimit" type="number"></ion-input>
             </ion-item>
             <ion-item>
               <ion-button @click="setGasLimit">Set Price</ion-button>
@@ -143,7 +143,11 @@
               <ion-label>Price in gwei</ion-label>
             </ion-item>
             <ion-item>
-              <ion-input v-model="inGasPrice" type="number"></ion-input>
+              <ion-input
+                label="price in gwei"
+                v-model="inGasPrice"
+                type="number"
+              ></ion-input>
             </ion-item>
             <ion-item>
               <ion-button @click="setGasPrice">Set Price</ion-button>
@@ -302,9 +306,9 @@ export default defineComponent({
 
     const newGasData = () => {
       gasFee.value = Number(
-        ethers.utils.formatUnits(String(gasLimit.value * gasPrice.value), "gwei")
+        ethers.formatUnits(String(gasLimit.value * gasPrice.value), "gwei")
       );
-      txValue.value = Number(ethers.utils.formatEther(params?.value ?? "0x0"));
+      txValue.value = Number(ethers.formatEther(params?.value ?? "0x0"));
       totalCost.value = gasFee.value + txValue.value;
     };
 
@@ -323,13 +327,15 @@ export default defineComponent({
       const pGetPrices = getPrices();
       selectedNetwork.value = await getSelectedNetwork();
       userBalance.value = Number(
-        ethers.utils.formatEther((await pBalance).toString() ?? "0x0")
+        ethers.formatEther((await pBalance).toString() ?? "0x0")
       );
 
       gasPrice.value = parseInt(
-        ethers.utils.formatUnits((await pGasPrice).toString() ?? "0x0", "gwei"),
+        ethers.formatUnits(((await pGasPrice) || 0).toString() ?? "0x0", "gwei"),
         10
       );
+      console.log(await pGasPrice);
+
       try {
         gasLimit.value = parseInt((await pEstimateGas).toString(), 10);
       } catch (err) {
@@ -364,7 +370,7 @@ export default defineComponent({
             timerFee.value = 20;
             loading.value = true;
             gasPrice.value = parseInt(
-              ethers.utils.formatUnits((await getGasPrice()).toString(), "gwei"),
+              ethers.formatUnits(((await getGasPrice()) || 0).toString(), "gwei"),
               10
             );
             newGasData();
@@ -391,7 +397,7 @@ export default defineComponent({
       gasPrice.value = inGasPrice.value;
       gasPriceReFetch.value = false;
       walletSendData(rid, {
-        gasPrice: ethers.utils.parseUnits(gasPrice.value.toString(), "gwei"),
+        gasPrice: numToHexStr(gasPrice.value),
       });
       newGasData();
       gasPriceModal.value = false;

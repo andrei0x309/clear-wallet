@@ -176,7 +176,7 @@ export const hexTostr = (hexStr: string) =>
     return hexStr
  }
 
-export const strToHex = (str: string) =>  `0x${str.split('').map( s => s.charCodeAt(0).toString(16) ).join('')}`
+export const strToHex = (str: string) =>  `0x${str.split('').map( s => s.charCodeAt(0).toString(16)).join('')}`
 
 export const numToHexStr = (num: number) => `0x${num.toString(16)}`
 

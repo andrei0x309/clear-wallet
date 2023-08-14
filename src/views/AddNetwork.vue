@@ -11,16 +11,22 @@
       >
       <ion-item>
         <ion-label>Name(*)</ion-label>
-        <ion-input v-model="name" placeholder="ex: Polygon"></ion-input>
+        <ion-input label="name" v-model="name" placeholder="ex: Polygon"></ion-input>
       </ion-item>
       <ion-item>
         <ion-label>ChainId(*)</ion-label>
-        <ion-input v-model="chainId" placeholder="137" type="number"></ion-input>
+        <ion-input
+          label="chainid"
+          v-model="chainId"
+          placeholder="137"
+          type="number"
+        ></ion-input>
       </ion-item>
       <ion-item button>
         <ion-icon :icon="clipboardOutline" @click="paste('pasteRpc')" />
         <ion-label>RPC URL(*)</ion-label>
         <ion-input
+          label="rpc"
           id="pasteRpc"
           placeholder="https://polygon-mainnet.g.alchemy.com/..."
           v-model="rpc"
@@ -29,12 +35,18 @@
       <ion-item button>
         <ion-icon :icon="clipboardOutline" @click="paste('pasteRpc')" />
         <ion-label>Native Token Symbol(?)</ion-label>
-        <ion-input id="pasteRpc" placeholder="MATIC" v-model="symbol"></ion-input>
+        <ion-input
+          label="native token"
+          id="native-token"
+          placeholder="MATIC"
+          v-model="symbol"
+        ></ion-input>
       </ion-item>
       <ion-item button>
         <ion-icon :icon="clipboardOutline" @click="paste('pasteExplorer')" />
         <ion-label>Explorer(?)</ion-label>
         <ion-input
+          label="explorer"
           id="pasteExplorer"
           placeholder="https://polygonscan.com"
           v-model="explorer"

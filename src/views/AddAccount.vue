@@ -10,7 +10,7 @@
     <ion-content class="ion-padding">
       <ion-item>
         <ion-label>Name</ion-label>
-        <ion-input v-model="name"></ion-input>
+        <ion-input label="name" v-model="name"></ion-input>
       </ion-item>
       <ion-item>
         <ion-label>Get Random Name</ion-label>
@@ -24,7 +24,7 @@
           button
         />
         <ion-label button>PK</ion-label>
-        <ion-input id="pastePk" v-model="pk"></ion-input>
+        <ion-input label="pk" id="pastePk" v-model="pk"></ion-input>
       </ion-item>
       <template v-if="!isEdit">
         <ion-item>
@@ -67,6 +67,7 @@
           <ion-item>
             <ion-textarea
               style="overflow-y: scroll"
+              label="Enter mnemonic"
               :rows="10"
               :cols="10"
               v-model="mnemonic"
@@ -74,7 +75,7 @@
           </ion-item>
           <ion-item>
             <ion-label>Enter Index (default: 0)</ion-label>
-            <ion-input v-model="mnemonicIndex"></ion-input>
+            <ion-input label="mnemonic index" v-model="mnemonicIndex"></ion-input>
           </ion-item>
           <ion-item>
             <ion-button @click="extractMnemonic">Extract</ion-button>
@@ -122,7 +123,7 @@ import UnlockModal from "@/views/UnlockModal.vue";
 import { encrypt, getCryptoParams } from "@/utils/webCrypto";
 
 import { clipboardOutline } from "ionicons/icons";
-import { getFromMemonic } from "@/utils/wallet";
+import { getFromMnemonic } from "@/utils/wallet";
 
 export default defineComponent({
   components: {
@@ -294,7 +295,7 @@ export default defineComponent({
         alertOpen.value = true;
         return;
       }
-      pk.value = getFromMemonic(mnemonic.value, mnemonicIndex.value);
+      pk.value = getFromMnemonic(mnemonic.value, mnemonicIndex.value);
       mnemonicModal.value = false;
     };
 

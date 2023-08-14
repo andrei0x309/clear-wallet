@@ -228,7 +228,7 @@
               <ion-label>Old Password</ion-label>
             </ion-item>
             <ion-item>
-              <ion-input v-model="mpPass" type="password"></ion-input>
+              <ion-input label="password" v-model="mpPass" type="password"></ion-input>
             </ion-item>
           </ion-list>
           <div v-else>
@@ -237,7 +237,7 @@
                 <ion-label>New Password</ion-label>
               </ion-item>
               <ion-item>
-                <ion-input v-model="mpPass" type="password"></ion-input>
+                <ion-input label="password" v-model="mpPass" type="password"></ion-input>
               </ion-item>
             </ion-list>
             <ion-list>
@@ -245,7 +245,11 @@
                 <ion-label>Confirm</ion-label>
               </ion-item>
               <ion-item>
-                <ion-input v-model="mpConfirm" type="password"></ion-input>
+                <ion-input
+                  label="password"
+                  v-model="mpConfirm"
+                  type="password"
+                ></ion-input>
               </ion-item>
             </ion-list>
           </div>
