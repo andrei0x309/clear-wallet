@@ -30,7 +30,7 @@ export default defineConfig({
         ['eval-sandbox']: 'eval-sandbox.html',
       },
     },
-    sourcemap: true,
+    sourcemap: false,
     chunkSizeWarningLimit: 1000,
     commonjsOptions: {
       transformMixedEsModules: true
