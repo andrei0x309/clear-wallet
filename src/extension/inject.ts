@@ -4,6 +4,42 @@ interface RequestArguments {
     params?: unknown[] | object;
 }
 
+interface EIP6963ProviderInfo {
+    uuid: string;
+    name: string;
+    icon: string;
+    rdns: string;
+  }
+
+const ProviderInfo: EIP6963ProviderInfo = {
+    uuid: '1fa914a1-f8c9-4c74-8d84-4aa93dc90eec',
+    name: 'Clear Wallet',
+    icon: 'data:image/png;base64,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',
+    rdns: 'clear-wallet.flashsoft.eu/',
+}
+
+function loadEIP1193Provider(provider: any) {
+
+    function announceProvider() {
+      const info: EIP6963ProviderInfo = ProviderInfo
+      window.dispatchEvent(
+        new CustomEvent("eip6963:announceProvider", {
+          detail: Object.freeze({ info, provider }),
+        })
+      );
+    }
+  
+    window.addEventListener(
+      "eip6963:requestProvider",
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      (event: any) => {
+        announceProvider();
+      }
+    );
+  
+    announceProvider();
+  }
+
 const listners = {
     accountsChanged: new Set<(p?: any) => void>(),
     connect: new Set<(p?: any) => void>(),
@@ -36,13 +72,13 @@ const getListnersCount = (): number => {
 const sendMessage = (args: RequestArguments, ping = false) => {
 if(Object.values(promResolvers).filter(r=> r).length < 10 ) {
     return new Promise((resolve, reject) => {
-        const resId = crypto.randomUUID()
+        const resId = [...`${Math.random().toString(16) + Date.now().toString(16)}`].slice(2).join('')
         promResolvers.set(resId, { resolve, reject })
         const data = { type: "CLWALLET_CONTENT", data: args, resId};
         if (ping) {
             data.type = 'CLWALLET_PING'
         }
-        // console.log('data in', data)
+        // console.info('data in', data)
         window.postMessage(data, "*");
     })
     } else {
@@ -80,7 +116,7 @@ class MetaMaskAPI {
         _events: {}, _eventsCount: 0, _maxListeners: undefined, _middleware: Array(4)
     }
     isConnected() {
-        return false
+        return true
     }
     // for maximum compatibility since is cloning the same API
     
@@ -129,7 +165,7 @@ class MetaMaskAPI {
             } else if (typeof arg1 === 'object') {
                 return sendMessage(arg1 as RequestArguments)
             } else {
-                console.error('Clear Wallet: faulty request')
+                console.info('ERROR: Clear Wallet: faulty request')
             }
         }else if( typeof arg1 === 'string' ) {
             return sendMessage({
@@ -272,37 +308,22 @@ class MetaMaskAPI {
     _handleStreamDisconnect() { return true }
     _handleUnlockStateChanged() { return true }
     _sendSync () {
-        console.error('Clear Wallet: Sync calling is deprecated and not supported')
+        console.info('ERROR: Clear Wallet: Sync calling is deprecated and not supported')
     }
 }
 
 const eth = new Proxy( new MetaMaskAPI(), {
-    // set: () => { return true },
-    // get: function(target, name, receiver) {
-    //     if (typeof (<any>target)[name] == 'function') {
-    //         return function (...args: any) {
-    //           console.dir({ call: [name, ...args] });
-    //           return undefined;
-    //         }
-    //         }
-
-    //         let check = true
-    //         setTimeout(() => check = false, 400)
-    //         while(check){
-    //             // igmore
-    //         }
-    // },
     deleteProperty: () => { return true },
 })
 
 const listner =  function(event: any) {
     if (event.source != window) return;
 
-    if (event.data.type && (event.data.type === "CLWALLET_PAGE")) {
+    if (event?.data?.type === "CLWALLET_PAGE") {
     try {
         if(event?.data?.data?.error){
             promResolvers.get(event.data.resId)?.reject(event.data.data);
-            console.error(event?.data?.data)
+            console.info('Error: ', event?.data?.data)
         }else {
             promResolvers.get(event.data.resId)?.resolve(event.data.data);
         }
@@ -310,7 +331,7 @@ const listner =  function(event: any) {
     } catch (e) {
         // console.log('Failed to connect resolve msg', e)
     }
-    } else if( event.data.type && (event.data.type === "CLWALLET_PAGE_LISTENER")) {
+    } else if(event?.data?.type === "CLWALLET_PAGE_LISTENER") {
         if((event?.data?.data?.listner ?? 'x') in listners ) {
             try {
                 const listnerName = event?.data?.data?.listner as ('accountsChanged' | 'connect' | 'disconnect' | 'chainChanged')
@@ -320,7 +341,7 @@ const listner =  function(event: any) {
                     (<any>eth).selectedAddress = event?.data?.data?.address ?? null;
                     (<any>eth).isConnected = () => true;
                 } else if( listnerName === 'chainChanged' ) {
-                    // console.log(event?.data?.data?.data);
+                    // console.info(event?.data?.data?.data);
                     (<any>eth).networkVersion = event?.data?.data?.data.toString(10) ?? '137';
                     (<any>eth).chainId = event?.data?.data?.data ?? '0x89';
                 } else if ( listnerName === 'accountsChanged' ) {
@@ -332,7 +353,7 @@ const listner =  function(event: any) {
                     listners.once[listnerName].delete(listner)
                 });
             } catch (e) {
-                // console.error(e)
+                // console.info(e)
                 // ignore
             }
         }   
@@ -341,43 +362,46 @@ const listner =  function(event: any) {
 
 window.addEventListener("message",listner)
 
-// const proxy1 = new Proxy({
-//     // on: (event: any, callback:any) => { if (event === 'message') {
-//     //     debugger;
-//     //     callback(true, true)
-//     // } }
-// }, {
-//     get: function(target, name, receiver) {
-//         if (typeof (<any>target)[name] == 'function') {
-//             return function (...args: any) {
-//               console.dir({ call: [name, ...args] });
-//             }
-//             }
+ 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const proxy1 = new Proxy(new MetaMaskAPI(), {
+        get: function (target: any, prop: any) {
+          // Intercept method calls and log them
+          if (typeof target[prop] === 'function') {
+            return function (...args: any[]) {
+              console.log(`Calling ${prop} with arguments:`, args);
+              // eslint-disable-next-line prefer-spread
+              const result = target[prop].apply(target, args);
+              console.log(`${prop} returned:`, result);
+              return result;
+            };
+          } else {
+            console.log(`Reading ${prop}`);
+            return target[prop];
+          }
+        },
+})
 
-//         console.log('ETH', name.toString() , target, receiver);
-//         return undefined
-//     }
-// })
-
-const web3Shim = {
-    currentProvider: eth,
-    __isMetaMaskShim__: true
-}
+// const web3Shim = {
+//     currentProvider: eth,
+//     __isMetaMaskShim__: true
+// }
 
 const injectWallet = (win: any) => {
 Object.defineProperty(win, 'ethereum', {
     value: eth,
 });
 Object.defineProperty(win, 'web3', {
-    value: web3Shim
+    value: eth
 });
 sendMessage({
     method: 'wallet_ready'
 }, true)
-// console.log('Clear wallet injected', (window as any).ethereum, win)
+console.log('Clear wallet injected', (window as any).ethereum, win)
 }
 
 injectWallet(this);
+loadEIP1193Provider(eth)
 
 // setTimeout(() => {
 //     // console.log('Metamask clone test');

@@ -22,7 +22,7 @@
                 <ion-item>
                   <ion-label>Name:</ion-label>
                   <ion-input
-                    label="Name"
+                    aria-label="Name"
                     style="margin-left: 0.5rem"
                     v-model="name"
                     readonly
@@ -32,7 +32,7 @@
                 <ion-item>
                   <ion-label>ChainId: </ion-label>
                   <ion-input
-                    label="ChainId"
+                    aria-label="ChainId"
                     style="margin-left: 0.5rem"
                     v-model="chainId"
                     readonly
@@ -42,7 +42,7 @@
                 <ion-item button>
                   <ion-label>RPC URL: </ion-label>
                   <ion-input
-                    label="RPC URL"
+                    aria-label="RPC URL"
                     style="margin-left: 0.5rem"
                     readonly
                     placeholder="https://polygon-mainnet.g.alchemy.com/..."
@@ -52,7 +52,7 @@
                 <ion-item button>
                   <ion-label>Native Token Symbol: </ion-label>
                   <ion-input
-                    label="Native Token Symbol"
+                    aria-label="Native Token Symbol"
                     style="margin-left: 0.5rem"
                     readonly
                     placeholder="MATIC"
@@ -62,7 +62,7 @@
                 <ion-item button>
                   <ion-label>Explorer: </ion-label>
                   <ion-input
-                    label="Explorer"
+                    aria-label="Explorer"
                     style="margin-left: 0.5rem"
                     readonly
                     placeholder="https://polygonscan.com"

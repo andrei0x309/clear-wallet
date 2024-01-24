@@ -66,6 +66,7 @@
       <ion-item>
         <ion-label>Raw TX:</ion-label>
         <ion-textarea
+          aria-label="raw tx"
           style="overflow-y: scroll"
           :rows="10"
           :cols="20"
@@ -119,7 +120,11 @@
               <ion-label>Limit in units</ion-label>
             </ion-item>
             <ion-item>
-              <ion-input label="gas limit" v-model="inGasLimit" type="number"></ion-input>
+              <ion-input
+                aria-label="gas limit"
+                v-model="inGasLimit"
+                type="number"
+              ></ion-input>
             </ion-item>
             <ion-item>
               <ion-button @click="setGasLimit">Set Price</ion-button>
@@ -144,7 +149,7 @@
             </ion-item>
             <ion-item>
               <ion-input
-                label="price in gwei"
+                aria-label="price in gwei"
                 v-model="inGasPrice"
                 type="number"
               ></ion-input>
@@ -256,7 +261,12 @@ export default defineComponent({
     if (!decodedParam) {
       isError = true;
     } else {
-      signTxData.value = JSON.stringify(params, null, 2);
+      const paramsWithoutZeros = Object.fromEntries(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        Object.entries(params).filter(([_, v]) => v !== "0x0")
+      );
+
+      signTxData.value = JSON.stringify(paramsWithoutZeros, null, 2);
     }
 
     const openModal = async () => {
@@ -304,16 +314,22 @@ export default defineComponent({
       }
     };
 
-    const newGasData = () => {
+    const newGasData = async () => {
+      await walletSendData(rid, {
+        gas: numToHexStr(gasLimit.value),
+      });
+
+      await walletSendData(rid, {
+        gasPrice: numToHexStr(BigInt(Math.trunc(gasPrice.value * 1e9))),
+      });
       gasFee.value = Number(
-        ethers.formatUnits(String(gasLimit.value * gasPrice.value), "gwei")
+        ethers.formatUnits(Math.trunc(gasLimit.value * gasPrice.value), "gwei")
       );
       txValue.value = Number(ethers.formatEther(params?.value ?? "0x0"));
       totalCost.value = gasFee.value + txValue.value;
     };
 
     onIonViewWillEnter(async () => {
-      console.log(params.value);
       (window as any)?.resizeTo?.(600, 800);
       const pEstimateGas = estimateGas({
         to: params?.to ?? "",
@@ -330,11 +346,7 @@ export default defineComponent({
         ethers.formatEther((await pBalance).toString() ?? "0x0")
       );
 
-      gasPrice.value = parseInt(
-        ethers.formatUnits(((await pGasPrice) || 0).toString() ?? "0x0", "gwei"),
-        10
-      );
-      console.log(await pGasPrice);
+      gasPrice.value = parseFloat((await pGasPrice).toString() ?? 0.1);
 
       try {
         gasLimit.value = parseInt((await pEstimateGas).toString(), 10);
@@ -347,16 +359,13 @@ export default defineComponent({
       inGasPrice.value = gasPrice.value;
       inGasLimit.value = gasLimit.value;
 
-      // console.log( 'test', ethers.utils.formatUnits((await pGasPrice).toString(), "gwei"), ethers.utils.formatUnits(ethers.utils.parseUnits(gasPrice.value.toString(), "gwei"), "gwei") )
-
-      newGasData();
       if (userBalance.value < totalCost.value) {
         insuficientBalance.value = true;
       }
       const prices = await pGetPrices;
       dollarPrice.value =
         prices[chainIdToPriceId(selectedNetwork.value?.chainId ?? 0)]?.usd ?? 0;
-
+      await newGasData();
       loading.value = false;
 
       interval = setInterval(async () => {
@@ -369,11 +378,8 @@ export default defineComponent({
           if (timerFee.value <= 0) {
             timerFee.value = 20;
             loading.value = true;
-            gasPrice.value = parseInt(
-              ethers.formatUnits(((await getGasPrice()) || 0).toString(), "gwei"),
-              10
-            );
-            newGasData();
+            gasPrice.value = parseFloat((await getGasPrice()).toString() ?? 0.1);
+            await newGasData();
             loading.value = false;
           }
         }
@@ -386,9 +392,6 @@ export default defineComponent({
 
     const setGasLimit = () => {
       gasLimit.value = inGasLimit.value;
-      walletSendData(rid, {
-        gas: numToHexStr(gasLimit.value),
-      });
       newGasData();
       gasLimitModal.value = false;
     };
@@ -396,9 +399,6 @@ export default defineComponent({
     const setGasPrice = () => {
       gasPrice.value = inGasPrice.value;
       gasPriceReFetch.value = false;
-      walletSendData(rid, {
-        gasPrice: numToHexStr(gasPrice.value),
-      });
       newGasData();
       gasPriceModal.value = false;
     };

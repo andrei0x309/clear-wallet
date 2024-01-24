@@ -15,6 +15,7 @@
 
     <ion-content class="ion-padding">
       <ion-toast
+        position="top"
         :is-open="toastState"
         @didDismiss="toastState = false"
         message="Copied to clipboard"
@@ -54,7 +55,12 @@
           <ion-item @click="copyAddress(shownPk, getToastRef())" button>
             <ion-icon style="margin-right: 0.5rem" :icon="copyOutline" />
             <ion-label button>PK</ion-label>
-            <ion-input label="pk" id="pastePk" v-model="shownPk" readonly></ion-input>
+            <ion-input
+              aria-label="pk"
+              id="pastePk"
+              v-model="shownPk"
+              readonly
+            ></ion-input>
           </ion-item>
         </ion-content>
       </ion-modal>

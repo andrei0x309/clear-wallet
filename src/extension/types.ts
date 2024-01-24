@@ -8,9 +8,12 @@ export interface Network {
     explorer?: string
 }
 
-export interface Account {
+export interface Contact {
     name: string
     address: string
+}
+
+export interface Account extends Contact {
     pk: string
     encPk: string
 }
@@ -64,4 +67,16 @@ export interface HistoryItem {
     chainId?: number
     webiste?: string
     txHash: string
+}
+
+export interface ContractAction {
+        name: string
+        contract: string
+        abi: string
+        functionName: string
+        params: any[]
+}
+
+export interface ContractActions {
+    [key: string] : ContractAction
 }

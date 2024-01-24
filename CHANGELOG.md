@@ -1,5 +1,21 @@
 # Changelog
 
+## Manifest Version 1.3.0
+
+- refactored the wallet to use etheres V6
+- implemented EIP6963Provider
+- updated all dependencies
+- added ability to send native tokens
+- added ability to manage ABIs
+- added ability to perfrom arbitrary read calls to contracts
+- added ability to perfrom arbitrary write calls to contracts
+- added ability to save read or write calls for later use
+- added sandbox to be able to evaluate JS code in order to pass complex parameters to read or write calls
+- added base Network to templates class
+- added Icon for base network
+- added ability to add contacts and load them in Read contract and Write and Send token pages
+- added ability to paste current selected address to both webpages and insde wallet itself
+
 ## Manifest Version 1.2.8
 
 - better support for estimate gas

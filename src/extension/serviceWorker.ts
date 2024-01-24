@@ -1,6 +1,40 @@
-import { getSelectedAccount, getSelectedNetwork, smallRandomString, getSettings, clearPk, openTab, getUrl, addToHistory, getNetworks, strToHex, numToHexStr } from '@/utils/platform';
-import { userApprove, userReject, rIdWin, rIdData } from '@/extension/userRequest'
-import { signMsg, getBalance, getBlockNumber, estimateGas, sendTransaction, getGasPrice, getBlockByNumber, evmCall, getTxByHash, getTxReceipt, signTypedData, getCode, getTxCount } from '@/utils/wallet'
+import { 
+    CLW_CONTEXT_MENU_ID,
+    getSelectedAccount, 
+    getSelectedNetwork, 
+    smallRandomString, 
+    getSettings, 
+    clearPk, 
+    openTab, 
+    getUrl, 
+    addToHistory, 
+    getNetworks, 
+    strToHex, 
+    numToHexStr,
+    enableRightClickVote,
+} from '@/utils/platform';
+import { 
+    userApprove, 
+    userReject, 
+    rIdWin, 
+    rIdData,
+} from '@/extension/userRequest'
+import { 
+    signMsg, 
+    getBalance, 
+    getBlockNumber, 
+    estimateGas, 
+    sendTransaction, 
+    getGasPrice, 
+    getBlockByNumber, 
+    evmCall, 
+    getTxByHash, 
+    getTxReceipt, 
+    signTypedData, 
+    getCode, 
+    getTxCount,
+    getSelectedAddress
+} from '@/utils/wallet'
 import type { RequestArguments } from '@/extension/types'
 import { rpcError } from '@/extension/rpcConstants'
 import { updatePrices } from '@/utils/gecko'
@@ -9,23 +43,58 @@ import { mainNets, testNets } from '@/utils/networks'
 let notificationUrl: string
 
 chrome.runtime.onInstalled.addListener(() => {
-    console.log('Service worker installed');
+    enableRightClickVote()
+    console.info('Service worker installed');
 })
 
 chrome.runtime.onStartup.addListener(() => {
-    console.log('Service worker startup');
+    console.info('Service worker startup');
+    enableRightClickVote();
     if(chrome.runtime.lastError) {
         console.warn("Whoops.. " + chrome.runtime.lastError.message);
     }
 })
 
 chrome.runtime.onSuspend.addListener(() => {
-    console.log('Service worker suspend');
+    console.info('Service worker suspend');
     if(chrome.runtime.lastError) {
         console.warn("Whoops.. " + chrome.runtime.lastError.message);
     }
 })
 
+async function pasteAddress() {
+        const currentAddress = (await (window as any).ethereum?.request({
+            method: 'eth_accounts',
+            params: []
+        }))
+        if(currentAddress.length > 0) {
+            document.execCommand("insertText", false, currentAddress[0]);
+    }
+}
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+    const extensionId = chrome.runtime.id
+    const isOwnExtension = info?.pageUrl?.startsWith(`chrome-extension://${extensionId}`)
+
+    if (info.menuItemId === CLW_CONTEXT_MENU_ID && tab?.id && !isOwnExtension) {
+        try {
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                world: 'MAIN',
+                func: pasteAddress
+            });
+        } catch {
+          // igonre
+        }
+    } else if(isOwnExtension) {
+        chrome.runtime.sendMessage({ method: 'paste', type: 'CLWALLET_PAGE_MSG' }, (r) => {
+            if (chrome.runtime.lastError) {
+                console.warn("LOC3: Error sending message:", chrome.runtime.lastError);
+            }
+            return r
+        })
+    }
+})
 
 chrome.alarms.create('updatePrices', {
     periodInMinutes: 1
@@ -34,7 +103,9 @@ chrome.alarms.create('updatePrices', {
 chrome.alarms.onAlarm.addListener((alarm) => {
   if(alarm.name === 'updatePrices') {
     updatePrices().then(() => {
-        console.log('Prices updated')
+        console.info('Prices updated')
+    }).catch((err) => {
+        console.warn('Prices update failed', err)
     })
   }
   getSettings().then((settings) => {
@@ -77,9 +148,15 @@ if (!chrome.notifications.onButtonClicked.hasListener(viewTxListner)){
 }
 
 const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: any) => any) => {
+    if (chrome.runtime.lastError) {
+        console.info("Error receiving message:", chrome.runtime.lastError);
+    }
     if(message?.type !== "CLWALLET_CONTENT_MSG") {
         return true
     }
+
+    console.info('main listener', message);
+
     (async () => {
         if (!(message?.method)) {
             sendResponse({
@@ -154,7 +231,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'eth_gasPrice': {
                     try {
-                    sendResponse(strToHex(String(await getGasPrice() ?? 0)))
+                    sendResponse(numToHexStr(BigInt(Math.trunc(await getGasPrice() * 1e9))))
                     } catch {
                         sendResponse({
                             error: true,
@@ -166,7 +243,9 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'eth_getBalance': {
                     try {
-                    sendResponse(await getBalance())
+                    const balance = await getBalance()
+                    const balanceHex = numToHexStr(balance ?? 0n)
+                    sendResponse(balanceHex)
                     } catch {
                         sendResponse({
                             error: true,
@@ -217,7 +296,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         data: params?.data ?? '',
                         value: params?.value ?? '0x0'
                     })
-                    const gasHex = strToHex(String(gas ?? 0))
+                    const gasHex = numToHexStr(gas ?? 0n)
                     sendResponse(gasHex)
                     } catch(err) {
                     if(String(err).includes('UNPREDICTABLE_GAS_LIMIT')) {
@@ -244,10 +323,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 case 'eth_requestAccounts':
                 case 'eth_accounts': {
                 try {
-                    // give only the selected address for better privacy
-                    const account = await getSelectedAccount()
-                    const address = account?.address ? [account?.address] : []
-                    sendResponse(address)
+                    sendResponse(await getSelectedAddress())
                  } catch {
                     sendResponse({
                         error: true,
@@ -303,13 +379,6 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         }
                         params.from = account.address
                         const serializeParams = strToHex(JSON.stringify(params)) ?? ''
-                        const pEstimateGas = estimateGas({
-                            to: params?.to ?? '',
-                            from: params?.from ?? '',
-                            data: params?.data ?? '',
-                            value: params?.value ?? '0x0'
-                        })
-                        const pGasPrice = getGasPrice()
                         let gWin: any
                         await new Promise((resolve, reject) => {
                         chrome.windows.create({
@@ -327,7 +396,9 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
 
                         })
                         try {
-                        const tx = await sendTransaction({...params, ...(rIdData?.[String(gWin?.id ?? 0)] ?? {}) }, pEstimateGas, pGasPrice )
+                        // console.log('waiting for user to approve or reject')
+                        // console.log(rIdData?.[String(gWin?.id ?? 0)])
+                        const tx = await sendTransaction({...params, ...(rIdData?.[String(gWin?.id ?? 0)] ?? {}) } )
                         sendResponse(tx.hash)
                         const buttons = {} as any
                         const network = await getSelectedNetwork()
@@ -452,7 +523,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                       clearPk()
                     }
                     } catch (e) {
-                        // console.error(e)
+                        // console.info(e)
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
@@ -570,7 +641,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                                     })
                                     sendResponse(null)
                                     } catch (err) {
-                                        console.log('err')
+                                        console.error('err')
                                         sendResponse({
                                             error: true,
                                             code: rpcError.USER_REJECTED,
@@ -612,7 +683,8 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'wallet_send_data': {
                     if(String(sender.tab?.windowId) in rIdData){
-                        rIdData[String(sender?.tab?.windowId ?? '')] = (message as any)?.data ?? {}
+                        const intData = rIdData[String(sender?.tab?.windowId ?? '')] ?? {}
+                        rIdData[String(sender?.tab?.windowId ?? '')] = {...intData, ...(message?.data ?? {})}
                         sendResponse(true)
                     }
                     break

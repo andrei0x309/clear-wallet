@@ -20,6 +20,7 @@
                 <ion-item>
                   <ion-label>Enable Storage Encryption</ion-label>
                   <ion-toggle
+                    aria-label="Enable Storage Encryption"
                     :key="updateKey"
                     @ion-change="changeEncryption"
                     slot="end"
@@ -33,6 +34,7 @@
               <ion-item :disabled="!settings.s.enableStorageEnctyption">
                 <ion-label>Enable Auto Lock</ion-label>
                 <ion-toggle
+                  aria-label="Enable Auto Lock"
                   :key="updateKey"
                   @ion-change="changeAutoLock"
                   slot="end"
@@ -70,6 +72,7 @@
                 <ion-item>
                   <ion-label>Permanent Lock</ion-label>
                   <ion-toggle
+                    aria-label="Permanent Lock"
                     @ion-change="changePermaLock"
                     :key="updateKey"
                     slot="end"
@@ -180,6 +183,7 @@
         </ion-accordion>
       </ion-accordion-group>
       <ion-toast
+        position="top"
         :is-open="toastState"
         @didDismiss="toastState = false"
         :message="toastMsg"
@@ -228,7 +232,11 @@
               <ion-label>Old Password</ion-label>
             </ion-item>
             <ion-item>
-              <ion-input label="password" v-model="mpPass" type="password"></ion-input>
+              <ion-input
+                aria-label="password"
+                v-model="mpPass"
+                type="password"
+              ></ion-input>
             </ion-item>
           </ion-list>
           <div v-else>
@@ -237,7 +245,11 @@
                 <ion-label>New Password</ion-label>
               </ion-item>
               <ion-item>
-                <ion-input label="password" v-model="mpPass" type="password"></ion-input>
+                <ion-input
+                  aria-label="password"
+                  v-model="mpPass"
+                  type="password"
+                ></ion-input>
               </ion-item>
             </ion-list>
             <ion-list>
@@ -246,7 +258,7 @@
               </ion-item>
               <ion-item>
                 <ion-input
-                  label="password"
+                  aria-label="password"
                   v-model="mpConfirm"
                   type="password"
                 ></ion-input>

@@ -1,4 +1,4 @@
-import type { Network, Account, Prices, Settings, Networks, HistoryItem } from '@/extension/types'
+import type { Network, Account, Prices, Settings, Networks, HistoryItem, ContractActions, ContractAction, Contact } from '@/extension/types'
 import type { Ref } from 'vue'
 
 const defaultSettings = {
@@ -10,6 +10,12 @@ const defaultSettings = {
     theme: 'system',
     lastLock: Date.now()
 }
+
+const defaultAbis = {} as {
+    [key: string]: string
+}
+
+export const CLW_CONTEXT_MENU_ID = 'clw-paste-address'
 
 export const storageSave = async (key: string, value: any): Promise<void> =>{
     await chrome.storage.local.set({ [key]: value })
@@ -48,10 +54,22 @@ export const saveSelectedNetwork  = async (selectedNetwork: Network ): Promise<v
 }
 
 
+export const getContacts = async (): Promise<Contact[]> => {
+    return (await storageGet('contacts')).contacts ?? [] as Contact[]
+}
+
+export const saveContact = async (contact: Contact): Promise<void> => {
+    const savedContacts = await getContacts()
+    await storageSave('contacts', [contact, ...savedContacts])
+}
+
+export const replaceContacts = async (contacts: Contact[]): Promise<void> => {
+    await storageSave('contacts', contacts)
+}
+
 export const getAccounts = async (): Promise<Account[]> => {
     return (await storageGet('accounts')).accounts ?? [] as Account[]
 }
-
 
 export const saveAccount = async (account: Account): Promise<void> => {
     const savedAccounts = await getAccounts()
@@ -61,6 +79,7 @@ export const saveAccount = async (account: Account): Promise<void> => {
 export const replaceAccounts = async (accounts: Account[]): Promise<void> => {
     await storageSave('accounts', accounts)
 }
+
 
 export const getSelectedAccount = async (): Promise<Account> => {
     return (await storageGet('selectedAccount'))?.selectedAccount ?? null as unknown as Account
@@ -106,6 +125,80 @@ export const setSettings = async (settings: Settings): Promise<void> => {
     await storageSave('settings', settings )
 }
 
+export const getAllAbis = async (): Promise<{ [key: string]: string }> => {
+    return ((await storageGet('abis'))?.abis) ?? defaultAbis
+}
+
+export const getAbis = async (name: string): Promise<string> => {
+    return (await getAllAbis())?.[name] ?? ''
+}
+
+export const setAbi = async ({
+    name ,
+    content
+}: {
+    name: string
+    content: string
+}): Promise<void> => {
+    const abis = await getAllAbis() || defaultAbis
+    await storageSave('abis', { ...abis, [name]: content })
+}
+
+export const setAbis = async (abis: { [key: string]: string }): Promise<void> => {
+    await storageSave('abis', abis)
+}
+
+export const removeAllAbis = async (): Promise<void> => {
+    await storageSave('abis', defaultAbis)
+}
+
+
+export const readCAGetAll = async (): Promise<ContractActions> => {
+    return ((await storageGet('read-actions'))?.['read-actions'] ?? {}) as ContractActions
+}
+
+export const readCAGet = async (action: string): Promise<ContractAction | undefined> => {
+    return ((await readCAGetAll())?.[action]) as ContractAction
+}
+
+export const readCASet = async (action: ContractAction): Promise<void> => {
+    const actions = await readCAGetAll()
+    await storageSave('read-actions', { ...actions, [action.name]: action })
+}
+
+export const readCARemove = async (action: string): Promise<void> => {
+    const actions = await readCAGetAll()
+    delete actions[action]
+    await storageSave('read-actions', actions)
+}
+
+export const readCAWipe = async (): Promise<void> => {
+    await storageSave('read-actions', {})
+}
+
+export const writeCAGetAll = async (): Promise<ContractActions> => {
+    return ((await storageGet('write-actions'))?.['write-actions'] ?? {}) as ContractActions
+}
+
+export const writeCAGet = async (action: string): Promise<ContractAction | undefined> => {
+    return ((await writeCAGetAll())?.[action]) as ContractAction
+}
+
+export const writeCASet = async (action: ContractAction): Promise<void> => {
+    const actions = await writeCAGetAll()
+    await storageSave('write-actions', { ...actions, [action.name]: action })
+}
+
+export const writeCARemove = async (action: string): Promise<void> => {
+    const actions = await writeCAGetAll()
+    delete actions[action]
+    await storageSave('write-actions', actions)
+}
+
+export const writeCAWipe = async (): Promise<void> => {
+    await storageSave('write-actions', {})
+}
+
 export const blockLockout = async (): Promise<Settings> => {
     const settings = await getSettings()
     settings.lockOutBlocked = true
@@ -126,15 +219,6 @@ export const getBalanceCache = async (): Promise<string> => {
 
 export const setBalanceCache = async (balance: string): Promise<void> => {
     await storageSave('balance', balance )
-}
-
-export const getRandomPk = () => {
-    const array = new Uint32Array(10);
-    crypto.getRandomValues(array)
-    return array.reduce(
-        (pv, cv) => `${pv}${cv.toString(16)}`,
-        '0x'
-    ).substring(0, 66)
 }
 
 export const smallRandomString = (size = 7) => {
@@ -178,7 +262,7 @@ export const hexTostr = (hexStr: string) =>
 
 export const strToHex = (str: string) =>  `0x${str.split('').map( s => s.charCodeAt(0).toString(16)).join('')}`
 
-export const numToHexStr = (num: number) => `0x${num.toString(16)}`
+export const numToHexStr = (num: number | bigint) => `0x${num.toString(16)}`
 
 export const copyAddress = async (address: string, toastRef: Ref<boolean>) => {
     await navigator.clipboard.writeText(address)
@@ -191,6 +275,27 @@ export const paste = (id: string) => {
     const el = document.getElementById(id)
     if(el){
       el.focus();
+      (document as any)?.execCommand('paste')
+    }
+}
+
+export const enableRightClickVote = async () => {
+    try {
+        await chrome.contextMenus.removeAll();
+        await chrome.contextMenus.create({
+            id: CLW_CONTEXT_MENU_ID,
+            title: "Paste Current Address",
+            contexts: ["editable"],
+        });
+    } catch (error) {
+        // ignore
+    }
+}
+
+export const pasteToFocused = () => {
+    const el = document.activeElement as HTMLInputElement
+    if(el){
+      el?.focus();
       (document as any)?.execCommand('paste')
     }
 }

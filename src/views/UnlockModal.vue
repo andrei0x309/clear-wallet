@@ -31,7 +31,7 @@
           <ion-label>Unlock Password</ion-label>
         </ion-item>
         <ion-item>
-          <ion-input label="password" v-model="mpPass" type="password"></ion-input>
+          <ion-input aria-label="password" v-model="mpPass" type="password"></ion-input>
         </ion-item>
       </ion-list>
       <ion-item>

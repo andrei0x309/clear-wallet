@@ -9,8 +9,7 @@
 
     <ion-content class="ion-padding">
       <ion-item>
-        <ion-label>Name</ion-label>
-        <ion-input label="name" v-model="name"></ion-input>
+        <ion-input label="Name" labelPlacement="stacked" v-model="name"></ion-input>
       </ion-item>
       <ion-item>
         <ion-label>Get Random Name</ion-label>
@@ -23,8 +22,12 @@
           :icon="clipboardOutline"
           button
         />
-        <ion-label button>PK</ion-label>
-        <ion-input label="pk" id="pastePk" v-model="pk"></ion-input>
+        <ion-input
+          label="PK"
+          labelPlacement="stacked"
+          id="pastePk"
+          v-model="pk"
+        ></ion-input>
       </ion-item>
       <template v-if="!isEdit">
         <ion-item>
@@ -33,7 +36,7 @@
         </ion-item>
         <ion-item>
           <ion-button @click="mnemonicModal = true" expand="full"
-            >Extarct From A Mnemonic</ion-button
+            >Extract From A Mnemonic</ion-button
           >
         </ion-item>
       </template>
@@ -67,7 +70,7 @@
           <ion-item>
             <ion-textarea
               style="overflow-y: scroll"
-              label="Enter mnemonic"
+              aria-label="Enter mnemonic"
               :rows="10"
               :cols="10"
               v-model="mnemonic"
@@ -75,9 +78,12 @@
           </ion-item>
           <ion-item>
             <ion-label>Enter Index (default: 0)</ion-label>
-            <ion-input label="mnemonic index" v-model="mnemonicIndex"></ion-input>
           </ion-item>
           <ion-item>
+            <ion-input aria-label="mnemonic index" v-model="mnemonicIndex"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-button @click="mnemonicModal = false" color="light">Close</ion-button>
             <ion-button @click="extractMnemonic">Extract</ion-button>
           </ion-item>
         </ion-content>
@@ -111,7 +117,6 @@ import {
   saveSelectedAccount,
   getAccounts,
   saveAccount,
-  getRandomPk,
   smallRandomString,
   paste,
   getSettings,
@@ -123,7 +128,7 @@ import UnlockModal from "@/views/UnlockModal.vue";
 import { encrypt, getCryptoParams } from "@/utils/webCrypto";
 
 import { clipboardOutline } from "ionicons/icons";
-import { getFromMnemonic } from "@/utils/wallet";
+import { getFromMnemonic, getRandomPk } from "@/utils/wallet";
 
 export default defineComponent({
   components: {

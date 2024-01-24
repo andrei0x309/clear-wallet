@@ -1,10 +1,11 @@
 {
   "name": "clear-wallet",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "private": true,
+  "description": "Clear Wallet (CLW) is a wallet that helps you manage your Ethereum assets and interact with Ethereum dApps and contracts with the main focus on absolute privacy.",
   "scripts": {
     "dev": "vite",
-    "inject": "tsc --outFile src/extension/inject.js src/extension/inject.ts",
+    "inject": "tsc --downlevelIteration --outFile src/extension/inject.js src/extension/inject.ts",
     "content": "tsc --outFile src/extension/content.js src/extension/content.ts",
     "post-build": "ts-node ./release-scripts/post-build.ts",
     "build": "yarn inject && yarn content && vue-tsc --noEmit && vite build && yarn post-build",
@@ -53,6 +54,5 @@
     "vite": "^4.4.9",
     "vue-tsc": "^1.8.8",
     "yarn-upgrade-all": "^0.7.2"
-  },
-  "description": "An Ionic project"
+  }
 }

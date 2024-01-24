@@ -1,7 +1,5 @@
 import { getSelectedAccount, getSelectedNetwork } from '@/utils/platform';
-import { ethers } from "ethers"
-import { strToHex } from '@/utils/platform';
-
+import { ethers} from "ethers"
 
 export const signMsg = async (msg: string) => {
     const account = await getSelectedAccount()
@@ -35,8 +33,8 @@ export const getGasPrice = async () => {
     const network = await getSelectedNetwork()
     const provider = new ethers.JsonRpcProvider(network.rpc)
     const feed = await provider.getFeeData()
-    const gasPrice = feed.gasPrice ?? feed.maxFeePerGas
-    return gasPrice
+    const gasPrice = feed.maxFeePerGas ?? feed.gasPrice ?? 0n
+    return Number(gasPrice) / 1e9
 }
 
 export const getBlockNumber = async () => {
@@ -98,35 +96,35 @@ export const getTxCount = async (addr: string, block: null | string = null) => {
     }
 }
 
-export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', value='0x0', gasPrice='0x0'}: 
-{to: string, from: string, data: string, value: string, gas: string, gasPrice: string}, 
-gasEstimate: Promise<bigint> | null = null, pGasPrice : Promise<bigint | null> | null) => {
+export const getRandomPk = () => {
+    return ethers.Wallet.createRandom().privateKey
+}
+
+export const getCurrentProvider = async () => {
+    const network = await getSelectedNetwork()
+    return new ethers.JsonRpcProvider(network.rpc)
+}
+
+export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', value='', gasPrice='0x0'}: 
+{to: string, from: string, data: string, value: string, gas: string, gasPrice: string}) => {
     const account = await getSelectedAccount()
     const network = await getSelectedNetwork()
     const wallet = new ethers.Wallet(account.pk, new ethers.JsonRpcProvider(network.rpc))
-    if(gas === '0x0') {
-       if(!gasEstimate){
-        throw new Error('No gas estimate available')
-       }else {
-        gas = (await gasEstimate).toString()
-       }
-    }
+    const gasPriceInt = BigInt(gasPrice)
+    const gasInt = BigInt(gas)
 
-    if(gasPrice === '0x0') {
-        if(!pGasPrice){
-         throw new Error('No gas estimate available')
-        }else {
-        gasPrice = (await pGasPrice ?? 0).toString()
-        }
-     }
- 
-    console.log('gasPrice', gasPrice)
-    console.log('gas', gas)
-
-     if(gas === '0x0' || gasPrice === '0x0' || 1 === 1) {
+     if(gas === '0x0' || gasPrice === '0x0') {
         throw new Error('No gas estimate available')
      }
-    return await wallet.sendTransaction({to, from, data, value, gasLimit: gas, gasPrice})
+    return await wallet.sendTransaction({
+        to,
+        from,
+        data: data ? data : null, 
+        value: value ? value : null,
+        gasLimit: gasInt,
+        gasPrice: null,
+        maxFeePerGas: gasPriceInt,
+    })
 }
 
 export const formatBalance = (balance: string) => {
@@ -134,4 +132,11 @@ export const formatBalance = (balance: string) => {
         notation: 'compact',
         maximumFractionDigits: 6
       }).format(Number(ethers.parseEther(balance)))
+}
+
+export const getSelectedAddress = async () => {
+    // give only the selected address for better privacy
+    const account = await getSelectedAccount()
+    const address = account?.address ? [account?.address] : []
+    return address
 }

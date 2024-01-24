@@ -11,8 +11,9 @@
         <ion-label>Operation Aborted</ion-label>
       </ion-item>
       <ion-item>
-        <ion-label>Error:</ion-label>
         <ion-textarea
+          label="Error:"
+          labelPlacement="stacked"
           style="overflow-y: scroll"
           :rows="10"
           :cols="20"
