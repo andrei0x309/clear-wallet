@@ -113,43 +113,9 @@ export default defineComponent({
     const alertOpen = ref(false);
 
     const alertMsg = ref("");
-    // const route = useRoute();
-    // const isEdit = route.path.includes("/edit");
-    // const paramAddress = route.params.address ?? "";
     const loading = ref(false);
 
-    // let accountsProm: Promise<Account[] | undefined>;
-    // let settingsProm: Promise<Settings | undefined>;
-
-    // const resetFields = () => {
-    //   name.value = "";
-    //   pk.value = "";
-    // };
-
-    // const openModal = async () => {
-    //   const modal = await modalController.create({
-    //     component: UnlockModal,
-    //     componentProps: {
-    //       unlockType: "addAccount",
-    //     },
-    //   });
-    //   modal.present();
-    //   const { role, data } = await modal.onWillDismiss();
-    //   if (role === "confirm") return data;
-    //   return false;
-    // };
-
-    onIonViewWillEnter(async () => {
-      //   if (isEdit && paramAddress) {
-      //     accountsProm = getAccounts();
-      //     settingsProm = getSettings();
-      //     const accounts = (await accountsProm) as Account[];
-      //     const acc = accounts.find((account) => account.address === paramAddress);
-      //     if (acc) {
-      //       name.value = acc.name;
-      //     }
-      //   }
-    });
+    onIonViewWillEnter(async () => {});
 
     const onAddAbi = async () => {
       if (!name.value) {
