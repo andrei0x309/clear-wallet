@@ -16,6 +16,7 @@
       >
       </ion-loading>
       <ion-toast
+        position="top"
         :is-open="toastState"
         @didDismiss="toastState = false"
         message="Copied to clipboard"
@@ -33,7 +34,11 @@
         Assets info could not be retrieved because of an http error, API down or
         conectivity issues.
       </template>
-      <template v-else-if="noAssets"> No assets found for this wallet address. </template>
+      <template v-else-if="noAssets">
+        <p class="padding: 1rem;">
+          No know assets found for this wallet address.
+        </p></template
+      >
       <template v-else>
         <template v-if="ethTokens.length || polyTokens.length">
           <template v-if="ethTokens.length">
@@ -274,7 +279,7 @@ export default defineComponent({
           return null;
         }
       } catch (error) {
-        console.error("Failed to fetch web3 profiles", error);
+        console.info("ERROR: Failed to fetch web3 profiles", error);
         return null;
       }
     };

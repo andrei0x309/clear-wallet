@@ -62,6 +62,7 @@
       >
       </ion-loading>
       <ion-toast
+        position="top"
         :is-open="toastState"
         @didDismiss="toastState = false"
         message="Copied to clipboard"

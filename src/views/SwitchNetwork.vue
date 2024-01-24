@@ -183,7 +183,6 @@ export default defineComponent({
       (window as any)?.resizeTo?.(600, 600);
       pnetworks = getNetworks();
       selectedNetwork.value = await getSelectedNetwork();
-      console.log(networkId.value);
       existingNetworks.value = await pnetworks;
       if ((networkId.value ?? "0") in existingNetworks.value ?? {}) {
         networkCase.value = "exists";

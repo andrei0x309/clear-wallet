@@ -22,7 +22,7 @@ export const mainNets: {[key: number]: Network} = {
     },
     100: {
         name: 'Gnosis',
-        rpc: 'https://rpc.gnosischain.com/',
+        rpc: 'https://rpc.gnosischain.com',
         chainId: 100,
         explorer: 'https://gnosisscan.io',
         icon:'xdai.webp',
@@ -56,6 +56,15 @@ export const mainNets: {[key: number]: Network} = {
         symbol: 'ETH',
         priceId: 'ethereum'
     },
+    8453: {
+        name: 'Base Mainnet',
+        rpc: 'https://base.publicnode.com',
+        chainId: 8453,
+        explorer: 'https://basescan.org',
+        icon: 'base.webp',
+        symbol: 'ETH',
+        priceId: 'ethereum'
+    }
 }
 
 export const testNets = {
@@ -77,7 +86,7 @@ export const testNets = {
         name: 'TESTNET Polygon',
         rpc: 'https://rpc.ankr.com/polygon_mumbai',
         chainId: 80001,
-        explorer: 'https://mumbai.polygonscan.com/',
+        explorer: 'https://mumbai.polygonscan.com',
         icon:'polygon.webp'
     },
     100100: {
@@ -91,21 +100,21 @@ export const testNets = {
         name: 'TESTNET Optimism Goreli',
         rpc: 'https://goerli.optimism.io/',
         chainId: 420,
-        explorer: 'https://goerli.etherscan.io/',
+        explorer: 'https://goerli.etherscan.io',
         icon: 'optimism.webp'
     },
     97: {
         name: 'TESTNET BSC',
         rpc: 'https://bsctestapi.terminet.io/rpc',
         chainId: 97,
-        explorer: 'https://testnet.bscscan.com/',
+        explorer: 'https://testnet.bscscan.com',
         icon: 'binance.webp'
     },
     421613: {
         name: 'TESTNET Arbitrum One',
         rpc: 'https://goerli-rollup.arbitrum.io/rpc/',
         chainId: 421613,
-        explorer: 'https://testnet.arbiscan.io/',
+        explorer: 'https://testnet.arbiscan.io',
         icon: 'arbitrum.webp'
     },
 }

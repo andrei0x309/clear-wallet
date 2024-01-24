@@ -2,7 +2,16 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Wallet</ion-title>
+        <ion-title>
+          <ion-avatar
+            style="margin: 0.3rem; width: 1.8rem; height: 1.8rem; display: inline-flex"
+          >
+            <img alt="clw" :src="getUrl('assets/extension-icon/wallet_32.png')" />
+          </ion-avatar>
+          <span style="position: absolute; top: 0.45rem; margin-left: 0.3rem"
+            >CL Wallet</span
+          >
+        </ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
@@ -13,10 +22,18 @@
       <ion-list v-else>
         <ion-item>
           <ion-label>Selected Account: {{ selectedAccount?.name }}</ion-label>
-          <ion-button @click="accountsModal = true">Select</ion-button>
+          <ion-button
+            @click="
+              () => {
+                accountsModal = true;
+                toastState = false;
+              }
+            "
+            >Select</ion-button
+          >
         </ion-item>
         <ion-item button @click="copyAddress(selectedAccount?.address, getToastRef())">
-          <p style="font-size: 0.7rem">{{ selectedAccount?.address }}</p>
+          <p style="font-size: 0.7rem; color: coral">{{ selectedAccount?.address }}</p>
           <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
         </ion-item>
         <ion-item
@@ -53,8 +70,21 @@
             :src="getUrl('assets/chain-icons/' + (mainNets as any)[selectedNetwork?.chainId]?.icon)"
           />
         </ion-avatar>
-        <ion-label>Selected Network ID: {{ selectedNetwork?.chainId }}</ion-label>
-        <ion-button @click="networksModal = true">Select</ion-button>
+        <ion-label
+          >Selected Network ID:
+          <span style="color: coral; font-weight: bold">{{
+            selectedNetwork?.chainId
+          }}</span></ion-label
+        >
+        <ion-button
+          @click="
+            () => {
+              networksModal = true;
+              toastState = false;
+            }
+          "
+          >Select</ion-button
+        >
       </ion-item>
 
       <ion-loading
@@ -67,6 +97,7 @@
       >
       </ion-loading>
       <ion-toast
+        position="top"
         :is-open="toastState"
         @didDismiss="toastState = false"
         message="Copied to clipboard"
@@ -98,11 +129,17 @@
               button
             >
               <ion-item>
-                <ion-radio slot="start" :value="account.address" />
-                <ion-label>{{ account.name }}</ion-label>
+                <ion-radio
+                  :aria-label="account.name"
+                  slot="start"
+                  :value="account.address"
+                  >{{ account.name }}</ion-radio
+                >
               </ion-item>
               <ion-item>
-                <ion-text style="font-size: 0.8rem">{{ account.address }}</ion-text>
+                <ion-text style="font-size: 0.7rem; color: coral">{{
+                  account.address
+                }}</ion-text>
               </ion-item>
             </ion-list>
           </ion-radio-group>
@@ -135,11 +172,18 @@
                   @click="changeSelectedNetwork(network.chainId)"
                   slot="start"
                   :value="network.chainId"
-                />
-                <ion-label>{{ network.name }}</ion-label>
+                  :aria-label="network.name"
+                >
+                  <span style="opacity: 0.7; font-size: 0.8rem">
+                    ID: {{ network.chainId }} ->
+                  </span>
+                  {{ network.name }}
+                </ion-radio>
               </ion-item>
               <ion-item>
-                <ion-text>{{ network.rpc }}</ion-text>
+                <ion-text style="opacity: 0.8; font-size: 0.85rem">{{
+                  network.rpc
+                }}</ion-text>
               </ion-item>
             </ion-list>
           </ion-radio-group>

@@ -1,0 +1,20 @@
+  <!DOCTYPE html>
+  <html>
+    <head>
+    </head>
+    <body>
+        <h1>Eval Sandbox</h1>
+      <script>
+        // console.log('sandbox loaded');
+        window.addEventListener('message', function (event) {
+          // console.log('message received', event);
+          const data = event.data;
+          const execFunc = new Function(
+            'return ' + data.code
+          );
+          const result = execFunc();
+          event.source.postMessage({ result }, event.origin);
+        });
+      </script>
+    </body>
+  </html>

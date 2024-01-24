@@ -79,6 +79,19 @@ const routes: Array<RouteRecordRaw> = [
         path: 'add-network/edit/:chainId',
         component: () => import('@/views/AddNetwork.vue'),
       },
+      
+      {
+        path: 'send-token',
+        component: () => import('@/views/SendToken.vue'),
+      },
+      {
+        path: 'read-contract',
+        component: () => import('@/views/ReadContract.vue'),
+      },
+      {
+        path: 'write-contract',
+        component: () => import('@/views/WriteContract.vue'),
+      },
     ],
   },
 ]

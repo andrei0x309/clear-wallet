@@ -35,6 +35,23 @@
             <ion-label>Settings</ion-label>
           </ion-tab-button>
         </ion-tab-bar>
+
+        <ion-tab-bar slot="bottom">
+          <ion-tab-button tab="send-token" href="/tabs/send-token">
+            <ion-icon :icon="sendOutline"></ion-icon>
+            <ion-label>Send Tokens</ion-label>
+          </ion-tab-button>
+
+          <ion-tab-button tab="read-contract" href="/tabs/read-contract">
+            <ion-icon :icon="glassesOutline"></ion-icon>
+            <ion-label>Read Contract</ion-label>
+          </ion-tab-button>
+
+          <ion-tab-button tab="write-contract" href="/tabs/write-contract">
+            <ion-icon :icon="pushOutline"></ion-icon>
+            <ion-label>Write Contracts</ion-label>
+          </ion-tab-button>
+        </ion-tab-bar>
       </ion-tabs>
     </ion-content>
   </ion-page>
@@ -50,9 +67,19 @@ import {
   IonTabBar,
   IonTabButton,
   IonLabel,
-  IonIcon
+  IonIcon,
 } from "@ionic/vue";
-import { personCircle, walletOutline, diamondOutline, cogOutline, receiptOutline, gitNetworkOutline } from "ionicons/icons";
+import {
+  personCircle,
+  walletOutline,
+  diamondOutline,
+  cogOutline,
+  receiptOutline,
+  gitNetworkOutline,
+  sendOutline,
+  glassesOutline,
+  pushOutline,
+} from "ionicons/icons";
 
 export default defineComponent({
   components: {
@@ -63,7 +90,7 @@ export default defineComponent({
     IonTabBar,
     IonTabButton,
     IonLabel,
-    IonIcon
+    IonIcon,
   },
   name: "AppTabs",
   setup() {
@@ -81,8 +108,11 @@ export default defineComponent({
       cogOutline,
       receiptOutline,
       gitNetworkOutline,
+      sendOutline,
       beforeTabChange,
       afterTabChange,
+      glassesOutline,
+      pushOutline,
     };
   },
 });

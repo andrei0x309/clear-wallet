@@ -25,7 +25,10 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      plugins: [nodePolyfills()]
+      plugins: [nodePolyfills()],
+      input: {
+        ['eval-sandbox']: 'eval-sandbox.html',
+      },
     },
     sourcemap: false,
     chunkSizeWarningLimit: 1000,

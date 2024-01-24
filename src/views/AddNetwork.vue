@@ -10,31 +10,46 @@
         >Add from popular chain list</ion-button
       >
       <ion-item>
-        <ion-label>Name(*)</ion-label>
-        <ion-input v-model="name" placeholder="ex: Polygon"></ion-input>
+        <ion-input
+          label="Name(*)"
+          labelPlacement="stacked"
+          v-model="name"
+          placeholder="ex: Polygon"
+        ></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label>ChainId(*)</ion-label>
-        <ion-input v-model="chainId" placeholder="137" type="number"></ion-input>
+        <ion-input
+          label="ChainId(*)"
+          labelPlacement="stacked"
+          v-model="chainId"
+          placeholder="137"
+          type="number"
+        ></ion-input>
       </ion-item>
       <ion-item button>
         <ion-icon :icon="clipboardOutline" @click="paste('pasteRpc')" />
-        <ion-label>RPC URL(*)</ion-label>
         <ion-input
+          label="RPC URL(*)"
+          labelPlacement="stacked"
           id="pasteRpc"
           placeholder="https://polygon-mainnet.g.alchemy.com/..."
           v-model="rpc"
         ></ion-input>
       </ion-item>
       <ion-item button>
-        <ion-icon :icon="clipboardOutline" @click="paste('pasteRpc')" />
-        <ion-label>Native Token Symbol(?)</ion-label>
-        <ion-input id="pasteRpc" placeholder="MATIC" v-model="symbol"></ion-input>
+        <ion-input
+          label="Native Token Symbol"
+          labelPlacement="stacked"
+          id="native-token"
+          placeholder="MATIC"
+          v-model="symbol"
+        ></ion-input>
       </ion-item>
       <ion-item button>
         <ion-icon :icon="clipboardOutline" @click="paste('pasteExplorer')" />
-        <ion-label>Explorer(?)</ion-label>
         <ion-input
+          label="Explorer"
+          labelPlacement="stacked"
           id="pasteExplorer"
           placeholder="https://polygonscan.com"
           v-model="explorer"
