@@ -1,6 +1,6 @@
 # Changelog
 
-## Manifest Version 1.3.0
+## Manifest Version 1.3.1
 
 - refactored the wallet to use etheres V6
 - implemented EIP6963Provider
