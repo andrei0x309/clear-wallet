@@ -86,6 +86,21 @@
           >Select</ion-button
         >
       </ion-item>
+      <ion-item style="margin-top: 0.3rem">
+        <div class="display: flex; flex-direction: column">
+          <img
+            alt="stealthex"
+            @click="openTab('https://stealthex.io')"
+            id="exchange-btn"
+            :src="getUrl('assets/exchange-btn-min.svg')"
+            class="exchange-btn"
+            style=""
+          />
+          <p style="font-size: 0.75rem; opacity: 0.8; padding 0.2rem;">
+            This button does not contain any referral to maximize privacy.
+          </p>
+        </div>
+      </ion-item>
 
       <ion-loading
         :is-open="loading"
@@ -235,7 +250,6 @@ import type { Network, Account, Networks } from "@/extension/types";
 import { mainNets } from "@/utils/networks";
 import router from "@/router";
 import { triggerListner } from "@/extension/listners";
-
 import { copyOutline } from "ionicons/icons";
 
 export default defineComponent({
@@ -362,3 +376,19 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.exchange-btn {
+  height: 2rem;
+  margin-top: 0.3rem;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  cursor: pointer;
+}
+.exchange-btn:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+  transform: scale(1.05);
+}
+</style>

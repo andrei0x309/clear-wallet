@@ -1,5 +1,9 @@
 # Changelog
 
+## Manifest Version 1.3.2
+
+- added button to open non kyc exchange, no referral is added to maximize privacy
+
 ## Manifest Version 1.3.1
 
 - refactored the wallet to use etheres V6
