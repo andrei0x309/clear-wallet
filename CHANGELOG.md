@@ -2,7 +2,7 @@
 
 ## Manifest Version 1.3.2
 
-- added button to open non kyc exchange, no referral is added to maximize privacy
+- added button to open non kyc exchange, no referral is used to maximize privacy
 
 ## Manifest Version 1.3.1
 
