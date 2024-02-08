@@ -78,7 +78,7 @@ if(Object.values(promResolvers).filter(r=> r).length < 10 ) {
         if (ping) {
             data.type = 'CLWALLET_PING'
         }
-        console.info('data in', data)
+        // console.info('data in', data)
         window.postMessage(data, "*");
     })
     } else {
@@ -165,7 +165,7 @@ class MetaMaskAPI {
             } else if (typeof arg1 === 'object') {
                 return sendMessage(arg1 as RequestArguments)
             } else {
-                console.info('ERROR: Clear Wallet: faulty request')
+                console.error('ERROR: Clear Wallet: faulty request')
             }
         }else if( typeof arg1 === 'string' ) {
             return sendMessage({
@@ -323,7 +323,7 @@ const listner =  function(event: any) {
     try {
         if(event?.data?.data?.error){
             promResolvers.get(event.data.resId)?.reject(event.data.data);
-            console.info('Error: ', event?.data?.data)
+            // console.info('Error: ', event?.data?.data)
         }else {
             promResolvers.get(event.data.resId)?.resolve(event.data.data);
         }
@@ -341,7 +341,7 @@ const listner =  function(event: any) {
                     (<any>eth).selectedAddress = event?.data?.data?.address ?? null;
                     (<any>eth).isConnected = () => true;
                 } else if( listnerName === 'chainChanged' ) {
-                    console.info(event?.data?.data?.data);
+                    // console.info(event?.data?.data?.data);
                     (<any>eth).networkVersion = event?.data?.data?.data.toString(10) ?? '137';
                     (<any>eth).chainId = event?.data?.data?.data ?? '0x89';
                 } else if ( listnerName === 'accountsChanged' ) {
@@ -369,14 +369,14 @@ const proxy1 = new Proxy(new MetaMaskAPI(), {
           // Intercept method calls and log them
           if (typeof target[prop] === 'function') {
             return function (...args: any[]) {
-              console.log(`Calling ${prop} with arguments:`, args);
+            //   console.log(`Calling ${prop} with arguments:`, args);
               // eslint-disable-next-line prefer-spread
               const result = target[prop].apply(target, args);
-              console.log(`${prop} returned:`, result);
+            //   console.log(`${prop} returned:`, result);
               return result;
             };
           } else {
-            console.log(`Reading ${prop}`);
+            // console.log(`Reading ${prop}`);
             return target[prop];
           }
         },
@@ -397,7 +397,7 @@ Object.defineProperty(win, 'web3', {
 sendMessage({
     method: 'wallet_ready'
 }, true)
-console.log('Clear wallet injected', (window as any).ethereum, win)
+// console.log('Clear wallet injected', (window as any).ethereum, win)
 }
 
 injectWallet(this);
