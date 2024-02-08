@@ -63,7 +63,7 @@ window.addEventListener("message", (event) => {
         }
 
         const data = { type: "CLWALLET_PAGE", data: res, resId: event.data.resId };
-        // console.info('data out', data)
+        console.info('data out', data)
         window.postMessage(data, "*");
       })
     }

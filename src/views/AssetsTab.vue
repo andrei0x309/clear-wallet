@@ -52,7 +52,7 @@
                   <img
                     :alt="token?.name"
                     :src="token?.image"
-                    @error="token.image = getUrl('assets/randomGrad.svg')"
+                    @error="token.image = getUrl('assets/chain-icons/eth.webp')"
                   />
                 </ion-avatar>
                 <ion-label

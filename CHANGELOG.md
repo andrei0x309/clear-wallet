@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.3.3
+
+- improved eth_call and eth_blockNumber to be more compatible with older websites
+- better error internal handling
+- modify the receipt returned to resamble more the one from Metamask
+
 ## Manifest Version 1.3.2
 
 - added button to open non kyc exchange, no referral is used to maximize privacy

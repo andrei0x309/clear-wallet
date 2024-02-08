@@ -167,24 +167,36 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
             // ETH API
             switch (message.method) {
                 case 'eth_call': {
-                    sendResponse(await evmCall(message?.params?.[0]))
+                    try {
+                    sendResponse(await evmCall(message?.params ?? []))
+                    } catch (e) {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'No network or user selected'
+                        })
+                        console.error('eth_call', e)
+                    }
                     break
                 }
                 case 'eth_getBlockByNumber': {
                     try {
                     const params = message?.params?.[0] as any
                     const block = await getBlockByNumber(params) as any
-                    block.gasLimit = block.gasLimit.toHexString()
-                    block.gasUsed = block.gasUsed.toHexString()
-                    block.baseFeePerGas  = block.baseFeePerGas.toHexString()
-                    block._difficulty = block._difficulty.toHexString()
-                    sendResponse(block)
-                    } catch {
+                    const newBlock = {...block}
+                    newBlock.gasLimit = numToHexStr(block.gasLimit)
+                    newBlock.gasUsed = numToHexStr(block.gasUsed)
+                    newBlock.baseFeePerGas  = numToHexStr(block.baseFeePerGas)
+                    newBlock._difficulty = numToHexStr(block.difficulty)
+                    newBlock.difficulty = block._difficulty
+                    sendResponse(newBlock)
+                    } catch (e) {
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
+                        console.log('eth_getBlockByNumber', e)
                     }
                     break;
                 }
@@ -195,49 +207,52 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                      }else {
                         sendResponse(numToHexStr(Number(await getTxCount(message?.params?.[0] as string))))
                      }
-                    } catch {
+                    } catch (e) {
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
-                        
+                        console.error('eth_getTransactionCount', e)
                     }
                     break
                 }
                 case 'eth_getTransactionByHash': {
                     try {
                     sendResponse(await getTxByHash(message?.params?.[0] as string))
-                    } catch {
+                    } catch (e) {
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
+                        console.error('eth_getTransactionByHash', e)
                     }
                     break
                 }
                 case 'eth_getTransactionReceipt':{
                     try {
                     sendResponse(await getTxReceipt(message?.params?.[0] as string))
-                    } catch {
+                    } catch (e) {
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
+                        console.error('eth_getTransactionReceipt', e)
                     }
                     break
                 }
                 case 'eth_gasPrice': {
                     try {
                     sendResponse(numToHexStr(BigInt(Math.trunc(await getGasPrice() * 1e9))))
-                    } catch {
+                    } catch(e) {
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
+                        console.error('eth_gasPrice', e)
                     }
                     break;
                 }
@@ -246,36 +261,39 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                     const balance = await getBalance()
                     const balanceHex = numToHexStr(balance ?? 0n)
                     sendResponse(balanceHex)
-                    } catch {
+                    } catch (e) {
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
+                        console.error('eth_getBalance', e)
                     }
                     break
                 }
                 case 'eth_getCode': {
                     try {
                     sendResponse(await getCode(message?.params?.[0] as string))
-                    } catch {
+                    } catch (e) {
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
+                        console.error('eth_getCode', e)
                     }
                     break
                 }
                 case 'eth_blockNumber': {
                     try {
                     sendResponse(await getBlockNumber())
-                    } catch {
+                    } catch (e) {
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
+                        console.error('eth_blockNumber', e)
                     }
                     break               
                 }
@@ -311,12 +329,14 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             code: rpcError.USER_REJECTED,
                             message: 'Gas estimate failed'
                         })
-                    }
+                    } else {
                     sendResponse({
                         error: true,
                         code: rpcError.USER_REJECTED,
                         message: 'No network or user selected'
                     })
+                    console.error('eth_estimateGas', err)
+                    }
                 }
                     break          
                 }
@@ -324,12 +344,13 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 case 'eth_accounts': {
                 try {
                     sendResponse(await getSelectedAddress())
-                 } catch {
+                 } catch (e) {
                     sendResponse({
                         error: true,
                         code: rpcError.USER_REJECTED,
                         message: 'No network or user selected'
                     })
+                    console.error('eth_accounts', e)
                 }
                 break
                 }
@@ -338,12 +359,13 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                     const network = await getSelectedNetwork()
                     const chainId = network?.chainId ?? 0
                     sendResponse(`0x${chainId.toString(16)}`)
-                } catch {
+                } catch (e) {
                     sendResponse({
                         error: true,
                         code: rpcError.USER_REJECTED,
                         message: 'No network or user selected'
                     })
+                    console.error('eth_chainId', e)
                 }
                 break
                 }

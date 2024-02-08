@@ -78,7 +78,7 @@ if(Object.values(promResolvers).filter(r=> r).length < 10 ) {
         if (ping) {
             data.type = 'CLWALLET_PING'
         }
-        // console.info('data in', data)
+        console.info('data in', data)
         window.postMessage(data, "*");
     })
     } else {
@@ -341,7 +341,7 @@ const listner =  function(event: any) {
                     (<any>eth).selectedAddress = event?.data?.data?.address ?? null;
                     (<any>eth).isConnected = () => true;
                 } else if( listnerName === 'chainChanged' ) {
-                    // console.info(event?.data?.data?.data);
+                    console.info(event?.data?.data?.data);
                     (<any>eth).networkVersion = event?.data?.data?.data.toString(10) ?? '137';
                     (<any>eth).chainId = event?.data?.data?.data ?? '0x89';
                 } else if ( listnerName === 'accountsChanged' ) {
