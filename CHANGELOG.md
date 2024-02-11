@@ -5,6 +5,8 @@
 - improved eth_call and eth_blockNumber to be more compatible with older websites
 - better error internal handling
 - modify the receipt returned to resamble more the one from Metamask
+- change some notes in about
+- refactored account name edit to be more user friendly
 
 ## Manifest Version 1.3.2
 

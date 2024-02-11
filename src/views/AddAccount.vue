@@ -42,9 +42,16 @@
       </template>
       <ion-item>
         <ion-button @click="onCancel">Cancel</ion-button>
-        <ion-button @click="onAddAccount">{{
-          isEdit ? "Edit Account" : "Add Account"
-        }}</ion-button>
+        <ion-button
+          @click="
+            () => {
+              isEdit ? onEditAccount() : onAddAccount();
+            }
+          "
+          expand="full"
+          color="primary"
+          >{{ isEdit ? "Edit Account" : "Add Account" }}</ion-button
+        >
       </ion-item>
       <ion-alert
         :is-open="alertOpen"
@@ -120,6 +127,7 @@ import {
   smallRandomString,
   paste,
   getSettings,
+  replaceAccounts,
 } from "@/utils/platform";
 import router from "@/router";
 import { useRoute } from "vue-router";
@@ -192,8 +200,48 @@ export default defineComponent({
       }
     });
 
+    const deleteAccount = async (address: string, accounts: Account[]) => {
+      const findIndex = accounts.findIndex((a) => a.address === address);
+      const pArr: Array<Promise<void>> = [];
+      if (findIndex !== -1) {
+        accounts.splice(findIndex, 1);
+        pArr.push(replaceAccounts([...accounts]));
+      }
+      await Promise.all(pArr);
+    };
+
+    const onEditAccount = async () => {
+      if (name.value.length < 1) {
+        alertMsg.value = "Name cannot be empty.";
+        alertOpen.value = true;
+        return;
+      }
+      const accounts = (await accountsProm) as Account[];
+      const account = accounts.find((acc) => acc.address === paramAddress);
+      if (!account) {
+        alertMsg.value = "Account not found.";
+        alertOpen.value = true;
+        return;
+      }
+      const savedAcc = {
+        address: account.address,
+        name: name.value,
+        pk: account.pk,
+        encPk: account.encPk,
+      };
+      await deleteAccount(account.address, accounts);
+
+      await saveAccount(savedAcc);
+      router.push("/tabs/accounts");
+    };
+
     const onAddAccount = async () => {
       let p1 = Promise.resolve();
+      if (name.value.length < 1) {
+        alertMsg.value = "Name cannot be empty.";
+        alertOpen.value = true;
+        return;
+      }
       if (pk.value.length === 64) {
         pk.value = `0x${pk.value.trim()}`;
       }
@@ -320,6 +368,7 @@ export default defineComponent({
       mnemonic,
       mnemonicIndex,
       extractMnemonic,
+      onEditAccount,
     };
   },
 });

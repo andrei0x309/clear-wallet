@@ -120,19 +120,22 @@
               and Ethers.
             </p>
             <p>
-              It emulates Metamask Wallet and can be used as a drop-in replacement, right
-              now if you have both extensions, CLW will overwrite Metamask.
-            </p>
-            <p>
-              Main philosophy of the wallet is: no trackers, full control, export/import
-              JSONs with accounts, fast generate new accounts, and wipe everything with
-              one click.
+              Unlike most wallets, this wallet has no ads, no analytics, no trackers, no
+              bloatware, no telemetry, no data collection, no sponsored content, no
+              sponsored Dapps, no sponsored tokens, no sponsored NFTs, no sponsored
+              anything. It is a clean wallet with no revenue model, made by a single
+              developer, if you want to support this project financially you can donate at
+              andrei0x309.eth.
             </p>
             <p>
               Github Repo:
               <a href="#" @click="openTab('https://github.com/andrei0x309/clear-wallet')"
                 >LINK</a
               >
+            </p>
+            <p>
+              Docs Website:
+              <a href="#" @click="openTab('https://clear-wallet.flashsoft.eu')">LINK</a>
             </p>
             <br />
             <p style="margin-bottom: 0.2rem">Places you can check me out:</p>
@@ -147,10 +150,6 @@
             <p>
               Blog Flashsoft
               <a href="#" @click="openTab('https://blog.flashsoft.eu')">LINK</a>
-            </p>
-            <p>
-              Crypto-Leftists Discord
-              <a href="#" @click="openTab('https://discord.gg/gzA4bTCdhb')">LINK</a>
             </p>
           </div>
         </ion-accordion>
