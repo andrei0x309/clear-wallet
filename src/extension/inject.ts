@@ -69,18 +69,25 @@ const getListnersCount = (): number => {
     return count
 }
 
-const sendMessage = (args: RequestArguments, ping = false) => {
+const sendMessage = (args: RequestArguments, ping = false, from = 'request'): Promise<unknown> => {
 if(Object.values(promResolvers).filter(r=> r).length < 10 ) {
     return new Promise((resolve, reject) => {
         const resId = [...`${Math.random().toString(16) + Date.now().toString(16)}`].slice(2).join('')
         promResolvers.set(resId, { resolve, reject })
-        const data = { type: "CLWALLET_CONTENT", data: args, resId};
+        const data = { 
+            type: "CLWALLET_CONTENT", 
+            data: { data: args, name: 'metamask-provider' },
+            resId,
+            from,
+            target: 'metamask-contentscript'
+        }
         if (ping) {
             data.type = 'CLWALLET_PING'
         }
         // console.info('data in', data)
         window.postMessage(data, "*");
-    })
+ 
+    }) 
     } else {
         return new Promise((resolve, reject) => {
             reject(new Error("You have reached the maximum number of concurent wallet messeges."))
@@ -125,25 +132,26 @@ class MetaMaskAPI {
     }
 
     request(args: RequestArguments): Promise<unknown> {
-        return sendMessage(args)
+        return sendMessage(args) as Promise<unknown>
     }
     // Deprecated
     sendAsync (arg1: any, arg2: any): void | Promise<unknown>  {
+        // return this.send(arg1, arg2) as any
         if( typeof arg1 === 'string' ) {
             return sendMessage({
                 method: arg1,
                 params: arg2 as object
-            })
+            }, false , 'sendAsync') as Promise<unknown>
         }else if (typeof arg2 === 'function'){
-                sendMessage(arg1 as RequestArguments).then(result => {
+                ((sendMessage(arg1 as RequestArguments, false, 'sendAsync') as Promise<unknown>).then(result => {
                     (arg2 as (e?: any, r?: any) => any )(undefined, {
                             id: (arg1 as RequestArguments)?.id,
                             jsonrpc: '2.0',
                             method: (arg1 as RequestArguments).method,
                             result
                           }
-                    )
-                }).catch( e => {
+                    ) 
+                }) as Promise<unknown>).catch( e => {
                     (arg2 as (er?: any, r?: any) => any )(new Error(e), {
                         id: (arg1 as RequestArguments)?.id,
                         jsonrpc: '2.0',
@@ -152,45 +160,83 @@ class MetaMaskAPI {
                       }
                 )
                 })
-            } 
+            } else {
+                return sendMessage(arg1 as RequestArguments, false, 'sendAsync') as Promise<unknown>
+            }
     }
     // Deprecated
+    // send (arg1: unknown, arg2: unknown): unknown {
+    //     if (arg2 === undefined) {
+    //         if( typeof arg1 === 'string' ) {
+    //             return sendMessage({
+    //                 method: arg1,
+    //                 params: undefined
+    //             })
+    //         } else if (typeof arg1 === 'object') {
+    //             return sendMessage(arg1 as RequestArguments)
+    //         } else {
+    //             console.error('ERROR: Clear Wallet: faulty request')
+    //         }
+    //     }else if( typeof arg1 === 'string' ) {
+    //         return sendMessage({
+    //             method: arg1,
+    //             params: arg2 as object
+    //         })
+    //     }else if (typeof arg2 === 'function'){
+    //             sendMessage(arg1 as RequestArguments).then(result => {
+    //                 (arg2 as (e?: any, r?: any) => any )(undefined, {
+    //                         id: (arg1 as RequestArguments)?.id,
+    //                         jsonrpc: '2.0',
+    //                         method: (arg1 as RequestArguments).method,
+    //                         result
+    //                       }
+    //                 )
+    //             }).catch( e => {
+    //                 (arg2 as (er?: any, r?: any) => any )(new Error(e), {
+    //                     id: (arg1 as RequestArguments)?.id,
+    //                     jsonrpc: '2.0',
+    //                     method: (arg1 as RequestArguments).method,
+    //                     error: new Error(e)
+    //                   }
+    //             )
+    //             })
+    //         } 
+    // }
+
     send (arg1: unknown, arg2: unknown): unknown {
+        const resultFmt = async (result: Promise<any>) => {
+            return {
+                "id": 0,
+                "jsonrpc": "2.0",
+                result: await result
+            }
+        }
         if (arg2 === undefined) {
             if( typeof arg1 === 'string' ) {
-                return sendMessage({
+ 
+                return resultFmt(sendMessage({
                     method: arg1,
                     params: undefined
-                })
-            } else if (typeof arg1 === 'object') {
-                return sendMessage(arg1 as RequestArguments)
+                }, false, 'send')) 
             } else {
-                console.error('ERROR: Clear Wallet: faulty request')
+                return resultFmt(sendMessage(arg1 as RequestArguments, false, 'send'))
+            }
+      } else if (typeof arg1 === 'object') {
+                if( typeof arg1 === 'string' ) {
+                return resultFmt(sendMessage(arg1 as RequestArguments, false, 'send'))
+            } else {
+                return resultFmt(sendMessage(arg1 as RequestArguments, false, 'send'))
             }
         }else if( typeof arg1 === 'string' ) {
-            return sendMessage({
+            return resultFmt( sendMessage({
                 method: arg1,
                 params: arg2 as object
-            })
+            }, false, 'send'))
         }else if (typeof arg2 === 'function'){
-                sendMessage(arg1 as RequestArguments).then(result => {
-                    (arg2 as (e?: any, r?: any) => any )(undefined, {
-                            id: (arg1 as RequestArguments)?.id,
-                            jsonrpc: '2.0',
-                            method: (arg1 as RequestArguments).method,
-                            result
-                          }
-                    )
-                }).catch( e => {
-                    (arg2 as (er?: any, r?: any) => any )(new Error(e), {
-                        id: (arg1 as RequestArguments)?.id,
-                        jsonrpc: '2.0',
-                        method: (arg1 as RequestArguments).method,
-                        error: new Error(e)
-                      }
-                )
-                })
-            } 
+            return resultFmt( sendMessage(arg1 as RequestArguments, false, 'send'))
+        } else {
+            return resultFmt(sendMessage(arg1 as RequestArguments , false, 'send'))
+        } 
     }
     on (eventName: string, callback: () => void) {
         this.addListener(eventName, callback)
@@ -308,7 +354,7 @@ class MetaMaskAPI {
     _handleStreamDisconnect() { return true }
     _handleUnlockStateChanged() { return true }
     _sendSync () {
-        console.info('ERROR: Clear Wallet: Sync calling is deprecated and not supported')
+        console.warn('ERROR: Clear Wallet: Sync calling is deprecated and not supported')
     }
 }
 
@@ -318,38 +364,41 @@ const eth = new Proxy( new MetaMaskAPI(), {
 
 const listner =  function(event: any) {
     if (event.source != window) return;
-
-    if (event?.data?.type === "CLWALLET_PAGE") {
+    const eventData = event?.data
+    const eventDataData = event?.data?.data
+    const eventDataDataData = event?.data?.data?.data
+    if (eventData?.type === "CLWALLET_PAGE") {
     try {
-        if(event?.data?.data?.error){
-            promResolvers.get(event.data.resId)?.reject(event.data.data);
+        if(eventData?.error){
+            promResolvers.get(eventData.resId)?.reject(eventData);
             // console.info('Error: ', event?.data?.data)
         }else {
-            promResolvers.get(event.data.resId)?.resolve(event.data.data);
+            promResolvers.get(eventData.resId)?.resolve(eventDataData);
         }
         promResolvers.delete(event.data.resId)
     } catch (e) {
-        // console.log('Failed to connect resolve msg', e)
+        // console.error('Failed to connect resolve msg', e)
     }
-    } else if(event?.data?.type === "CLWALLET_PAGE_LISTENER") {
-        if((event?.data?.data?.listner ?? 'x') in listners ) {
+    } else if(eventData?.type === "CLWALLET_PAGE_LISTENER") {
+        if((eventDataData?.listner ?? 'x') in listners ) {
             try {
-                const listnerName = event?.data?.data?.listner as ('accountsChanged' | 'connect' | 'disconnect' | 'chainChanged')
-                if( listnerName === 'connect' && event?.data?.data?.data) {
-                    (<any>eth).networkVersion = event?.data?.data?.data?.chainId?.toString(10) ?? '137';
-                    (<any>eth).chainId = event?.data?.data?.data?.chainId ?? '0x89';
-                    (<any>eth).selectedAddress = event?.data?.data?.address ?? null;
+                const listnerName = eventDataData.listner as ('accountsChanged' | 'connect' | 'disconnect' | 'chainChanged')
+                if( listnerName === 'connect' && eventDataData) {
+                    (<any>eth).networkVersion = eventDataDataData?.chainId?.toString(10) ?? '137';
+                    (<any>eth).chainId = eventDataDataData?.chainId ?? '0x89';
+                    (<any>eth).selectedAddress = eventDataData?.address?.[0] ?? null;
+                    (<any>eth).accounts = [eventDataData.address?.[0]] ?? [];
                     (<any>eth).isConnected = () => true;
                 } else if( listnerName === 'chainChanged' ) {
-                    // console.info(event?.data?.data?.data);
-                    (<any>eth).networkVersion = event?.data?.data?.data.toString(10) ?? '137';
-                    (<any>eth).chainId = event?.data?.data?.data ?? '0x89';
+                    (<any>eth).networkVersion = eventDataData?.toString(10) ?? '137';
+                    (<any>eth).chainId = eventDataData ?? '0x89';
                 } else if ( listnerName === 'accountsChanged' ) {
-                    (<any>eth).selectedAddress = event?.data?.data?.data?.address ?? 'dummy-string';
+                    (<any>eth).accounts = [eventDataData?.[0]] ?? [];
+                    (<any>eth).selectedAddress = eventDataData?.[0] ?? '';
                 }
-                listners[listnerName].forEach(listner => listner(event?.data?.data?.data));
+                listners[listnerName].forEach(listner => listner(eventDataDataData));
                 listners.once[listnerName].forEach(listner => {
-                    listner(event?.data?.data?.data)
+                    listner(eventDataData)
                     listners.once[listnerName].delete(listner)
                 });
             } catch (e) {
@@ -362,37 +411,19 @@ const listner =  function(event: any) {
 
 window.addEventListener("message",listner)
 
- 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const proxy1 = new Proxy(new MetaMaskAPI(), {
-        get: function (target: any, prop: any) {
-          // Intercept method calls and log them
-          if (typeof target[prop] === 'function') {
-            return function (...args: any[]) {
-            //   console.log(`Calling ${prop} with arguments:`, args);
-              // eslint-disable-next-line prefer-spread
-              const result = target[prop].apply(target, args);
-            //   console.log(`${prop} returned:`, result);
-              return result;
-            };
-          } else {
-            // console.log(`Reading ${prop}`);
-            return target[prop];
-          }
-        },
-})
 
-// const web3Shim = {
-//     currentProvider: eth,
-//     __isMetaMaskShim__: true
-// }
+
+const web3Shim = {
+    currentProvider: eth,
+    __isMetaMaskShim__: true
+}
 
 const injectWallet = (win: any) => {
 Object.defineProperty(win, 'ethereum', {
     value: eth,
 });
 Object.defineProperty(win, 'web3', {
-    value: eth
+    value: web3Shim
 });
 sendMessage({
     method: 'wallet_ready'
@@ -402,6 +433,29 @@ sendMessage({
 
 injectWallet(this);
 loadEIP1193Provider(eth)
+
+
+// HELPERS TO CLONE METAMASK API
+
+// window.addEventListener("message" , (event) => {
+//     console.log('event', event)
+// })
+
+// setTimeout(() => {
+//     console.log('Metamask clone test');
+//     console.log((<any>window).ethereum.send({
+//         "jsonrpc": "2.0",
+//         "method": "eth_accounts",
+//         "params": [],
+//         "id": 0
+//     }))
+//     console.log((<any>window).ethereum.request({
+//         "jsonrpc": "2.0",
+//         "method": "eth_accounts",
+//         "params": [],
+//         "id": 0
+//     }))
+// }, 5000)
 
 // setTimeout(() => {
 //     // console.log('Metamask clone test');

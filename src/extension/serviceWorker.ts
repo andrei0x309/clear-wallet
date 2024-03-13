@@ -286,7 +286,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'eth_blockNumber': {
                     try {
-                    sendResponse(await getBlockNumber())
+                    sendResponse(numToHexStr(await getBlockNumber()))
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -566,7 +566,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                     break
                 }
                 case 'web3_clientVersion': {
-                    sendResponse("MetaMask/v10.20.0")
+                    sendResponse("MetaMask/v11.0.0")
                     break
                 }
                 case 'wallet_getPermissions':
@@ -583,6 +583,18 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         }],
                         date: Date.now(),
                     }])
+                    break
+                }
+                case 'wallet_revokePermissions': {
+                    sendResponse(null)
+                    break
+                }
+                case 'wallet_registerOnboarding': {
+                    sendResponse(true)
+                    break
+                }
+                case 'eth_syncing': {
+                    sendResponse(false)
                     break
                 }
                 case 'net_version': {

@@ -1,5 +1,12 @@
 # Changelog
 
+## Manifest Version 1.3.4
+
+- bump fake Metamask version signature to 11.0.0
+- improved compatibility with older deprecated websites
+- improved mimicking of Metamask API
+- made the wallet compatible with fire extension on sending transaction( by mimicking new Metamask API)
+
 ## Manifest Version 1.3.3
 
 - improved eth_call and eth_blockNumber to be more compatible with older websites

@@ -20,10 +20,13 @@ const allowedMethods = {
   'eth_chainId': true,
   'personal_sign': true,
   'wallet_requestPermissions': true,
+  'wallet_registerOnboarding': true,
+  'wallet_revokePermissions': true,
   'eth_gasPrice': true,
   'eth_getBlockByNumber': true,
   'eth_blockNumber': true,
   'eth_estimateGas': true,
+  'eth_syncing': true,
   'eth_sign': true,
   'net_version': true,
   'eth_sendTransaction': true,
@@ -53,30 +56,29 @@ window.addEventListener("message", (event) => {
   if (event.source != window)
     return;
   if (event?.data?.type === "CLWALLET_CONTENT") {
-    event.data.data.resId = event.data.resId
-    event.data.data.type = "CLWALLET_CONTENT_MSG"
-    event.data.data.website = document?.location?.href ?? ''
-    if ((event?.data?.data?.method ?? 'x') in allowedMethods) {
-      chrome.runtime.sendMessage(event.data.data, (res) => {
+    event.data.data.data.resId = event.data.resId
+    event.data.data.data.type = "CLWALLET_CONTENT_MSG"
+    event.data.data.data.website = document?.location?.href ?? ''
+    if ((event?.data?.data?.data?.method ?? 'x') in allowedMethods) {
+      chrome?.runtime?.sendMessage(event.data.data.data, (res) => {
         if (chrome.runtime.lastError) {
           console.warn("LOC1: Error sending message:", chrome.runtime.lastError);
         }
-
         const data = { type: "CLWALLET_PAGE", data: res, resId: event.data.resId };
         // console.info('data out', data)
         window.postMessage(data, "*");
       })
     }
     else {
-      const data = { type: "CLWALLET_PAGE", data: { error: true, message: 'ClearWallet: Unknown method requested ' + event?.data?.data?.method ?? '' }, resId: event.data.resId };
+      const data = { type: "CLWALLET_PAGE", data: { error: true, message: 'ClearWallet: Unknown method requested ' + event?.data?.data?.data?.method ?? '' }, resId: event.data.resId };
       window.postMessage(data, "*");
     }
   } else if (event?.data?.type === "CLWALLET_PING") {
-    event.data.data.resId = event.data.resId
-    event.data.data.type = "CLWALLET_CONTENT_MSG"
-    event.data.data.method = "wallet_connect"
-    event.data.data.params = Array(0)
-    chrome.runtime.sendMessage(event.data.data, async (res) => {
+    event.data.data.data.resId = event.data.resId
+    event.data.data.data.type = "CLWALLET_CONTENT_MSG"
+    event.data.data.data.method = "wallet_connect"
+    event.data.data.data.params = Array(0)
+    chrome.runtime.sendMessage(event.data.data.data, async (res) => {
       if (chrome.runtime.lastError) {
         console.warn("LOC2: Error sending message:", chrome.runtime.lastError);
       }

@@ -81,14 +81,23 @@ export const estimateGas = async ({to = '', from = '', data = '', value = '0x0' 
 }
 
 export const evmCall = async (params: any[]) => {
-    const param1 = (params[0] ?? {to:'', from: '', data:'', value: '0x0', blockTag: 'latest' }) as {to: string, from: string, data: string, value: string, blockTag: string}
-    const param2 = (params[1] ?? 'latest') as string
-    param1.blockTag = param2
-    
-
+    const tx = {} as {to: string, from: string, data: string, value: string, blockTag: string}
+    const param1 = params[0] as any
+    if(param1.to) tx.to = param1.to
+    if(param1.from) tx.from = param1.from
+    if(param1.data) tx.data = param1.data
+    if(param1.value) tx.value = param1.value
+    const param2 = params[1] as string
+    if (param2.startsWith('0x')) {
+        tx.blockTag = param2
+    } else {
+        tx.blockTag = 'latest'
+    }
+ 
     const network = await getSelectedNetwork()
     const provider = new ethers.JsonRpcProvider(network.rpc)
-    return await provider.call(param1)
+    const result = await provider.call(tx)
+    return result
 }
 
 export const getTxByHash = async (hash: string) => {

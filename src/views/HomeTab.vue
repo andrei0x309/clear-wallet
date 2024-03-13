@@ -96,7 +96,7 @@
             class="exchange-btn"
             style=""
           />
-          <p style="font-size: 0.75rem; opacity: 0.8; padding 0.2rem;">
+          <p style="font-size: 0.75rem; opacity: 0.8; padding: 0.2rem">
             This button does not contain any referral to maximize privacy.
           </p>
         </div>
@@ -330,10 +330,7 @@ export default defineComponent({
         accounts.value.splice(0, 0, selectedAccount.value);
         const newAccounts = [...accounts.value];
         await replaceAccounts(newAccounts);
-        triggerListner(
-          "accountsChanged",
-          newAccounts.map((a) => a.address)
-        );
+        triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
       }
       accountsModal.value = false;
       loading.value = false;
