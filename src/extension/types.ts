@@ -57,6 +57,7 @@ export interface Settings {
     theme: 'system' | 'light' | 'dark'
     lastLock: number
     lockOutBlocked: boolean
+    copyLowerCaseAddress?: boolean
 }
 
 export type listnerType = 'accountsChanged' | 'connect' | 'disconnect' | 'chainChanged'

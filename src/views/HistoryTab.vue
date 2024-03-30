@@ -21,7 +21,7 @@
                 ><b style="margin-right: 0.5rem">Date:</b>
                 {{ new Date(item.date).toDateString() }}</ion-item
               >
-              <ion-item button @click="copyAddress(item.txHash, getToastRef())">
+              <ion-item button @click="copyText(item.txHash, getToastRef())">
                 <p style="font-size: 0.7rem">
                   <b style="margin-right: 0.5rem"
                     ><ion-icon
@@ -88,7 +88,7 @@ import {
   IonButton,
   IonIcon,
 } from "@ionic/vue";
-import { getHistory, copyAddress, wipeHistory, openTab } from "@/utils/platform";
+import { getHistory, copyText, wipeHistory, openTab } from "@/utils/platform";
 import type { HistoryItem } from "@/extension/types";
 
 import { copyOutline } from "ionicons/icons";
@@ -130,7 +130,7 @@ export default defineComponent({
     return {
       history,
       loading,
-      copyAddress,
+      copyText,
       getToastRef,
       toastState,
       copyOutline,

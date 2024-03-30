@@ -11,6 +11,19 @@
           <span style="position: absolute; top: 0.45rem; margin-left: 0.3rem"
             >CL Wallet</span
           >
+          <span
+            v-if="version"
+            style="
+              position: absolute;
+              top: 0.3rem;
+              right: 1.1rem;
+              margin-left: 0.3rem;
+              color: coral;
+              font-weight: bold;
+              font-size: 0.65rem;
+            "
+            >Version: {{ version }}</span
+          >
         </ion-title>
       </ion-toolbar>
     </ion-header>
@@ -32,7 +45,17 @@
             >Select</ion-button
           >
         </ion-item>
-        <ion-item button @click="copyAddress(selectedAccount?.address, getToastRef())">
+        <ion-item
+          button
+          @click="
+            copyText(
+              settings?.copyLowerCaseAddress
+                ? selectedAccount?.address?.toLowerCase()
+                : selectedAccount?.address,
+              getToastRef()
+            )
+          "
+        >
           <p style="font-size: 0.7rem; color: coral">{{ selectedAccount?.address }}</p>
           <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
         </ion-item>
@@ -49,6 +72,7 @@
               )
             "
             expand="block"
+            style="margin: auto; width: 98%; font-size: 0.8rem; padding: 0.6rem"
             >View Address on
             {{
               `${selectedNetwork.explorer}`.replace("https://", "").replace("http://", "")
@@ -71,11 +95,15 @@
           />
         </ion-avatar>
         <ion-label
+          button
+          @click="copyText(String(selectedNetwork?.chainId), getToastRef())"
+          style="cursor: pointer"
           >Selected Network ID:
           <span style="color: coral; font-weight: bold">{{
             selectedNetwork?.chainId
-          }}</span></ion-label
-        >
+          }}</span>
+          <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
+        </ion-label>
         <ion-button
           @click="
             () => {
@@ -239,18 +267,22 @@ import {
   saveSelectedAccount,
   replaceAccounts,
   getSelectedNetwork,
-  copyAddress,
+  copyText,
   replaceNetworks,
   getUrl,
   saveSelectedNetwork,
   numToHexStr,
   openTab,
+  getSettings,
+  getVersion,
 } from "@/utils/platform";
 import type { Network, Account, Networks } from "@/extension/types";
 import { mainNets } from "@/utils/networks";
 import router from "@/router";
 import { triggerListner } from "@/extension/listners";
 import { copyOutline } from "ionicons/icons";
+
+const version = getVersion();
 
 export default defineComponent({
   components: {
@@ -283,6 +315,7 @@ export default defineComponent({
     const selectedAccount = (ref(null) as unknown) as Ref<Account>;
     const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
     const toastState = ref(false);
+    const settings = ref({}) as Ref<Awaited<ReturnType<typeof getSettings>>>;
 
     const getToastRef = () => toastState;
 
@@ -292,15 +325,21 @@ export default defineComponent({
       const pNetworks = getNetworks();
       const pSelectedAccount = getSelectedAccount();
       const pSelectedNetwork = getSelectedNetwork();
-      Promise.all([pAccounts, pNetworks, pSelectedAccount, pSelectedNetwork]).then(
-        (res) => {
-          accounts.value = res[0];
-          networks.value = res[1];
-          selectedAccount.value = res[2];
-          selectedNetwork.value = res[3];
-          loading.value = false;
-        }
-      );
+      const pSettings = getSettings();
+      Promise.all([
+        pAccounts,
+        pNetworks,
+        pSelectedAccount,
+        pSelectedNetwork,
+        pSettings,
+      ]).then((res) => {
+        accounts.value = res[0];
+        networks.value = res[1];
+        selectedAccount.value = res[2];
+        selectedNetwork.value = res[3];
+        settings.value = res[4];
+        loading.value = false;
+      });
     };
 
     onIonViewWillEnter(() => {
@@ -361,7 +400,7 @@ export default defineComponent({
       selectedNetwork,
       changeSelectedAccount,
       changeSelectedNetwork,
-      copyAddress,
+      copyText,
       copyOutline,
       toastState,
       getToastRef,
@@ -369,6 +408,8 @@ export default defineComponent({
       mainNets,
       getUrl,
       openTab,
+      settings,
+      version,
     };
   },
 });

@@ -108,6 +108,7 @@ export const getTxByHash = async (hash: string) => {
 
 export const getTxReceipt = async (hash: string) => {
     try {
+    if (!hash) return null
     const network = await getSelectedNetwork()
     const provider = new ethers.JsonRpcProvider(network.rpc)
     const receipt = await provider.getTransactionReceipt(hash)

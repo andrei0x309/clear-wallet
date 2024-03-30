@@ -1,6 +1,8 @@
 import type { Network, Account, Prices, Settings, Networks, HistoryItem, ContractActions, ContractAction, Contact } from '@/extension/types'
 import type { Ref } from 'vue'
 
+const pottentialMissingSettings = ['copyLowerCaseAddress']
+
 const defaultSettings = {
     enableStorageEnctyption: false,
     encryptAfterEveryTx: false,
@@ -8,7 +10,8 @@ const defaultSettings = {
     lockOutPeriod: 2,
     lockOutBlocked: false,
     theme: 'system',
-    lastLock: Date.now()
+    lastLock: Date.now(),
+    copyLowerCaseAddress: false
 }
 
 const defaultAbis = {} as {
@@ -118,7 +121,13 @@ export const wipeHistory = async (): Promise<void> => {
 }
 
 export const getSettings = async (): Promise<Settings> => {
-    return (await storageGet('settings'))?.settings ?? defaultSettings as unknown as Settings
+    const settings = (await storageGet('settings'))?.settings ?? defaultSettings as unknown as Settings
+    pottentialMissingSettings.forEach( (s: string) => {
+        if(settings[s] === undefined) {
+            settings[s as keyof Settings] = defaultSettings[s as keyof Settings]
+        }
+    })
+    return settings
 }
 
 export const setSettings = async (settings: Settings): Promise<void> => {
@@ -264,7 +273,7 @@ export const strToHex = (str: string) =>  `0x${str.split('').map( s => s.charCod
 
 export const numToHexStr = (num: number | bigint) => `0x${num.toString(16)}`
 
-export const copyAddress = async (address: string, toastRef: Ref<boolean>) => {
+export const copyText = async (address: string, toastRef: Ref<boolean>) => {
     await navigator.clipboard.writeText(address)
     toastRef.value = true
 }
@@ -305,3 +314,5 @@ export const openTab = (url: string) => {
         url
       });
 }
+
+export const getVersion = () => chrome?.runtime?.getManifest()?.version ?? ''

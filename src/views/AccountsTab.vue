@@ -31,7 +31,7 @@
             {{ account.name }}
           </ion-label>
         </ion-item>
-        <ion-item @click="copyAddress(account.address, getToastRef())">
+        <ion-item @click="copyText(account.address, getToastRef())">
           <p style="font-size: 0.7rem">{{ account.address }}</p>
           <ion-icon :icon="copyOutline"></ion-icon>
         </ion-item>
@@ -52,7 +52,7 @@
           </ion-toolbar>
         </ion-header>
         <ion-content class="ion-padding">
-          <ion-item @click="copyAddress(shownPk, getToastRef())" button>
+          <ion-item @click="copyText(shownPk, getToastRef())" button>
             <ion-icon style="margin-right: 0.5rem" :icon="copyOutline" />
             <ion-label button>PK</ion-label>
             <ion-input
@@ -72,7 +72,7 @@
 import { defineComponent, ref, Ref } from "vue";
 import {
   getAccounts,
-  copyAddress,
+  copyText,
   replaceAccounts,
   getSettings,
   clearPk,
@@ -220,7 +220,7 @@ export default defineComponent({
       addCircleOutline,
       copyOutline,
       toastState,
-      copyAddress,
+      copyText,
       getToastRef,
       deleteAccount,
       editAccount,

@@ -1,5 +1,12 @@
 # Changelog
 
+## Manifest Version 1.3.5
+
+- added copy button to chainId for easier development
+- added settings to be able to transfrom address to lower case when copying
+- added a check in get recepit to return null if hash is missing
+- added version display to wallet first page
+
 ## Manifest Version 1.3.4
 
 - bump fake Metamask version signature to 11.0.0

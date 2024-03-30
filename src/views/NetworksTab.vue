@@ -4,11 +4,11 @@
       <ion-toolbar>
         <ion-buttons slot="end">
           <router-link to="/tabs/add-network">
-          <ion-button>
-          <ion-icon slot="icon-only" :icon="addCircleOutline"></ion-icon>
-          </ion-button>
-        </router-link>
-          </ion-buttons>
+            <ion-button>
+              <ion-icon slot="icon-only" :icon="addCircleOutline"></ion-icon>
+            </ion-button>
+          </router-link>
+        </ion-buttons>
         <ion-title>Networks</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -19,30 +19,34 @@
         <ion-button @click="goToAddNetwork">Add Network</ion-button>
       </ion-item>
 
-        <ion-list v-for="network of networks" :key="network.chainId">
-       <ion-item>
-        <ion-avatar v-if="(mainNets as any)[network.chainId]?.icon" style="margin-right: 1rem; width: 1.8rem; height:1.8rem;">
-    <img :alt="network.name" :src="getUrl('assets/chain-icons/' + (mainNets as any)[network.chainId].icon)" />
-  </ion-avatar>
-       <ion-label>
-            {{ network.name }}
-        </ion-label>
-        <ion-label>
-            ID: {{ network.chainId }}
-        </ion-label>
-       </ion-item>
+      <ion-list v-for="network of networks" :key="network.chainId">
         <ion-item>
-        <ion-chip @click="editNetwork(network.chainId)" button>Edit</ion-chip>
-        <ion-chip @click="deleteNetwork(network.chainId)" button>Delete</ion-chip>
+          <ion-avatar
+            v-if="(mainNets as any)[network.chainId]?.icon"
+            style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+          >
+            <img
+              :alt="network.name"
+              :src="getUrl('assets/chain-icons/' + (mainNets as any)[network.chainId].icon)"
+            />
+          </ion-avatar>
+          <ion-label>
+            {{ network.name }}
+          </ion-label>
+          <ion-label> ID: {{ network.chainId }} </ion-label>
         </ion-item>
-        </ion-list>
+        <ion-item>
+          <ion-chip @click="editNetwork(network.chainId)" button>Edit</ion-chip>
+          <ion-chip @click="deleteNetwork(network.chainId)" button>Delete</ion-chip>
+        </ion-item>
+      </ion-list>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, Ref } from "vue";
-import { getNetworks, copyAddress, getUrl, replaceNetworks } from "@/utils/platform"
+import { getNetworks, copyText, getUrl, replaceNetworks } from "@/utils/platform";
 import {
   IonContent,
   IonHeader,
@@ -57,12 +61,12 @@ import {
   IonButtons,
   IonButton,
   onIonViewWillEnter,
-  IonAvatar
+  IonAvatar,
 } from "@ionic/vue";
-import { mainNets } from "@/utils/networks"
+import { mainNets } from "@/utils/networks";
 import { addCircleOutline, copyOutline } from "ionicons/icons";
-import router from '@/router/index'
-import type { Networks } from '@/extension/types'
+import router from "@/router/index";
+import type { Networks } from "@/extension/types";
 
 export default defineComponent({
   components: {
@@ -77,60 +81,57 @@ export default defineComponent({
     IonLabel,
     IonChip,
     IonButtons,
-  IonButton,
-  IonAvatar
+    IonButton,
+    IonAvatar,
   },
-  setup () {
-    const networks = ref({}) as Ref<Networks>
-    const loading = ref(true)
-    const toastState = ref(false)
+  setup() {
+    const networks = ref({}) as Ref<Networks>;
+    const loading = ref(true);
+    const toastState = ref(false);
 
-    const getToastRef = () => toastState
-    
+    const getToastRef = () => toastState;
+
     const loadData = () => {
-      const pAccounts = getNetworks()
-      Promise.all([pAccounts]).then(( res )  => {
-        networks.value = res[0]
-        loading.value = false
-      })
-    }
+      const pAccounts = getNetworks();
+      Promise.all([pAccounts]).then((res) => {
+        networks.value = res[0];
+        loading.value = false;
+      });
+    };
 
     const deleteNetwork = async (chainId: number) => {
-        loading.value = true
-        delete networks.value[chainId]
-        await replaceNetworks(networks.value)
-        loading.value = false
-    }
+      loading.value = true;
+      delete networks.value[chainId];
+      await replaceNetworks(networks.value);
+      loading.value = false;
+    };
 
     const editNetwork = (chainId: number) => {
-      router.push(`add-network/edit/${chainId}`)
-    }
-
+      router.push(`add-network/edit/${chainId}`);
+    };
 
     const goToAddNetwork = () => {
       router.push("/tabs/add-network");
     };
 
-
     onIonViewWillEnter(() => {
-        loadData()
-      })
+      loadData();
+    });
 
-      return {
-        networks,
-        addCircleOutline,
-        copyOutline,
-        toastState,
-        copyAddress,
-        getToastRef,
-        getUrl,
-        mainNets,
-        deleteNetwork,
-        editNetwork,
-        loading,
-        goToAddNetwork
-      }
-
-  }
+    return {
+      networks,
+      addCircleOutline,
+      copyOutline,
+      toastState,
+      copyText,
+      getToastRef,
+      getUrl,
+      mainNets,
+      deleteNetwork,
+      editNetwork,
+      loading,
+      goToAddNetwork,
+    };
+  },
 });
 </script>

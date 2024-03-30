@@ -26,7 +26,7 @@
       <ion-item>
         <ion-label>Assests for Account: {{ selectedAccount?.name }}</ion-label>
       </ion-item>
-      <ion-item button @click="copyAddress(selectedAccount?.address, getToastRef())">
+      <ion-item button @click="copyText(selectedAccount?.address, getToastRef())">
         <p style="font-size: 0.7rem">{{ selectedAccount?.address }}</p>
         <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
       </ion-item>
@@ -184,7 +184,7 @@ import {
   IonLoading,
   IonIcon,
 } from "@ionic/vue";
-import { getSelectedAccount, copyAddress, getUrl } from "@/utils/platform";
+import { getSelectedAccount, copyText, getUrl } from "@/utils/platform";
 import type { Account } from "@/extension/types";
 
 import { copyOutline } from "ionicons/icons";
@@ -564,7 +564,7 @@ export default defineComponent({
       isError,
       noAssets,
       getToastRef,
-      copyAddress,
+      copyText,
       copyOutline,
       ethTokens,
       polyTokens,

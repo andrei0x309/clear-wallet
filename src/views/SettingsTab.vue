@@ -89,7 +89,7 @@
         </ion-accordion>
         <ion-accordion value="2">
           <ion-item slot="header" color="light">
-            <ion-label>Theme</ion-label>
+            <ion-label>Theme & Misc</ion-label>
           </ion-item>
           <div class="ion-padding" slot="content">
             <ion-list>
@@ -107,6 +107,18 @@
                   <ion-label>Light</ion-label>
                 </ion-item>
               </ion-radio-group>
+              <ion-item>
+                <ion-label style="font-size: 0.7rem"
+                  >Convert Address to lowercase on copy</ion-label
+                >
+                <ion-toggle
+                  aria-label="Convert Address to Lowercase on Copy"
+                  @ion-change="changeCopyLowerCaseAddress"
+                  :key="updateKey"
+                  slot="end"
+                  :checked="settings.s.copyLowerCaseAddress"
+                ></ion-toggle>
+              </ion-item>
             </ion-list>
           </div>
         </ion-accordion>
@@ -408,6 +420,12 @@ export default defineComponent({
       defaultAccordionOpen.value = "1";
     };
 
+    const changeCopyLowerCaseAddress = async () => {
+      settings.s.copyLowerCaseAddress = !settings.s?.copyLowerCaseAddress;
+      await saveSettings();
+      defaultAccordionOpen.value = "2";
+    };
+
     const changeTheme = async (theme: "system" | "light" | "dark") => {
       document.body.classList.remove(radioTheme.value);
       document.body.classList.add(theme);
@@ -697,6 +715,7 @@ export default defineComponent({
       openTab,
       radioTheme,
       changePermaLock,
+      changeCopyLowerCaseAddress,
     };
   },
 });
