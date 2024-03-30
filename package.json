@@ -1,6 +1,6 @@
 {
   "name": "clear-wallet",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "private": true,
   "description": "Clear Wallet (CLW) is a wallet that helps you manage your Ethereum assets and interact with Ethereum dApps and contracts with the main focus on absolute privacy.",
   "scripts": {
