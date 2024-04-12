@@ -38,7 +38,9 @@ import {
 import type { RequestArguments } from '@/extension/types'
 import { rpcError } from '@/extension/rpcConstants'
 import { updatePrices } from '@/utils/gecko'
-import { mainNets, testNets } from '@/utils/networks'
+import { allTemplateNets } from '@/utils/networks'
+
+// const METAMAKS_EXTENSION_ID = 'nkbihfbeogaeaoehlefnkodbefgpgknn'
 
 let notificationUrl: string
 
@@ -154,9 +156,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
     if(message?.type !== "CLWALLET_CONTENT_MSG") {
         return true
     }
-
-    console.info('main listener', message);
-
+ 
     (async () => {
         if (!(message?.method)) {
             sendResponse({
@@ -175,7 +175,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
-                        console.error('eth_call', e)
+                        console.warn('Error: eth_call', e)
                     }
                     break
                 }
@@ -196,7 +196,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
-                        console.log('eth_getBlockByNumber', e)
+                        console.warn('Error: eth_getBlockByNumber', e)
                     }
                     break;
                 }
@@ -213,7 +213,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
-                        console.error('eth_getTransactionCount', e)
+                        console.warn('Error: eth_getTransactionCount', e)
                     }
                     break
                 }
@@ -226,7 +226,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
-                        console.error('eth_getTransactionByHash', e)
+                        console.warn('Error: eth_getTransactionByHash', e)
                     }
                     break
                 }
@@ -239,7 +239,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
-                        console.error('eth_getTransactionReceipt', e)
+                        console.warn('Error: eth_getTransactionReceipt', e)
                     }
                     break
                 }
@@ -252,7 +252,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
-                        console.error('eth_gasPrice', e)
+                        console.warn('Error: eth_gasPrice', e)
                     }
                     break;
                 }
@@ -267,7 +267,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
-                        console.error('eth_getBalance', e)
+                        console.warn('Error: eth_getBalance', e)
                     }
                     break
                 }
@@ -280,7 +280,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
-                        console.error('eth_getCode', e)
+                        console.warn('Error: eth_getCode', e)
                     }
                     break
                 }
@@ -293,7 +293,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             code: rpcError.USER_REJECTED,
                             message: 'No network or user selected'
                         })
-                        console.error('eth_blockNumber', e)
+                        console.warn('Error: eth_blockNumber', e)
                     }
                     break               
                 }
@@ -335,7 +335,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         code: rpcError.USER_REJECTED,
                         message: 'No network or user selected'
                     })
-                    console.error('eth_estimateGas', err)
+                    console.warn('Error: eth_estimateGas', err)
                     }
                 }
                     break          
@@ -350,7 +350,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         code: rpcError.USER_REJECTED,
                         message: 'No network or user selected'
                     })
-                    console.error('eth_accounts', e)
+                    console.warn('Error: eth_accounts', e)
                 }
                 break
                 }
@@ -365,7 +365,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         code: rpcError.USER_REJECTED,
                         message: 'No network or user selected'
                     })
-                    console.error('eth_chainId', e)
+                    console.warn('Error: eth_chainId', e)
                 }
                 break
                 }
@@ -478,7 +478,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             } as any)
                         }
                         } catch(err) {
-                            // console.log(err)
+                            console.warn('Error: eth_sendTransaction', err)
                             sendResponse({
                                 error: true,
                                 code: rpcError.USER_REJECTED,
@@ -545,7 +545,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                       clearPk()
                     }
                     } catch (e) {
-                        // console.info(e)
+                        console.warn('Error: signTypedData', e)
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
@@ -599,7 +599,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'net_version': {
                     const network = await getSelectedNetwork()
-                    const chainId = network?.chainId ?? 0
+                    const chainId = String(network?.chainId ?? 1)
                     sendResponse(chainId)
                     break
                 }
@@ -634,7 +634,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'wallet_addEthereumChain': {
                     const userNetworks = await getNetworks()
-                    const networks = {...mainNets, ...testNets, ...userNetworks}
+                    const networks = {...allTemplateNets, ...userNetworks}
                     const chainId = Number(message?.params?.[0]?.chainId ?? '0')
                     if(!chainId) {
                         sendResponse({
@@ -693,7 +693,8 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                     const [network, account] = await Promise.all([pNetwork, pAccount])
                     const address = account?.address ? [account?.address] : []
                     const chainId = `0x${(network?.chainId ?? 0).toString(16)}`
-                    const data = { type: "CLWALLET_PAGE_LISTENER", data: {
+                    const data = { 
+                        type: "CLWALLET_PAGE_LISTENER", data: {
                         listner: 'connect',
                         data: {
                             chainId
@@ -743,6 +744,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
             }
         }
+ 
     }
     )();
     return true;

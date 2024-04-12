@@ -4,7 +4,7 @@
       <ion-toolbar>
         <ion-title>
           <ion-avatar
-            style="margin: 0.3rem; width: 1.8rem; height: 1.8rem; display: inline-flex"
+            style="margin: 0.3rem; width: 1.6rem; height: 1.6rem; display: inline-flex"
           >
             <img alt="clw" :src="getUrl('assets/extension-icon/wallet_32.png')" />
           </ion-avatar>
@@ -71,11 +71,15 @@
                 )
               )
             "
+            class="ion-text-wrap"
             expand="block"
             style="margin: auto; width: 98%; font-size: 0.8rem; padding: 0.6rem"
             >View Address on
             {{
-              `${selectedNetwork.explorer}`.replace("https://", "").replace("http://", "")
+              `${selectedNetwork.explorer}`
+                .replace("https://", "")
+                .replace("http://", "")
+                .replace(/\/.*/, "")
             }}
           </ion-button>
         </ion-item>
@@ -84,14 +88,14 @@
         <ion-label>No EVM Networks found</ion-label>
         <ion-button @click="goToAddNetwork">Add Network</ion-button>
       </ion-item>
-      <ion-item v-else>
+      <ion-item style="font-size: 0.86rem" v-else>
         <ion-avatar
-          v-if="(mainNets as any)[selectedNetwork?.chainId]?.icon"
-          style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+          v-if="(allTemplateNets as any)[selectedNetwork?.chainId]?.icon"
+          style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
         >
           <img
             :alt="selectedNetwork?.name"
-            :src="getUrl('assets/chain-icons/' + (mainNets as any)[selectedNetwork?.chainId]?.icon)"
+            :src="getUrl('assets/chain-icons/' + (allTemplateNets as any)[selectedNetwork?.chainId]?.icon)"
           />
         </ion-avatar>
         <ion-label
@@ -277,7 +281,7 @@ import {
   getVersion,
 } from "@/utils/platform";
 import type { Network, Account, Networks } from "@/extension/types";
-import { mainNets } from "@/utils/networks";
+import { allTemplateNets } from "@/utils/networks";
 import router from "@/router";
 import { triggerListner } from "@/extension/listners";
 import { copyOutline } from "ionicons/icons";
@@ -405,7 +409,7 @@ export default defineComponent({
       toastState,
       getToastRef,
       networksModal,
-      mainNets,
+      allTemplateNets,
       getUrl,
       openTab,
       settings,

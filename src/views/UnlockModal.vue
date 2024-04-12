@@ -2,10 +2,10 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-button @click="close">Close</ion-button>
-        </ion-buttons>
         <ion-title>Unlock to Proceed</ion-title>
+        <ion-buttons slot="end">
+          <ion-button @click="close" color="primary">Close</ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -30,9 +30,29 @@
         <ion-item>
           <ion-label>Unlock Password</ion-label>
         </ion-item>
-        <ion-item>
-          <ion-input aria-label="password" v-model="mpPass" type="password"></ion-input>
-        </ion-item>
+        <ion-list>
+          <ion-item>
+            <ion-input
+              aria-label="password"
+              placeholder=""
+              class="password-input"
+              type="password"
+              @ion-input="mpPass = String($event.target.value)"
+              fill="solid"
+              ref="ionInput"
+            ></ion-input>
+
+            <!-- <ion-input
+            label="Password"
+            label-placement="floating"
+            fill="outline"
+            placeholder=""
+            type="password"
+            ref="ionInput"
+            @ion-input="mpPass = String($event.target.value)"
+          ></ion-input> -->
+          </ion-item>
+        </ion-list>
       </ion-list>
       <ion-item>
         <ion-button @click="unlock">Confirm</ion-button>
@@ -57,7 +77,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, onMounted } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -132,6 +152,14 @@ export default defineComponent({
         return;
       }
     };
+
+    onMounted(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const el = document?.querySelector(
+        ".password-input .native-input"
+      ) as HTMLInputElement;
+      el?.focus?.();
+    });
 
     return {
       loading,

@@ -22,12 +22,12 @@
       <ion-list v-for="network of networks" :key="network.chainId">
         <ion-item>
           <ion-avatar
-            v-if="(mainNets as any)[network.chainId]?.icon"
-            style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+            v-if="(allTemplateNets as any)[network.chainId]?.icon"
+            style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
           >
             <img
               :alt="network.name"
-              :src="getUrl('assets/chain-icons/' + (mainNets as any)[network.chainId].icon)"
+              :src="getUrl('assets/chain-icons/' + (allTemplateNets as any)[network.chainId].icon)"
             />
           </ion-avatar>
           <ion-label>
@@ -63,7 +63,7 @@ import {
   onIonViewWillEnter,
   IonAvatar,
 } from "@ionic/vue";
-import { mainNets } from "@/utils/networks";
+import { allTemplateNets } from "@/utils/networks";
 import { addCircleOutline, copyOutline } from "ionicons/icons";
 import router from "@/router/index";
 import type { Networks } from "@/extension/types";
@@ -126,7 +126,7 @@ export default defineComponent({
       copyText,
       getToastRef,
       getUrl,
-      mainNets,
+      allTemplateNets,
       deleteNetwork,
       editNetwork,
       loading,

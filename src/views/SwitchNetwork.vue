@@ -20,12 +20,12 @@
                 <ion-item>Network Name: {{ selectedNetwork?.name }}</ion-item>
                 <ion-item>
                   <ion-avatar
-                    v-if="(templateNetworks as any)[selectedNetwork?.chainId]?.icon"
-                    style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+                    v-if="(allTemplateNets as any)[selectedNetwork?.chainId]?.icon"
+                    style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
                   >
                     <img
                       :alt="selectedNetwork?.name"
-                      :src="getUrl('assets/chain-icons/' + (templateNetworks as any)[selectedNetwork?.chainId]?.icon)"
+                      :src="getUrl('assets/chain-icons/' + (allTemplateNets as any)[selectedNetwork?.chainId]?.icon)"
                     />
                   </ion-avatar>
                   <ion-label>Network ID: {{ selectedNetwork?.chainId }}</ion-label>
@@ -42,7 +42,7 @@
                 <ion-item>
                   <ion-avatar
                     v-if="(existingNetworks as any)[networkId]?.icon"
-                    style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+                    style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
                   >
                     <img
                       :alt="(existingNetworks as any)[networkId]?.name"
@@ -132,7 +132,7 @@ import {
   numToHexStr,
 } from "@/utils/platform";
 import type { Network, Networks } from "@/extension/types";
-import { mainNets, testNets } from "@/utils/networks";
+import { allTemplateNets } from "@/utils/networks";
 import { approve, walletPing } from "@/extension/userRequest";
 import { triggerListner } from "@/extension/listners";
 
@@ -162,7 +162,6 @@ export default defineComponent({
     const alertMsg = ref("");
     const networkCase = ref("");
     let pnetworks: Promise<Networks>;
-    const templateNetworks = Object.assign({}, mainNets, testNets) ?? {};
     const addChainUrl = `${chainListPage}${networkId.value}`;
     const timerReject = ref(140);
     let interval: any;
@@ -186,8 +185,8 @@ export default defineComponent({
       existingNetworks.value = await pnetworks;
       if ((networkId.value ?? "0") in existingNetworks.value ?? {}) {
         networkCase.value = "exists";
-      } else if ((networkId.value ?? "0") in templateNetworks) {
-        existingNetworks.value = templateNetworks;
+      } else if ((networkId.value ?? "0") in allTemplateNets) {
+        existingNetworks.value = allTemplateNets;
         networkCase.value = "inTemplates";
       } else {
         networkCase.value = "doesNotExist";
@@ -217,9 +216,10 @@ export default defineComponent({
 
     const onSwitchTemplates = async () => {
       loading.value = true;
-      selectedNetwork.value = templateNetworks[Number(networkId.value)];
-      await saveNetwork(templateNetworks[Number(networkId.value)]);
-      await saveSelectedNetwork(templateNetworks[Number(networkId.value)]);
+      const nId = Number(networkId.value) as keyof typeof allTemplateNets;
+      selectedNetwork.value = allTemplateNets[nId];
+      await saveNetwork(allTemplateNets[nId]);
+      await saveSelectedNetwork(allTemplateNets[nId]);
       triggerListner("chainChanged", numToHexStr(selectedNetwork.value?.chainId ?? 0));
       approve(rid);
       loading.value = false;
@@ -240,7 +240,7 @@ export default defineComponent({
       loading,
       networkCase,
       selectedNetwork,
-      templateNetworks,
+      allTemplateNets,
       getUrl,
       onSwitchTemplates,
       onSwitchNotExisting,

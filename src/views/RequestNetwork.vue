@@ -112,7 +112,6 @@ import {
 import { useRoute } from "vue-router";
 import { getUrl, saveSelectedNetwork, saveNetwork, hexTostr } from "@/utils/platform";
 import type { Network } from "@/extension/types";
-import { mainNets, testNets } from "@/utils/networks";
 import { approve, walletPing } from "@/extension/userRequest";
 import { triggerListner } from "@/extension/listners";
 
@@ -137,7 +136,6 @@ export default defineComponent({
     const rid = (route?.params?.rid as string) ?? "";
     const networkData = hexTostr((route.params?.param as string) ?? "");
     const alertOpen = ref(false);
-    const templateNetworks = Object.assign({}, mainNets, testNets) ?? {};
     const timerReject = ref(140);
     let interval: any;
     const website = ref("");
@@ -208,7 +206,6 @@ export default defineComponent({
       onCancel,
       alertOpen,
       loading,
-      templateNetworks,
       getUrl,
       onAddSwitch,
       timerReject,

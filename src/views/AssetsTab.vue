@@ -47,7 +47,7 @@
               <ion-item v-for="token of ethTokens" :key="token.address">
                 <ion-avatar
                   v-if="token?.image"
-                  style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+                  style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
                 >
                   <img
                     :alt="token?.name"
@@ -71,7 +71,7 @@
               <ion-item v-for="token of polyTokens" :key="token.address">
                 <ion-avatar
                   v-if="token?.image"
-                  style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+                  style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
                 >
                   <img
                     :alt="token?.name"
@@ -96,7 +96,7 @@
               <ion-item v-for="nft of ethNfts" :key="nft.address">
                 <ion-avatar
                   v-if="nft?.imageURI"
-                  style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+                  style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
                 >
                   <img
                     :alt="nft?.collectionName"
@@ -120,7 +120,7 @@
               <ion-item v-for="nft of polyNfts" :key="nft.address">
                 <ion-avatar
                   v-if="nft?.imageURI"
-                  style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+                  style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
                 >
                   <img
                     :alt="nft?.collectionName"
@@ -144,7 +144,7 @@
             <ion-item v-for="nft of poaps" :key="nft.eventId">
               <ion-avatar
                 v-if="nft?.image"
-                style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+                style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
               >
                 <img
                   :alt="nft?.title"

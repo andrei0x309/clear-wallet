@@ -12,12 +12,12 @@
       >
       <ion-item>
         <ion-avatar
-          v-if="(mainNets as any)[selectedNetwork?.chainId]?.icon"
-          style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+          v-if="(allTemplateNets as any)[selectedNetwork?.chainId]?.icon"
+          style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
         >
           <img
             :alt="selectedNetwork?.name"
-            :src="getUrl('assets/chain-icons/' + (mainNets as any)[selectedNetwork?.chainId]?.icon)"
+            :src="getUrl('assets/chain-icons/' + (allTemplateNets as any)[selectedNetwork?.chainId]?.icon)"
           />
         </ion-avatar>
         <ion-label>Network ID: {{ selectedNetwork?.chainId }}</ion-label>
@@ -201,7 +201,7 @@ import {
 } from "@/utils/platform";
 import { getBalance, getGasPrice, estimateGas } from "@/utils/wallet";
 import type { Network } from "@/extension/types";
-import { mainNets, chainIdToPriceId } from "@/utils/networks";
+import { allTemplateNets, chainIdToPriceId } from "@/utils/networks";
 import UnlockModal from "@/views/UnlockModal.vue";
 import router from "@/router";
 
@@ -424,7 +424,7 @@ export default defineComponent({
       bars,
       loading,
       selectedNetwork,
-      mainNets,
+      allTemplateNets,
       getUrl,
       setGasLimit,
       setGasPrice,

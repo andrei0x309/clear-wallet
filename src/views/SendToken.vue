@@ -198,9 +198,15 @@ export default defineComponent({
     // };
 
     onIonViewWillEnter(async () => {
-      selectedNetwork.value = await getSelectedNetwork();
-      selectedAccount.value = await getSelectedAccount();
-      currentBalance.value = Number(formatEther((await getBalance()).toString()));
+      try {
+        selectedNetwork.value = await getSelectedNetwork();
+        selectedAccount.value = await getSelectedAccount();
+        currentBalance.value = Number(formatEther((await getBalance()).toString()));
+      } catch (e) {
+        alertOpen.value = true;
+        alertMsg.value =
+          "Error getting network & balance Internet or RPC or blockchain may be down";
+      }
       loading.value = false;
     });
 

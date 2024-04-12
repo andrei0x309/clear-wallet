@@ -68,56 +68,65 @@ export const mainNets: {[key: number]: Network} = {
 }
 
 export const testNets = {
-    5: {
-        name: 'TESTNET Ethereum Goerli',
-        rpc: 'https://rpc.ankr.com/eth_goerli',
-        chainId: 5,
-        explorer: 'https://goerli.etherscan.io',
-        icon: 'eth.webp'
+    11155111: {
+        name: 'TESTNET Ethereum Sepolia',
+        rpc: 'https://ethereum-sepolia-rpc.publicnode.com',
+        chainId: 11155111,
+        explorer: 'https://sepolia.etherscan.io',
+        icon: 'eth_t.webp'
     },
-    4: {
-        name: 'TESTNET Ethereum Rinkeby',
-        rpc: 'https://rpc.ankr.com/eth_rinkeby',
-        chainId: 4,
-        explorer: 'https://rinkeby.etherscan.io',
-        icon: 'eth.webp'
+    84532: {
+        name: 'TESTNET Base Sepolia',
+        rpc: 'https://sepolia.base.org',
+        chainId: 84532,
+        explorer: 'https://sepolia.basescan.org/',
+        icon: 'base_t.webp'
     },
-    80001: {
-        name: 'TESTNET Polygon',
-        rpc: 'https://rpc.ankr.com/polygon_mumbai',
-        chainId: 80001,
-        explorer: 'https://mumbai.polygonscan.com',
-        icon:'polygon.webp'
+    80002: {
+        name: 'TESTNET Polygon Amoy',
+        rpc: 'https://rpc-amoy.polygon.technology',
+        chainId: 80002,
+        explorer: 'https://oklink.com/amoy',
+        icon:'polygon_t.webp'
     },
-    100100: {
+    100200: {
         name: 'TESTNET Gnosis Chiado',
-        rpc: 'https://gnosis-mainnet.public.blastapi.io',
-        chainId: 100100,
-        explorer: '',
-        icon:'xdai.webp'
+        rpc: 'https://rpc.chiadochain.net',
+        chainId: 100200,
+        explorer: 'https://gnosis-chiado.blockscout.com',
+        icon:'xdai_t.webp'
     },
     420: {
         name: 'TESTNET Optimism Goreli',
         rpc: 'https://goerli.optimism.io/',
         chainId: 420,
         explorer: 'https://goerli.etherscan.io',
-        icon: 'optimism.webp'
+        icon: 'optimism_t.webp'
+    },
+    11155420 : {
+        name: 'TESTNET Optimism Sepolia',
+        rpc: 'https://sepolia.optimism.io',
+        chainId: 11155420 ,
+        explorer: 'https://sepolia-optimistic.etherscan.io/',
+        icon: 'optimism_t.webp'
     },
     97: {
         name: 'TESTNET BSC',
         rpc: 'https://bsctestapi.terminet.io/rpc',
         chainId: 97,
         explorer: 'https://testnet.bscscan.com',
-        icon: 'binance.webp'
+        icon: 'binance_t.webp'
     },
-    421613: {
-        name: 'TESTNET Arbitrum One',
-        rpc: 'https://goerli-rollup.arbitrum.io/rpc/',
-        chainId: 421613,
-        explorer: 'https://testnet.arbiscan.io',
-        icon: 'arbitrum.webp'
+    421614: {
+        name: 'TESTNET Arbitrum Sepolia',
+        rpc: 'https://sepolia-rollup.arbitrum.io/rpc',
+        chainId: 421614,
+        explorer: 'https://sepolia.arbiscan.io/',
+        icon: 'arbitrum_t.webp'
     },
 }
+
+export const allTemplateNets = {...mainNets, ...testNets}
 
 export const chainIdToPriceId = (chainId: number): string => {
     return mainNets?.[chainId]?.priceId ?? 'x'

@@ -6,7 +6,7 @@
 
 <script lang="ts">
 import { IonApp, IonRouterOutlet } from "@ionic/vue";
-import { defineComponent, onBeforeMount, onMounted, onUnmounted } from "vue";
+import { defineComponent, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getSettings } from "@/utils/platform";
 import { getSelectedAddress } from "@/utils/wallet";
@@ -68,6 +68,11 @@ export default defineComponent({
       return true;
     };
 
+    if (chrome?.runtime?.onMessage) {
+      chrome.runtime.onMessage.addListener(pageListener);
+      console.info("page listener set");
+    }
+
     onBeforeMount(() => {
       getSettings().then((settings) => {
         if (settings.theme !== "system") {
@@ -75,18 +80,14 @@ export default defineComponent({
           document.body.classList.add(settings.theme);
         }
       });
-      if (chrome?.runtime?.onMessage) {
-        chrome.runtime.onMessage.addListener(pageListener);
-        console.info("page listener set");
-      }
     });
 
-    onUnmounted(() => {
-      if (chrome?.runtime?.onMessage) {
-        chrome.runtime.onMessage.removeListener(pageListener);
-        console.info("page listener removed");
-      }
-    });
+    // onUnmounted(() => {
+    //   if (chrome?.runtime?.onMessage) {
+    //     chrome.runtime.onMessage.removeListener(pageListener);
+    //     console.info("page listener removed");
+    //   }
+    // });
 
     onMounted(() => {
       switch (route?.query?.route ?? "") {

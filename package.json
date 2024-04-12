@@ -24,7 +24,7 @@
     "@ionic/vue-router": "^7.2.3",
     "@types/chrome": "^0.0.243",
     "core-js": "^3.32.0",
-    "ethers": "^6.7.0",
+    "ethers": "^6.11.1",
     "vue": "^3.3.4",
     "vue-router": "^4.2.4"
   },

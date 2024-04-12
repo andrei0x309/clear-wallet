@@ -36,15 +36,15 @@ export const signTypedData = async (msg: string) => {
     const account = await getSelectedAccount()
     const wallet = new ethers.Wallet(account.pk)
     const parsedMsg = JSON.parse(msg)
-    if(parsedMsg?.primaryType) {
-        if(parsedMsg.primaryType in parsedMsg.types){
-            parsedMsg.types = {
-                [parsedMsg.primaryType]: parsedMsg.types[parsedMsg.primaryType]
-            }
+    const types = {} as Record<string, any>
+    for (const key in parsedMsg.types) {
+        if (key !== 'EIP712Domain') {
+            types[key] = parsedMsg.types[key]
         }
     }
-
-    return await wallet.signTypedData(parsedMsg.domain, parsedMsg.types, parsedMsg.message)
+    parsedMsg.types = types
+    const args = [parsedMsg.domain, parsedMsg.types, parsedMsg.message]
+    return await wallet.signTypedData(args[0], args[1], args[2])
 }
 
 export const getBalance = async () =>{

@@ -59,18 +59,40 @@ window.addEventListener("message", (event) => {
     event.data.data.data.resId = event.data.resId
     event.data.data.data.type = "CLWALLET_CONTENT_MSG"
     event.data.data.data.website = document?.location?.href ?? ''
-    if ((event?.data?.data?.data?.method ?? 'x') in allowedMethods) {
+    if ((event?.data?.data?.method ?? 'x') in allowedMethods) {
+      event.data.data.data.method = event?.data?.data?.method ?? ''
       chrome?.runtime?.sendMessage(event.data.data.data, (res) => {
         if (chrome.runtime.lastError) {
           console.warn("LOC1: Error sending message:", chrome.runtime.lastError);
         }
-        const data = { type: "CLWALLET_PAGE", data: res, resId: event.data.resId };
+        const id = Number(event.data.resId.replace(/[A-Za-z]/g, '').slice(0, 10))
+        const data = { 
+          target: 'metamask-inpage',
+          type: "CLWALLET_PAGE",
+          resId: event.data.resId,
+          data: { name: 'metamask-provider', data: {
+              jsonrpc: '2.0',
+              id,
+              result: res,
+          },
+          id,
+          method: event?.data?.data?.data?.method ?? '',
+          params: event?.data?.data?.data?.params ?? [],
+        },
+      }
+
         // console.info('data out', data)
         window.postMessage(data, "*");
       })
     }
     else {
-      const data = { type: "CLWALLET_PAGE", data: { error: true, message: 'ClearWallet: Unknown method requested ' + event?.data?.data?.data?.method ?? '' }, resId: event.data.resId };
+      const data = { 
+        type: "CLWALLET_PAGE", 
+        data: {
+        data: {
+          result: { error: true, message: 'ClearWallet: Unknown method requested ' + event?.data?.data?.data?.method ?? '' }
+        } }
+        , resId: event.data.resId };
       window.postMessage(data, "*");
     }
   } else if (event?.data?.type === "CLWALLET_PING") {

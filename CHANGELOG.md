@@ -1,5 +1,19 @@
 # Changelog
 
+## Manifest Version 1.3.6
+
+- better display of blockchain explorer button
+- updated ethers dependency to latest 6.11.1
+- better handling of type sigining
+- changed the password input for unlock to not lose focus
+- activated focus on password input for unlock on view enter
+- disabled integration of fire wallet(in cause user has it installed) with type signing due to incompatibility
+- other misc improvements
+- added a check when sending native token to check if internet / RPC or Blockchain and show a message to the user
+- customize testNets icons to show a small dev icon on the top right corner
+- updated testNets templates to include newer networks
+- show icons for testNets too in most places
+
 ## Manifest Version 1.3.5
 
 - added copy button to chainId for easier development

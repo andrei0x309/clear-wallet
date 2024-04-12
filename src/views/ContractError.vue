@@ -12,12 +12,12 @@
       >
       <ion-item>
         <ion-avatar
-          v-if="(mainNets as any)[selectedNetwork?.chainId]?.icon"
-          style="margin-right: 1rem; width: 1.8rem; height: 1.8rem"
+          v-if="(allTemplateNets as any)[selectedNetwork?.chainId]?.icon"
+          style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
         >
           <img
             :alt="selectedNetwork?.name"
-            :src="getUrl('assets/chain-icons/' + (mainNets as any)[selectedNetwork?.chainId]?.icon)"
+            :src="getUrl('assets/chain-icons/' + (allTemplateNets as any)[selectedNetwork?.chainId]?.icon)"
           />
         </ion-avatar>
         <ion-label>Network ID: {{ selectedNetwork?.chainId }}</ion-label>
@@ -75,7 +75,7 @@ import {
 import { useRoute } from "vue-router";
 import { getSelectedNetwork, getUrl, hexTostr } from "@/utils/platform";
 import type { Network } from "@/extension/types";
-import { mainNets } from "@/utils/networks";
+import { allTemplateNets } from "@/utils/networks";
 
 export default defineComponent({
   components: {
@@ -112,7 +112,7 @@ export default defineComponent({
       contract,
       loading,
       selectedNetwork,
-      mainNets,
+      allTemplateNets,
       getUrl,
       error,
     };
