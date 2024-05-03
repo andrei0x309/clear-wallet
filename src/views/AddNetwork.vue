@@ -159,6 +159,7 @@ import {
 import {
   getNetworks,
   saveSelectedNetwork,
+  getSelectedNetwork,
   getUrl,
   paste,
   replaceNetworks,
@@ -203,7 +204,6 @@ export default defineComponent({
     const route = useRoute();
     const isEdit = route.path.includes("/edit");
     const paramChainId = route.params.chainId ?? "";
-    let networksProm: Promise<Networks | undefined>;
 
     const fillNetworkInputs = (network: Network) => {
       name.value = network.name;
@@ -215,8 +215,7 @@ export default defineComponent({
 
     onIonViewWillEnter(async () => {
       if (isEdit && paramChainId) {
-        networksProm = getNetworks();
-        const networks = (await networksProm) as Networks;
+        const networks = (await getNetworks()) as Networks;
         fillNetworkInputs(networks[Number(paramChainId)]);
       }
     });
@@ -249,10 +248,13 @@ export default defineComponent({
         }
       }
       let p1 = Promise.resolve();
-      if (!networksProm) {
-        networksProm = getNetworks();
-      }
-      const networks = (await networksProm) as Networks;
+      const networksProm = getNetworks();
+      const selectedNetworkProm = getSelectedNetwork();
+
+      const allNetworks = await Promise.all([networksProm, selectedNetworkProm]);
+      const networks = allNetworks[0] as Networks;
+      const selectedNetwork = allNetworks[1] as Network;
+
       const network = {
         name: name.value,
         chainId: chainId.value,
@@ -260,7 +262,10 @@ export default defineComponent({
         ...(symbol.value ? { symbol: symbol.value } : {}),
         ...(explorer.value ? { explorer: explorer.value } : {}),
       };
-      if ((Object.keys(networks).length ?? 0) < 1) {
+      if (
+        (Object.keys(networks).length ?? 0) < 1 ||
+        selectedNetwork.chainId === chainId.value
+      ) {
         p1 = saveSelectedNetwork(network);
       } else {
         if (chainId.value in networks && !isEdit) {

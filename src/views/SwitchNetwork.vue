@@ -183,7 +183,7 @@ export default defineComponent({
       pnetworks = getNetworks();
       selectedNetwork.value = await getSelectedNetwork();
       existingNetworks.value = await pnetworks;
-      if ((networkId.value ?? "0") in existingNetworks.value ?? {}) {
+      if ((networkId.value ?? "0") in (existingNetworks?.value ?? {})) {
         networkCase.value = "exists";
       } else if ((networkId.value ?? "0") in allTemplateNets) {
         existingNetworks.value = allTemplateNets;

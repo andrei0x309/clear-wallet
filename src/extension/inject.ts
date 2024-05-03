@@ -18,6 +18,10 @@ const ProviderInfo: EIP6963ProviderInfo = {
     rdns: 'clear-wallet.flashsoft.eu/',
 }
 
+const THROTTLE_LEVEL = 20;
+const THROTTLE_TIMEOUT = 500;
+const MAX_PROMISES = 50
+
 function loadEIP1193Provider(provider: any) {
 
     function announceProvider() {
@@ -70,8 +74,13 @@ const getListnersCount = (): number => {
 }
 
 const sendMessage = (args: RequestArguments, ping = false, from = 'request'): Promise<unknown> => {
-if(promResolvers.size < 10 ) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+        if(promResolvers.size < MAX_PROMISES && promResolvers.size > THROTTLE_LEVEL) {
+            await new Promise((res) => setTimeout(res, THROTTLE_TIMEOUT))
+        } else if(promResolvers.size > MAX_PROMISES) {
+            reject({code: -32000, message: 'ClearWallet: Too many requests', error: true })
+        }
+
         const resId = [...`${Math.random().toString(16) + Date.now().toString(16)}`].slice(2).join('')
         promResolvers.set(resId, { resolve, reject })
         const p = [ "eth_signTypedData", "eth_signTypedData_v3", "eth_signTypedData_v4"]
@@ -91,21 +100,16 @@ if(promResolvers.size < 10 ) {
         if (ping) {
             data.type = 'CLWALLET_PING'
         }
+
         // console.info('data in', data)
         window.postMessage(data, "*");
  
     }) 
-    } else {
-        return new Promise((_resolve, reject) => {
-            setTimeout(() => {
-            reject({code: -32000, message: 'ClearWallet: Too many requests', error: true })
-            } , 200)
-        })
-    }
 }
 
 class MetaMaskAPI {
     isMetaMask = true
+    isClWallet = true
     _state = {accounts: Array(1), isConnected: true, isUnlocked: true, initialized: true, isPermanentlyDisconnected: false}
     _sentWarnings = {enable: false, experimentalMethods: false, send: false, events: {}}
     // Deprecated - hardcoded for now, websites should not access this directly since is deprecated for a long time
@@ -338,6 +342,7 @@ const eth = new Proxy( new MetaMaskAPI(), {
 
 const listner =  function(event: any) {
     if (event.source != window) return;
+    if(!['CLWALLET_PAGE', 'CLWALLET_PAGE_LISTENER'].includes(event?.data?.type)) return;
     const eventData = event?.data
     const eventDataData = event?.data?.data
     const eventDataDataData = event?.data?.data?.data
@@ -362,13 +367,13 @@ const listner =  function(event: any) {
                     (<any>eth).networkVersion = String(parseInt(eventDataDataData?.chainId ?? "0x89", 16));
                     (<any>eth).chainId = eventDataDataData?.chainId ?? '0x89';
                     (<any>eth).selectedAddress = eventDataData?.address?.[0] ?? null;
-                    (<any>eth).accounts = [eventDataData.address?.[0]] ?? [];
+                    (<any>eth).accounts = eventDataData.address?.[0] ? [eventDataData.address?.[0]] : [];
                     (<any>eth).isConnected = () => true;
                 } else if( listnerName === 'chainChanged' ) {
                     (<any>eth).networkVersion = String(parseInt(eventDataDataData ?? "0x89", 16));
                     (<any>eth).chainId = eventDataData ?? '0x89';
                 } else if ( listnerName === 'accountsChanged' ) {
-                    (<any>eth).accounts = [eventDataData?.[0]] ?? [];
+                    (<any>eth).accounts = eventDataData?.[0] ? [eventDataData?.[0]] : [];
                     (<any>eth).selectedAddress = eventDataData?.[0] ?? '';
                 }
                 listners[listnerName].forEach(listner => listner(eventDataDataData));
@@ -380,9 +385,9 @@ const listner =  function(event: any) {
                 // console.info(e)
                 // ignore
             }
-        }   
+        }
     }
-    if(promResolvers.has(resId) && (eventData?.type === "CLWALLET_PAGE" || eventData?.type === "CLWALLET_PAGE_LISTENER")) {
+    if(promResolvers.has(resId)) {
         promResolvers.delete(resId)
     }
   }
@@ -401,7 +406,12 @@ const web3Shim = {
 }
 
 const injectWallet = (win: any) => {
-Object.defineProperty(win, 'ethereum', {
+const ethKey = 'ethereum'
+if (win[ethKey]?.isClWallet) {
+    return;
+}
+
+Object.defineProperty(win, ethKey, {
     value: eth,
 });
 Object.defineProperty(win, 'web3', {
@@ -410,7 +420,6 @@ Object.defineProperty(win, 'web3', {
 sendMessage({
     method: 'wallet_ready'
 }, true)
-// console.log('Clear wallet injected', (window as any).ethereum, win)
 }
 
 injectWallet(this);
@@ -439,27 +448,53 @@ loadEIP1193Provider(eth)
 //     }))
 // }, 5000)
 
-// setTimeout(() => {
+// setTimeout(async () => {
     // console.log('Metamask clone test');
-    // (<any>window).ethereum.request({method: 'eth_requestAccounts', params: Array(0)}).then((res: any) => { console.log(res, '111111111')});
-    // (<any>window).ethereum.request({method: 'eth_accounts', params: Array(0)}).then((res: any) => { console.log(res, '111111111')});
-    // (<any>window).ethereum.request({method: 'eth_chainId', params: Array(0)}).then((res: any) => { console.log(res, '111111111')});
-    // (<any>window).ethereum.request({method: 'wallet_requestPermissions', params: [{eth_accounts: {}}]}).then((res: any) => { console.log(res, '111111111')});
-    // (<any>window).ethereum.request({method: 'net_version', params: []}).then((res: any) => { console.log(res, '111111111')});
-    // (<any>window).ethereum.request({method: 'wallet_switchEthereumChain', params: [{chainId: "0x89"}]}).then((res: any) => { console.log(res, '111111111')});
-    // (<any>window).ethereum2.request({method: 'wallet_switchEthereumChain', params: [{chainId: "0x89"}]}).then((res: any) => { console.log(res, '111111111')});
-    //    (<any>window).ethereum.on('connect', ((a: any, b: any) => console.log('connect', a, b)));
-    // (<any>window).ethereum.on('accountsChanged', ((a: any, b: any) => console.log('accountsChanged', a, b)));
-    // (<any>window).ethereum.on('chainChanged', ((a: any) => console.log('chainChanged', a, typeof a)));
-    // console.log((<any>window).ethereum.on('message', (a: any, b:any) => console.log(a,b)))
-    // console.dir((<any>window).ethereum);
-    // (<any>window).ethereum.request({method: 'net_version', params: []}).then((res: any) => { console.log(res, '111111111')});
-    // (<any>window).ethereum.request({method: 'eth_blockNumber', params:  Array(0)}).then((res: any) => { console.log(res, '2222222')});
+    // (<any>window).ethereum.request({method: 'eth_requestAccounts', params: Array(0)}).then((res: any) => { console.log(res, 'MT: eth_requestAccounts')});
+    // (<any>window).ethereum2.request({method: 'eth_requestAccounts', params: Array(0)}).then((res: any) => { console.log(res, 'CW: eth_requestAccounts')});
 
-    // console.log((<any>window).ethereum2.toString())
-    // console.log((<any>window).ethereum.Symbold)
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
 
-// }, 5500)
+    // (<any>window).ethereum.request({method: 'eth_accounts', params: Array(0)}).then((res: any) => { console.log(res, 'MT: eth_accounts')});
+    // (<any>window).ethereum2.request({method: 'eth_accounts', params: Array(0)}).then((res: any) => { console.log(res, 'CW: eth_accounts')});
+
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // (<any>window).ethereum.request({method: 'eth_chainId', params: Array(0)}).then((res: any) => { console.log(res, 'MT: eth_chainId')});
+    // (<any>window).ethereum2.request({method: 'eth_chainId', params: Array(0)}).then((res: any) => { console.log(res, 'CW: eth_chainId')});
+
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
 
 
-// console.log( (window as any).ethereum.request({method: 'eth_chainId'}))
+    // (<any>window).ethereum.request({method: 'eth_blockNumber', params:  Array(0)}).then((res: any) => { console.log(res, 'MT: eth_chainId')});
+    // (<any>window).ethereum2.request({method: 'eth_blockNumber', params:  Array(0)}).then((res: any) => { console.log(res, 'CW: eth_chainId')});
+    
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    
+    // (<any>window).ethereum.request({method: 'wallet_requestPermissions', params: [{eth_accounts: {}}]}).then((res: any) => { console.log(res, 'MT: wallet_requestPermissions')});
+    // (<any>window).ethereum2.request({method: 'wallet_requestPermissions', params: [{eth_accounts: {}}]}).then((res: any) => { console.log(res, 'CW: wallet_requestPermissions')});
+
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    // (<any>window).ethereum.request({method: 'net_version', params: []}).then((res: any) => { console.log(res, 'MT: net_version')});
+    // (<any>window).ethereum2.request({method: 'net_version', params: []}).then((res: any) => { console.log(res, 'CW: net_version')});
+
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    // (<any>window).ethereum.request({method: 'wallet_switchEthereumChain', params: [{chainId: "0x89"}]}).then((res: any) => { console.log(res, 'MT: wallet_switchEthereumChain')});
+    // (<any>window).ethereum2.request({method: 'wallet_switchEthereumChain', params: [{chainId: "0x89"}]}).then((res: any) => { console.log(res, 'CW: wallet_switchEthereumChain')});
+
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // (<any>window).ethereum.on('connect', ((a: any, b: any) => console.log('connect MT', a, b)));
+    // (<any>window).ethereum.on('accountsChanged', ((a: any, b: any) => console.log('accountsChanged MT', a, b)));
+    // (<any>window).ethereum.on('chainChanged', ((a: any) => console.log('chainChanged MT', a, typeof a)));
+  
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // (<any>window).ethereum2.on('connect', ((a: any, b: any) => console.log('connect CW', a, b)));
+    // (<any>window).ethereum2.on('accountsChanged', ((a: any, b: any) => console.log('accountsChanged CW', a, b)));
+    // (<any>window).ethereum2.on('chainChanged', ((a: any) => console.log('chainChanged CW', a, typeof a)));
+
+// }, 3500)

@@ -738,7 +738,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                     sendResponse({
                         error: true,
                         code: rpcError.INVALID_PARAM,
-                        message: 'ClearWallet: Invalid request method ' + message?.method ?? '' 
+                        message: 'ClearWallet: Invalid request method ' + (message?.method ?? '') 
                     })
                     break
                 }

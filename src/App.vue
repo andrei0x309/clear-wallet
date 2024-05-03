@@ -58,7 +58,7 @@ export default defineComponent({
               sendResponse({
                 error: true,
                 message:
-                  "ClearWallet: Invalid PAGE request method " + message?.method ?? "",
+                  "ClearWallet: Invalid PAGE request method " + (message?.method ?? ""),
               });
               break;
             }

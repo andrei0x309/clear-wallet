@@ -112,7 +112,7 @@ export const testNets = {
     },
     97: {
         name: 'TESTNET BSC',
-        rpc: 'https://bsctestapi.terminet.io/rpc',
+        rpc: 'https://bsc-testnet-rpc.publicnode.com',
         chainId: 97,
         explorer: 'https://testnet.bscscan.com',
         icon: 'binance_t.webp'

@@ -1,5 +1,14 @@
 # Changelog
 
+## Manifest Version 1.3.7
+
+- improved add Network pages
+- upgraded and optimized some dependencies including vite
+- optimized vite config
+- added condition to not reinject wallet if already injected for websites that reload injected scripts
+- optimized throttle fuffilment of requests in case of too many requests
+- removed uneeded mobile native code
+
 ## Manifest Version 1.3.6
 
 - better display of blockchain explorer button

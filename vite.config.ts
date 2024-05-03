@@ -1,11 +1,8 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'url'
-import nodePolyfills from 'rollup-plugin-polyfill-node'
 import { crx } from '@crxjs/vite-plugin'
 import manifest from './src/extension/manifest.json'
-
-const production = process.env.NODE_ENV === 'production'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -25,7 +22,13 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      plugins: [nodePolyfills()],
+      // plugins: [nodePolyfills()],
+      onwarn: (warning) => {
+        if (warning.message.includes('comment will be removed')) {
+          return false;
+        }
+        return true;
+      },
       input: {
         ['eval-sandbox']: 'eval-sandbox.html',
       },
@@ -36,12 +39,11 @@ export default defineConfig({
       transformMixedEsModules: true
     },
   },
+  esbuild: {
+    legalComments: 'none',
+  },
   plugins: [
-    !production &&
-    nodePolyfills({
-      include: ['node_modules/**/*.js', new RegExp('node_modules/.vite/.*js')]
-    }),
-    crx({ manifest }),
+    crx({ manifest: manifest as any }),
     vue()
   ],
   server: {

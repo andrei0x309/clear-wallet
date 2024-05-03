@@ -1,19 +1,4 @@
 
-(() => {
-  // Not needed anymore since injection is done with MAIN_WORLD context
-  // try {
-  //   const container = document.documentElement;
-  //   const script = document.createElement('script');
-  //   script.setAttribute('async', "false")
-  //   script.setAttribute('fetchpriority', "high")
-  //   script.src = chrome.runtime.getURL('src/extension/inject.js')
-  //   container.prepend(script)
-  //   script.addEventListener('load', () => { container.removeChild(script) })
-  // } catch (error) {
-  //   console.info('Error: MetaMask: Provider injection failed.', error);
-  // }
-})()
-
 const allowedMethods = {
   'eth_accounts': true,
   'eth_requestAccounts': true,
@@ -90,7 +75,7 @@ window.addEventListener("message", (event) => {
         type: "CLWALLET_PAGE", 
         data: {
         data: {
-          result: { error: true, message: 'ClearWallet: Unknown method requested ' + event?.data?.data?.data?.method ?? '' }
+          result: { error: true, message: 'ClearWallet: Unknown method requested ' + (event?.data?.data?.data?.method ?? '') }
         } }
         , resId: event.data.resId };
       window.postMessage(data, "*");
