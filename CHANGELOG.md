@@ -1,5 +1,9 @@
 # Changelog
 
+## Manifest Version 1.3.8
+
+- improved sign message display to better accomodate SIWE & other messages
+
 ## Manifest Version 1.3.7
 
 - improved add Network pages

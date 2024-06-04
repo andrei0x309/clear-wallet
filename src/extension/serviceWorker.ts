@@ -524,8 +524,8 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
 
                     await new Promise((resolve, reject) => {
                     chrome.windows.create({
-                        height: 450,
-                        width: 400,
+                        height: 510,
+                        width: 480,
                         url: chrome.runtime.getURL(`index.html?route=sign-msg&param=${strToHex(signMsgData)}&rid=${String(message?.resId ?? '')}`),
                         type: 'popup'
                     }).then((win) => {

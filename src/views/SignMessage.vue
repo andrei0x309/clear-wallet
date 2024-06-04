@@ -11,7 +11,7 @@
         <ion-label>Message to Sign</ion-label>
       </ion-item>
       <ion-item>
-        <ion-text>{{ signMsg }}</ion-text>
+        <div style="white-space: pre-wrap" disabled>{{ signMsg }}</div>
       </ion-item>
       <ion-item>
         <ion-button @click="onCancel">Cancel</ion-button>
@@ -49,7 +49,6 @@ import {
   IonLabel,
   IonButton,
   IonAlert,
-  IonText,
   IonLoading,
   modalController,
   onIonViewWillEnter,
@@ -72,7 +71,6 @@ export default defineComponent({
     IonLabel,
     IonButton,
     IonAlert,
-    IonText,
     IonLoading,
   },
   setup: () => {
