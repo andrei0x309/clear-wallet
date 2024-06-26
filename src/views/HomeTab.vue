@@ -367,12 +367,13 @@ export default defineComponent({
       const findIndex = accounts.value.findIndex((a) => a.address == address);
       if (findIndex > -1) {
         selectedAccount.value = accounts.value[findIndex];
-        await saveSelectedAccount(selectedAccount.value);
-        // console.log(({ [address]: accounts.value[address], ...accounts.value}))
-        accounts.value.splice(findIndex, 1);
-        accounts.value.splice(0, 0, selectedAccount.value);
+        accounts.value = accounts.value.filter((a) => a.address !== address);
+        accounts.value.unshift(selectedAccount.value);
         const newAccounts = [...accounts.value];
-        await replaceAccounts(newAccounts);
+        await Promise.all([
+          saveSelectedAccount(selectedAccount.value),
+          replaceAccounts(newAccounts),
+        ]);
         triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
       }
       accountsModal.value = false;

@@ -76,7 +76,7 @@
           </ion-item>
           <ion-item>
             <ion-textarea
-              style="overflow-y: scroll"
+              style="overflow-y: scroll; width: 100%"
               aria-label="Enter mnemonic"
               :rows="10"
               :cols="10"
@@ -263,7 +263,7 @@ export default defineComponent({
       if (settings.enableStorageEnctyption) {
         const pass = await openModal();
         if (!pass) {
-          alertMsg.value = "Cannot add account with encryption password.";
+          alertMsg.value = "Cannot add account without encryption password.";
           alertOpen.value = true;
           return;
         }
@@ -278,7 +278,8 @@ export default defineComponent({
         } else {
           if (accounts.find((account) => account.address === wallet.address)) {
             alertMsg.value = "Account already exists.";
-            return (alertOpen.value = true);
+            alertOpen.value = true;
+            return;
           }
         }
         const p2 = saveAccount({
@@ -299,7 +300,8 @@ export default defineComponent({
         } else {
           if (accounts.find((account) => account.address === wallet.address)) {
             alertMsg.value = "Account already exists.";
-            return (alertOpen.value = true);
+            alertOpen.value = true;
+            return;
           }
         }
         const p2 = saveAccount({

@@ -44,6 +44,8 @@ import { allTemplateNets } from '@/utils/networks'
 
 let notificationUrl: string
 
+const chainIdThrottle: {[key: string]: number} = {}
+
 chrome.runtime.onInstalled.addListener(() => {
     enableRightClickVote()
     console.info('Service worker installed');
@@ -149,6 +151,30 @@ if (!chrome.notifications.onButtonClicked.hasListener(viewTxListner)){
     chrome.notifications.onButtonClicked.addListener(viewTxListner)
 }
 
+const chainIdThrottleFn = async (website: string) => {
+    let urlKey
+    try {
+        const url = new URL(website)
+        urlKey = url.hostname
+    } catch {
+        urlKey = 'invalid'
+    }
+    if(chainIdThrottle[urlKey] === undefined) {
+        chainIdThrottle[urlKey] = 0
+    }
+    chainIdThrottle[urlKey] += 1
+
+    if( chainIdThrottle[urlKey] > 3) {
+        await new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve(null)
+            }, 450)
+        })
+        // console.log('throttling', chainIdThrottle)
+    }
+    return urlKey
+}
+
 const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: any) => any) => {
     if (chrome.runtime.lastError) {
         console.info("Error receiving message:", chrome.runtime.lastError);
@@ -158,6 +184,8 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
     }
  
     (async () => {
+        // console.info('Message:', message)
+
         if (!(message?.method)) {
             sendResponse({
                 code: 500,
@@ -354,11 +382,16 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 break
                 }
-                case 'eth_chainId': {
+                case 'eth_chainId':
+                case 'net_version': 
+                {
                 try {
+                    const isNetVersion = message.method === 'net_version'
+                    const urlKey = await chainIdThrottleFn(message?.website ?? '')
                     const network = await getSelectedNetwork()
-                    const chainId = network?.chainId ?? 0
-                    sendResponse(`0x${chainId.toString(16)}`)
+                    const chainId = network?.chainId ?? 1
+                    sendResponse(isNetVersion ? chainId.toString() : `0x${chainId.toString(16)}`)
+                    chainIdThrottle[urlKey] -= 1
                 } catch (e) {
                     sendResponse({
                         error: true,
@@ -711,7 +744,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                     try {
                         chrome.windows.remove(sender.tab?.windowId ?? 0)
                     }catch (e) {
-                        console.log(e)
+                        console.info(e)
                         // ignore
                     }
                     break

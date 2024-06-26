@@ -48,7 +48,6 @@ export const saveNetwork = async (network: Network): Promise<void> => {
 
 
 export const getSelectedNetwork  = async (): Promise<Network > => {
-    console.info('network', (await (storageGet('selectedNetwork')))?.selectedNetwork)
     return (await storageGet('selectedNetwork'))?.selectedNetwork ?? null as unknown as Network 
 }
 

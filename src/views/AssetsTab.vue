@@ -35,10 +35,14 @@
         conectivity issues.
       </template>
       <template v-else-if="noAssets">
-        <p class="padding: 1rem;">
+        <!-- <p class="padding: 1rem;">
           No know assets found for this wallet address.
-        </p></template
-      >
+        </p> -->
+        <p class="padding: 1rem;">
+          Assets view temporarily disabled until finding better provider. As old
+          provider(yup.io) is no longer available.
+        </p>
+      </template>
       <template v-else>
         <template v-if="ethTokens.length || polyTokens.length">
           <template v-if="ethTokens.length">

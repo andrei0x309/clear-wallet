@@ -65,8 +65,10 @@ window.addEventListener("message", (event) => {
           params: event?.data?.data?.data?.params ?? [],
         },
       }
+        if(event?.data?.data?.data?.method !== 'eth_chainId') {
+          // console.info('data out', data)
+        }
 
-        // console.info('data out', data)
         window.postMessage(data, "*");
       })
     }

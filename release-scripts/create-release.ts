@@ -47,7 +47,6 @@ async function ghRelease(changes: string[]) {
       const p = cps.spawn('gh', ['release', 'create', `v${pkg.version}`, `./${outputPath}`, '-F', `./${changeLogPath}`], {
         shell: true,
       });
-      // const p = spawn('pwd');
       let result = '';
       p.stdout.on('data', (data) => (result += data.toString()));
       p.stderr.on('data', (data) => (result += data.toString()));

@@ -113,6 +113,7 @@
       />
 
       <iframe
+        title="eval-sandbox"
         @load="sandboxLoaded = true"
         ref="evalFrame"
         src="eval-sandbox.html"
@@ -279,7 +280,8 @@ export default defineComponent({
         if (!content) {
           alertMsg.value =
             "Abi not found in storage, be sure Abi with name " + data.abi + " exists.";
-          return (alertOpen.value = true);
+          alertOpen.value = true;
+          return;
         }
 
         abiContent.value = content;
@@ -297,15 +299,18 @@ export default defineComponent({
     const saveActionInStorage = () => {
       if (!functionName.value) {
         alertMsg.value = "Function Name is required";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
       if (!contractAddress.value) {
         alertMsg.value = "Contract Address is required";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
       if (abiContent.value === "") {
         alertMsg.value = "Abi is required";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
       saveActionModal.value = true;
     };
@@ -313,22 +318,26 @@ export default defineComponent({
     const executeAction = async () => {
       if (sandboxLoaded.value === false) {
         alertMsg.value = "Sandbox for eval not loaded yet, please wait";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
 
       if (!contractAddress.value) {
         alertMsg.value = "Contract Address is required";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
 
       if (!functionName.value) {
         alertMsg.value = "Function Name is required";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
 
       if (!parsedAbi) {
         alertMsg.value = "Abi is required";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
 
       alertHeader.value = "Error";
@@ -348,14 +357,16 @@ export default defineComponent({
             .map((param) => param.trim());
           if (paramsTypes.length !== evalParams.length) {
             alertMsg.value = "Params count mismatch";
-            return (alertOpen.value = true);
+            alertOpen.value = true;
+            return;
           }
           encodeParamsTypes.push(...paramsTypes);
         }
       } catch {
         alertMsg.value =
           "Function Siganture wrong format (ex: 'functionName(uint256,string)')";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
 
       const fnName = functionName.value.includes("(")
@@ -396,7 +407,8 @@ export default defineComponent({
         alertMsg.value = "Function call failed, check params, contract address and ABI";
         loadingSend.value = false;
         loading.value = false;
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
       loadingSend.value = false;
       loading.value = false;
@@ -405,7 +417,8 @@ export default defineComponent({
     const saveAction = async () => {
       if (!name.value) {
         alertMsg.value = "Name is required";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
       const action = {
         name: name.value,
@@ -419,7 +432,7 @@ export default defineComponent({
       saveActionModal.value = false;
       alertMsg.value = "Action saved successfully";
       alertHeader.value = "OK";
-      return (alertOpen.value = true);
+      alertOpen.value = true;
     };
 
     const messageHandler = (event: any) => {

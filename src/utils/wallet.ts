@@ -1,6 +1,21 @@
 import { getSelectedAccount, getSelectedNetwork, numToHexStr } from '@/utils/platform';
 import { ethers } from "ethers"
 
+let provider: ethers.JsonRpcProvider | null = null
+
+export const getCurrentProvider = async () => {
+    const network = await getSelectedNetwork()
+    if (provider) {
+        // check if the network has changed
+        if (provider._getConnection().url !== network.rpc) {
+            provider = new ethers.JsonRpcProvider(network.rpc, ethers.Network.from(network.chainId), { staticNetwork: true, batchMaxCount: 6, polling: false })
+        }
+        return {provider, network}
+    }
+    provider = new ethers.JsonRpcProvider(network.rpc, ethers.Network.from(network.chainId), { staticNetwork: true, batchMaxCount: 6, polling: false })
+    return {provider, network}
+}
+
 const convertReceipt = (receipt: ethers.TransactionReceipt | null) => {
     if(!receipt) return null
     const newReceipt = {...receipt} as any
@@ -49,34 +64,29 @@ export const signTypedData = async (msg: string) => {
 
 export const getBalance = async () =>{
     const account = await getSelectedAccount()
-    const network = await getSelectedNetwork()
-    const provider = new ethers.JsonRpcProvider(network.rpc)
+    const { provider } = await getCurrentProvider()
     return await provider.getBalance(account.address)    
 }
 
 export const getGasPrice = async () => {
-    const network = await getSelectedNetwork()
-    const provider = new ethers.JsonRpcProvider(network.rpc)
+    const { provider } = await getCurrentProvider()
     const feed = await provider.getFeeData()
     const gasPrice = feed.maxFeePerGas ?? feed.gasPrice ?? 0n
     return Number(gasPrice) / 1e9
 }
 
 export const getBlockNumber = async () => {
-    const network = await getSelectedNetwork()
-    const provider = new ethers.JsonRpcProvider(network.rpc)
+    const { provider } = await getCurrentProvider()
     return await provider.getBlockNumber()
 }
 
 export const getBlockByNumber = async (blockNum: number) => {
-    const network = await getSelectedNetwork()
-    const provider = new ethers.JsonRpcProvider(network.rpc)
+    const { provider } = await getCurrentProvider()
     return await provider.getBlock(blockNum)
 }
 
 export const estimateGas = async ({to = '', from = '', data = '', value = '0x0' }: {to: string, from: string, data: string, value: string}) => {
-    const network = await getSelectedNetwork()
-    const provider = new ethers.JsonRpcProvider(network.rpc)
+    const { provider } = await getCurrentProvider()
     return await provider.estimateGas({to, from, data, value})
 }
 
@@ -94,23 +104,20 @@ export const evmCall = async (params: any[]) => {
         tx.blockTag = 'latest'
     }
  
-    const network = await getSelectedNetwork()
-    const provider = new ethers.JsonRpcProvider(network.rpc)
+    const { provider } = await getCurrentProvider()
     const result = await provider.call(tx)
     return result
 }
 
 export const getTxByHash = async (hash: string) => {
-    const network = await getSelectedNetwork()
-    const provider = new ethers.JsonRpcProvider(network.rpc)
+    const { provider } = await getCurrentProvider()
     return await provider.getTransaction(hash)
 }
 
 export const getTxReceipt = async (hash: string) => {
     try {
     if (!hash) return null
-    const network = await getSelectedNetwork()
-    const provider = new ethers.JsonRpcProvider(network.rpc)
+    const { provider } = await getCurrentProvider()
     const receipt = await provider.getTransactionReceipt(hash)
 
     return convertReceipt(receipt)
@@ -121,8 +128,7 @@ export const getTxReceipt = async (hash: string) => {
 }
 
 export const getCode = async (addr: string) => {
-    const network = await getSelectedNetwork()
-    const provider = new ethers.JsonRpcProvider(network.rpc)
+    const { provider } = await getCurrentProvider()
     return await provider.getCode(addr)
 }
 
@@ -134,8 +140,7 @@ export const getFromMnemonic = (mnemonic: string, index: number) => {
 }
 
 export const getTxCount = async (addr: string, block: null | string = null) => {
-    const network = await getSelectedNetwork()
-    const provider = new ethers.JsonRpcProvider(network.rpc)
+    const { provider } = await getCurrentProvider()
     if(block){
         return await provider.getTransactionCount(addr, block)
     } else {
@@ -147,16 +152,11 @@ export const getRandomPk = () => {
     return ethers.Wallet.createRandom().privateKey
 }
 
-export const getCurrentProvider = async () => {
-    const network = await getSelectedNetwork()
-    return new ethers.JsonRpcProvider(network.rpc)
-}
-
 export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', value='', gasPrice='0x0'}: 
 {to: string, from: string, data: string, value: string, gas: string, gasPrice: string}) => {
     const account = await getSelectedAccount()
-    const network = await getSelectedNetwork()
-    const wallet = new ethers.Wallet(account.pk, new ethers.JsonRpcProvider(network.rpc))
+    const { provider } = await getCurrentProvider()
+    const wallet = new ethers.Wallet(account.pk, provider)
     const gasPriceInt = BigInt(gasPrice)
     const gasInt = BigInt(gas)
 

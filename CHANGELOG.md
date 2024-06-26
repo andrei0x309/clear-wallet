@@ -1,5 +1,15 @@
 # Changelog
 
+## Manifest Version 1.3.9
+
+- add an additional throttle on 'eth_chainId' to prevent websites from spamming the wallet with requests
+- change inject throttle to only affect UI requests
+- updated some core dependencies
+- optimized performance for json rpc calls
+- disabled assets fetch until new provider is found before yup.io was used
+- simplified wallet switching
+- added sonarCloud badge to README.md
+
 ## Manifest Version 1.3.8
 
 - improved sign message display to better accomodate SIWE & other messages

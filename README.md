@@ -12,6 +12,10 @@ For more info you can check [docs website](https://clear-wallet.flashsoft.eu)
 
 [![Clear EVM Wallet (CLW) - Open source EVM wallet that implements meta mask API. | Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=381026&theme=dark)](https://www.producthunt.com/posts/clear-evm-wallet-clw?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-clear-evm-wallet-clw)
 
+### Badges
+
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=andrei0x309_clear-wallet)](https://sonarcloud.io/summary/new_code?id=andrei0x309_clear-wallet)
+
 ### Extended article about this repo
 
 [Article on Mirror](https://mirror.xyz/andrei0x309.eth/9nc8UXrGIGOvz694ZY2gouS1JM9L8-Z8ITLNtirqD6Q)

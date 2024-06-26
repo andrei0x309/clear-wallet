@@ -53,11 +53,14 @@ import {
   modalController,
   onIonViewWillEnter,
 } from "@ionic/vue";
-// import { ethers } from "ethers";
-import { hexTostr } from "@/utils/platform";
 import { approve, walletPing } from "@/extension/userRequest";
 import { useRoute } from "vue-router";
-import { getSelectedAccount, unBlockLockout, blockLockout } from "@/utils/platform";
+import {
+  getSelectedAccount,
+  unBlockLockout,
+  blockLockout,
+  hexTostr,
+} from "@/utils/platform";
 import UnlockModal from "@/views/UnlockModal.vue";
 
 export default defineComponent({

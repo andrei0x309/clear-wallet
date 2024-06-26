@@ -229,22 +229,26 @@ export default defineComponent({
     const onAddNetwork = async () => {
       if (Number(chainId.value) < 1) {
         alertMsg.value = "Chain Id must be a valid decimal integer";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
       if (name.value.length < 2) {
         alertMsg.value = "Name must have at least 2 characters";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
       if (name.value.length > 99) {
         alertMsg.value = "Name must be less than 100 characters";
-        return (alertOpen.value = true);
+        alertOpen.value = true;
+        return;
       }
       if (name.value.length > 99) {
         try {
           new URL(rpc.value);
         } catch {
           alertMsg.value = "RPC must be a valid URL";
-          return (alertOpen.value = true);
+          alertOpen.value = true;
+          return;
         }
       }
       let p1 = Promise.resolve();
@@ -270,7 +274,8 @@ export default defineComponent({
       } else {
         if (chainId.value in networks && !isEdit) {
           alertMsg.value = "Network already exists.";
-          return (alertOpen.value = true);
+          alertOpen.value = true;
+          return;
         }
       }
       networks[chainId.value] = network;
