@@ -101,7 +101,7 @@ const sendMessage = (args: RequestArguments, ping = false, from = 'request'): Pr
             data.type = 'CLWALLET_PING'
         }
         if(method!== 'eth_chainId') {
-        // console.info('data in', data)          
+        console.info('data in', data)          
     }
 
         window.postMessage(data, "*");

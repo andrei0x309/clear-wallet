@@ -1,0 +1,32 @@
+name: Bun Script Execution
+
+on:
+  #push: # Trigger on push events to master branch (you can adjust this trigger)
+  workflow_dispatch: # Trigger on manual workflow dispatch
+
+jobs:
+  run-bun-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Get Parameters (for push event)
+        if: github.event_name == 'push'
+        run: |
+          # No parameters are automatically provided on push events
+          echo "No parameters provided on push event."
+
+      - name: Get Parameters (for manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          PARAM_VALUE_1=${{ github.event.inputs.param1 }}
+          PARAM_VALUE_2=${{ github.event.inputs.param2 }}
+          # ... add more parameter retrieval as needed
+          # Use empty strings if parameters are not provided
+
+      - name: Run Bun Script
+        run: bun run index.ts --param1 $PARAM_VALUE_1 --param2 $PARAM_VALUE_2
+        # Adjust the command based on your parameter names and flags

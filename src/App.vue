@@ -31,40 +31,38 @@ export default defineComponent({
       if (chrome.runtime.lastError) {
         console.info("Error receiving message:", chrome.runtime.lastError);
       }
-      if (message?.type !== "CLWALLET_PAGE_MSG") {
-        return true;
-      }
+      if (message?.type === "CLWALLET_PAGE_MSG") {
+        console.info("page listener:", message);
 
-      console.info("page listener:", message);
-
-      (async () => {
-        if (!message?.method) {
-          sendResponse({
-            code: 500,
-            message: "Invalid request method",
-          });
-        } else {
-          // ETH API
-          switch (message.method) {
-            case "paste": {
-              const currentAddress = (await getSelectedAddress()) as string[];
-              if (currentAddress.length > 0) {
-                document.execCommand("insertText", false, currentAddress[0]);
+        (async () => {
+          if (!message?.method) {
+            sendResponse({
+              code: 500,
+              message: "Invalid request method",
+            });
+          } else {
+            // ETH API
+            switch (message.method) {
+              case "paste": {
+                const currentAddress = (await getSelectedAddress()) as string[];
+                if (currentAddress.length > 0) {
+                  document.execCommand("insertText", false, currentAddress[0]);
+                }
+                sendResponse(true);
+                break;
               }
-              sendResponse(true);
-              break;
-            }
-            default: {
-              sendResponse({
-                error: true,
-                message:
-                  "ClearWallet: Invalid PAGE request method " + (message?.method ?? ""),
-              });
-              break;
+              default: {
+                sendResponse({
+                  error: true,
+                  message:
+                    "ClearWallet: Invalid PAGE request method " + (message?.method ?? ""),
+                });
+                break;
+              }
             }
           }
-        }
-      })();
+        })();
+      }
       return true;
     };
 

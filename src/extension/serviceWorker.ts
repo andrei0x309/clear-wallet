@@ -630,12 +630,6 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                     sendResponse(false)
                     break
                 }
-                case 'net_version': {
-                    const network = await getSelectedNetwork()
-                    const chainId = String(network?.chainId ?? 1)
-                    sendResponse(chainId)
-                    break
-                }
                 case 'wallet_switchEthereumChain': {
                     try {
                         const currentChainId = `0x${((await getSelectedNetwork())?.chainId ?? 0).toString(16)}`
