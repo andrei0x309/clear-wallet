@@ -9,7 +9,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-   "yup-api-interact": "^0.1.4",
-   "farcaster-hub-utils": "https://github.com/andrei0x309/farcaster-hub-utils#main"
-  }
+    "farcaster-hub-utils": "^0.1.7",
+    "yup-api-interact": "^0.1.6"
+  },
+  "license": "MIT"
 }
