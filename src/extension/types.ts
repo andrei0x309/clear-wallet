@@ -81,3 +81,64 @@ export interface ContractAction {
 export interface ContractActions {
     [key: string] : ContractAction
 }
+ 
+export interface UniSwapPortfolioResponse {
+    data: {
+        portfolios: {
+            id: string;
+            tokenBalances: {
+                id: string;
+                quantity: number;
+                denominatedValue: {
+                    value: number;
+                }
+                token: {
+                    id: string;
+                    address: string;
+                    chain: string;
+                    symbol: string;
+                    name: string;
+                    decimals: number;
+                    standard: string;
+                    project: {
+                        id: string;
+                        name: string;
+                        logo: null;
+                        safetyLevel: string;
+                        logoUrl: null;
+                        isSpam: boolean;
+                        __typename: string;
+                    };
+                    __typename: string;
+                };
+                tokenProjectMarket: {
+                    id: string;
+                    pricePercentChange: null;
+                    tokenProject: {
+                        id: string;
+                        logoUrl: null;
+                        isSpam: boolean;
+                        __typename: string;
+                    };
+                    __typename: string;
+                };
+                __typename: string;
+            }[];
+            __typename: string;
+            tokensTotalDenominatedValue: {
+                id: string;
+                value: number;
+            }
+            tokensTotalDenominatedValueChange: {
+                absolute: {
+                    id: string;
+                    value: number;
+                }
+                percentage: {
+                    id: string;
+                    value: number;
+                }
+            }
+        }[];
+    };
+}

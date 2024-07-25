@@ -40,7 +40,7 @@ export const mainNets: {[key: number]: Network} = {
     },
     56: {
         name: 'BSC Main',
-        rpc: 'https://bsc-dataseed2.binance.org',
+        rpc: 'https://bsc-dataseed1.binance.org',
         chainId: 56,
         explorer: 'https://bscscan.com',
         icon: 'binance.webp',

@@ -46,40 +46,49 @@ window.addEventListener("message", (event) => {
     event.data.data.data.website = document?.location?.href ?? ''
     if ((event?.data?.data?.method ?? 'x') in allowedMethods) {
       event.data.data.data.method = event?.data?.data?.method ?? ''
-      chrome?.runtime?.sendMessage(event.data.data.data, (res) => {
-        if (chrome.runtime.lastError) {
-          console.warn("LOC1: Error sending message:", chrome.runtime.lastError);
-        }
-        const id = Number(event.data.resId.replace(/[A-Za-z]/g, '').slice(0, 10))
-        const data = { 
-          target: 'metamask-inpage',
-          type: "CLWALLET_PAGE",
-          resId: event.data.resId,
-          data: { name: 'metamask-provider', data: {
-              jsonrpc: '2.0',
+      try {
+        chrome?.runtime?.sendMessage(event.data.data.data, (res) => {
+          if (chrome.runtime.lastError) {
+            console.warn("LOC1: Error sending message:", chrome.runtime.lastError);
+          }
+          const id = Number(event.data.resId.replace(/[A-Za-z]/g, '').slice(0, 10))
+          const data = {
+            target: 'metamask-inpage',
+            type: "CLWALLET_PAGE",
+            resId: event.data.resId,
+            data: {
+              name: 'metamask-provider', data: {
+                jsonrpc: '2.0',
+                id,
+                result: res,
+              },
               id,
-              result: res,
-          },
-          id,
-          method: event?.data?.data?.data?.method ?? '',
-          params: event?.data?.data?.data?.params ?? [],
-        },
-      }
-        if(event?.data?.data?.data?.method !== 'eth_chainId') {
-          console.info('data out', data)
-        }
+              method: event?.data?.data?.data?.method ?? '',
+              params: event?.data?.data?.data?.params ?? [],
+            },
+          }
+          if (event?.data?.data?.data?.method !== 'eth_chainId') {
+            // console.info('data out', data)
+          }
 
-        window.postMessage(data, "*");
-      })
+          window.postMessage(data, "*");
+        })
+      } catch (e) {
+        if ((e as Error)?.message === 'Extension context invalidated') {
+          console.info('Error: Extension context invalidated. Ignoring.');
+        }
+      }
     }
     else {
-      const data = { 
-        type: "CLWALLET_PAGE", 
+      const data = {
+        type: "CLWALLET_PAGE",
         data: {
-        data: {
-          result: { error: true, message: 'ClearWallet: Unknown method requested ' + (event?.data?.data?.data?.method ?? '') }
-        } }
-        , resId: event.data.resId };
+          data: {
+            result: { error: true, message: 'ClearWallet: Unknown method requested ' + (event?.data?.data?.data?.method ?? '') }
+          }
+        }
+        , resId: event.data.resId
+      };
       window.postMessage(data, "*");
     }
   } else if (event?.data?.type === "CLWALLET_PING") {
@@ -87,12 +96,18 @@ window.addEventListener("message", (event) => {
     event.data.data.data.type = "CLWALLET_CONTENT_MSG"
     event.data.data.data.method = "wallet_connect"
     event.data.data.data.params = Array(0)
-    chrome.runtime.sendMessage(event.data.data.data, async (res) => {
-      if (chrome.runtime.lastError) {
-        console.warn("LOC2: Error sending message:", chrome.runtime.lastError);
+    try {
+      chrome.runtime.sendMessage(event.data.data.data, async (res) => {
+        if (chrome.runtime.lastError) {
+          console.warn("LOC2: Error sending message:", chrome.runtime.lastError);
+        }
+        window.postMessage(res, "*");
+      })
+    } catch (e) {
+      if ((e as Error)?.message === 'Extension context invalidated') {
+        console.info('Error: Extension context invalidated. Ignoring.');
       }
-      window.postMessage(res, "*");
-    })
+    }
   }
 });
 

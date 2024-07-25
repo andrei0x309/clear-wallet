@@ -1,4 +1,3 @@
-# Not supported due to compatibility issues with Bun Http2 stdlib
 name: Bun Main Workflow
 
 on:

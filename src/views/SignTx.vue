@@ -67,7 +67,7 @@
         <ion-label>Raw TX:</ion-label>
         <ion-textarea
           aria-label="raw tx"
-          style="overflow-y: scroll"
+          style="overflow-y: scroll; width: 400px; height: 200px"
           :rows="10"
           :cols="20"
           :value="signTxData"
@@ -250,6 +250,7 @@ export default defineComponent({
     const gasPriceModal = ref(false);
     const inGasPrice = ref(0);
     const inGasLimit = ref(0);
+    let gasFeed = {} as Awaited<ReturnType<typeof getGasPrice>>["feed"];
 
     let interval = 0;
     const bars = ref(0);
@@ -317,11 +318,10 @@ export default defineComponent({
     const newGasData = async () => {
       await walletSendData(rid, {
         gas: numToHexStr(gasLimit.value),
+        gasPrice: numToHexStr(BigInt(Math.trunc(gasPrice.value * 1e9))),
+        supportsEIP1559: gasFeed?.maxFeePerGas !== null,
       });
 
-      await walletSendData(rid, {
-        gasPrice: numToHexStr(BigInt(Math.trunc(gasPrice.value * 1e9))),
-      });
       gasFee.value = Number(
         ethers.formatUnits(Math.trunc(gasLimit.value * gasPrice.value), "gwei")
       );
@@ -345,8 +345,10 @@ export default defineComponent({
       userBalance.value = Number(
         ethers.formatEther((await pBalance).toString() ?? "0x0")
       );
+      const { feed, price } = await pGasPrice;
+      gasFeed = feed;
 
-      gasPrice.value = parseFloat((await pGasPrice).toString() ?? 0.1);
+      gasPrice.value = parseFloat(price.toString() ?? 0.1);
 
       try {
         gasLimit.value = parseInt((await pEstimateGas).toString(), 10);
@@ -378,7 +380,9 @@ export default defineComponent({
           if (timerFee.value <= 0) {
             timerFee.value = 20;
             loading.value = true;
-            gasPrice.value = parseFloat((await getGasPrice()).toString() ?? 0.1);
+            const { feed, price } = await getGasPrice();
+            gasFeed = feed;
+            gasPrice.value = parseFloat(price.toString() ?? 0.1);
             await newGasData();
             loading.value = false;
           }

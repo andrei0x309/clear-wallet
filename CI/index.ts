@@ -59,19 +59,30 @@ const main = async () => {
 
     if(action === 'update') {
         const VERSION = GithubEvent.inputs.version;
-        const message = `Github ClearWallet new version ${VERSION} has been released!\n
-        ChromeStore: https://bit.ly/clw-evm \n
-        Github: https://github.com/andrei0x309/clear-wallet
-        `;
-
+        const message = `Clear Wallet - New version ${VERSION} released! \n
+                ChangeLog: https://bit.ly/clw-cl \n
+                ChromeStore: https://bit.ly/clw-evm \n
+                `
         if(ENABLED) {
             await yupAPI.sendPost({
                 content: message,
                 platforms: ['twitter', 'threads', 'bsky', 'lens']
             })
-            await fchubUtils.createFarcasterPost({
+            const fcPost = await fchubUtils.createFarcasterPost({
                 content: message,
             })
+            const fcPostHash = Buffer.from(fcPost).toString('hex');
+            if(fcPostHash) {
+                await new Promise((resolve) => setTimeout(resolve, 3000));
+                const launchCasterMessage = `@launch`
+
+                await fchubUtils.createFarcasterPost({ content: launchCasterMessage, replyTo: {
+                    hash: fcPostHash,
+                    fid: String(USER_FID)
+                } })
+                    
+            }
+
         } else {
             console.log('No action required')
         }

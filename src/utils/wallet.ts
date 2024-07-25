@@ -72,7 +72,10 @@ export const getGasPrice = async () => {
     const { provider } = await getCurrentProvider()
     const feed = await provider.getFeeData()
     const gasPrice = feed.maxFeePerGas ?? feed.gasPrice ?? 0n
-    return Number(gasPrice) / 1e9
+    return {
+        price: Number(gasPrice) / 1e9,
+        feed
+    }
 }
 
 export const getBlockNumber = async () => {
@@ -152,8 +155,8 @@ export const getRandomPk = () => {
     return ethers.Wallet.createRandom().privateKey
 }
 
-export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', value='', gasPrice='0x0'}: 
-{to: string, from: string, data: string, value: string, gas: string, gasPrice: string}) => {
+export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', value='', gasPrice='0x0', supportsEIP1559=true}: 
+{to: string, from: string, data: string, value: string, gas: string, gasPrice: string, supportsEIP1559: boolean}) => {
     const account = await getSelectedAccount()
     const { provider } = await getCurrentProvider()
     const wallet = new ethers.Wallet(account.pk, provider)
@@ -163,7 +166,7 @@ export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', val
      if(gas === '0x0' || gasPrice === '0x0') {
         throw new Error('No gas estimate available')
      }
-    return await wallet.sendTransaction({
+    return supportsEIP1559 ? await wallet.sendTransaction({
         to,
         from,
         data: data ? data : null, 
@@ -171,15 +174,24 @@ export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', val
         gasLimit: gasInt,
         gasPrice: null,
         maxFeePerGas: gasPriceInt,
+    }) :
+    await wallet.sendTransaction({
+        to,
+        from,
+        data: data ? data : null, 
+        value: value ? value : null,
+        gasLimit: gasInt,
+        gasPrice: gasPriceInt
     })
 }
 
-export const formatBalance = (balance: string) => {
-    Intl.NumberFormat('en-US', {
-        notation: 'compact',
-        maximumFractionDigits: 6
-      }).format(Number(ethers.parseEther(balance)))
-}
+export const formatNumber = (num: number, digits = 0) => {
+    return Intl.NumberFormat('en-US', {
+      notation: 'compact',
+      maximumFractionDigits: digits
+    }).format(num)
+  }
+  
 
 export const getSelectedAddress = async () => {
     // give only the selected address for better privacy

@@ -56,6 +56,7 @@ const listners = {
 }
 
 const promResolvers = new Map()
+const UIpromResolvers = new Map()
 
 const getListnersCount = (): number => {
     let count = 0
@@ -75,14 +76,20 @@ const sendMessage = (args: RequestArguments, ping = false, from = 'request'): Pr
     return new Promise((resolve, reject) => {
     const p = [ "eth_signTypedData", "eth_signTypedData_v3", "eth_signTypedData_v4"]
     const throttledMethods = [...p, 'eth_sign', 'personal_sign', 'eth_sendTransaction']
-        
-    if(promResolvers.size > MAX_PROMISES && throttledMethods.includes(args.method)) {
+    
+    const isThrottled = throttledMethods.includes(args.method)
+    
+    if(UIpromResolvers.size > MAX_PROMISES && isThrottled) {
         reject({code: -32000, message: 'ClearWallet: Too many requests', error: true })
         return
     }
         
         const resId = [...`${Math.random().toString(16) + Date.now().toString(16)}`].slice(2).join('')
-        promResolvers.set(resId, { resolve, reject })
+        if(isThrottled) {
+            UIpromResolvers.set(resId, { resolve, reject })
+        }
+            promResolvers.set(resId, { resolve, reject })
+
         
         const method = args.method
         if (p.includes(args.method)) {
@@ -101,7 +108,7 @@ const sendMessage = (args: RequestArguments, ping = false, from = 'request'): Pr
             data.type = 'CLWALLET_PING'
         }
         if(method!== 'eth_chainId') {
-        console.info('data in', data)          
+        // console.info('data in', data)          
     }
 
         window.postMessage(data, "*");
@@ -388,6 +395,10 @@ const listner =  function(event: any) {
     }
     if(promResolvers.has(resId)) {
         promResolvers.delete(resId)
+    }
+    if(UIpromResolvers.has(resId)) {
+        UIpromResolvers.get(resId).resolve(result)
+        UIpromResolvers.delete(resId)
     }
   }
 

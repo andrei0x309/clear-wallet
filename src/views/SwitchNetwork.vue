@@ -41,12 +41,12 @@
                 >
                 <ion-item>
                   <ion-avatar
-                    v-if="(existingNetworks as any)[networkId]?.icon"
+                    v-if="(allTemplateNets as any)[(existingNetworks as any)[networkId]?.chainId]?.icon"
                     style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
                   >
                     <img
                       :alt="(existingNetworks as any)[networkId]?.name"
-                      :src="getUrl('assets/chain-icons/' + (existingNetworks as any)[networkId].icon)"
+                      :src="getUrl('assets/chain-icons/' + (allTemplateNets as any)[(existingNetworks as any)[networkId]?.chainId].icon)"
                     />
                   </ion-avatar>
                   <ion-label

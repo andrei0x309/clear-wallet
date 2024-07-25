@@ -39,7 +39,7 @@
               type="password"
               @ion-input="mpPass = String($event.target.value)"
               fill="solid"
-              ref="ionInput"
+              ref="passInput"
             ></ion-input>
 
             <!-- <ion-input
@@ -77,7 +77,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+import { defineComponent, ref, Ref, onMounted } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -124,6 +124,7 @@ export default defineComponent({
     const loading = ref(false);
     const alertOpen = ref(false);
     const alertMsg = ref("");
+    const passInput = ref() as Ref<typeof IonInput>;
 
     const close = () => {
       return modalController?.dismiss(null, "cancel");
@@ -153,12 +154,14 @@ export default defineComponent({
       }
     };
 
-    onMounted(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      const el = document?.querySelector(
-        ".password-input .native-input"
-      ) as HTMLInputElement;
-      el?.focus?.();
+    onMounted(() => {
+      requestAnimationFrame(async () => {
+        if (passInput.value) {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          console.log("passInput.value", passInput.value);
+          passInput.value.$el.setFocus();
+        }
+      });
     });
 
     return {
@@ -168,6 +171,7 @@ export default defineComponent({
       alertOpen,
       alertMsg,
       close,
+      passInput,
     };
   },
 });

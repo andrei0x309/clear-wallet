@@ -15,7 +15,6 @@
             v-if="version"
             style="
               position: absolute;
-              top: 0.3rem;
               right: 1.1rem;
               margin-left: 0.3rem;
               color: coral;
@@ -24,6 +23,11 @@
             "
             >Version: {{ version }}</span
           >
+          <span
+            class="github-icon"
+            @click="openTab('https://github.com/andrei0x309/clear-wallet/')"
+            ><GitHub
+          /></span>
         </ion-title>
       </ion-toolbar>
     </ion-header>
@@ -285,6 +289,7 @@ import { allTemplateNets } from "@/utils/networks";
 import router from "@/router";
 import { triggerListner } from "@/extension/listners";
 import { copyOutline } from "ionicons/icons";
+import GitHub from "@/components/icons/GitHub.vue";
 
 const version = getVersion();
 
@@ -309,6 +314,7 @@ export default defineComponent({
     IonToast,
     IonIcon,
     IonAvatar,
+    GitHub,
   },
   setup: () => {
     const loading = ref(false);
@@ -430,6 +436,23 @@ export default defineComponent({
   cursor: pointer;
 }
 .exchange-btn:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+  transform: scale(1.05);
+}
+
+.github-icon {
+  position: absolute;
+  top: 0.9rem;
+  right: 2.4rem;
+  margin-left: 0.3rem;
+  color: coral;
+  font-weight: bold;
+  font-size: 0.65rem;
+  cursor: pointer;
+}
+
+.github-icon:hover {
   opacity: 0.8;
   transition: opacity 0.2s ease-in-out;
   transform: scale(1.05);

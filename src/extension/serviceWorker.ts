@@ -1,37 +1,37 @@
-import { 
+import {
     CLW_CONTEXT_MENU_ID,
-    getSelectedAccount, 
-    getSelectedNetwork, 
-    smallRandomString, 
-    getSettings, 
-    clearPk, 
-    openTab, 
-    getUrl, 
-    addToHistory, 
-    getNetworks, 
-    strToHex, 
+    getSelectedAccount,
+    getSelectedNetwork,
+    smallRandomString,
+    getSettings,
+    clearPk,
+    openTab,
+    getUrl,
+    addToHistory,
+    getNetworks,
+    strToHex,
     numToHexStr,
     enableRightClickVote,
 } from '@/utils/platform';
-import { 
-    userApprove, 
-    userReject, 
-    rIdWin, 
+import {
+    userApprove,
+    userReject,
+    rIdWin,
     rIdData,
 } from '@/extension/userRequest'
-import { 
-    signMsg, 
-    getBalance, 
-    getBlockNumber, 
-    estimateGas, 
-    sendTransaction, 
-    getGasPrice, 
-    getBlockByNumber, 
-    evmCall, 
-    getTxByHash, 
-    getTxReceipt, 
-    signTypedData, 
-    getCode, 
+import {
+    signMsg,
+    getBalance,
+    getBlockNumber,
+    estimateGas,
+    sendTransaction,
+    getGasPrice,
+    getBlockByNumber,
+    evmCall,
+    getTxByHash,
+    getTxReceipt,
+    signTypedData,
+    getCode,
     getTxCount,
     getSelectedAddress
 } from '@/utils/wallet'
@@ -44,35 +44,65 @@ import { allTemplateNets } from '@/utils/networks'
 
 let notificationUrl: string
 
-const chainIdThrottle: {[key: string]: number} = {}
+const chainIdThrottle: { [key: string]: number } = {}
+
+const reInjectContentScripts = async () => {
+    const cts = chrome.runtime.getManifest().content_scripts ?? []
+    for (const cs of cts) {
+        const tabs = await chrome.tabs.query({ url: cs.matches })
+        for (const tab of tabs) {
+            if (!tab?.id || !cs.js || !tab.url) {
+                continue;
+            }
+            if (tab.url.match(/(chrome|chrome-extension):\/\//gi)) {
+                continue;
+            }
+
+            const isWorldMain = (cs as any)?.world === 'MAIN'
+
+            chrome.scripting.executeScript({
+                files: cs.js,
+                target: { tabId: tab.id, allFrames: cs.all_frames },
+                injectImmediately: cs.run_at === 'document_start',
+                world: isWorldMain ? 'MAIN' : 'ISOLATED'
+            }).catch((err) => {
+                console.warn('Error injecting content script', err)
+            })
+        }
+    }
+}
 
 chrome.runtime.onInstalled.addListener(() => {
     enableRightClickVote()
+    reInjectContentScripts();
     console.info('Service worker installed');
+    if (chrome.runtime.lastError) {
+        console.warn("Whoops.. " + chrome.runtime.lastError.message);
+    }
 })
 
 chrome.runtime.onStartup.addListener(() => {
     console.info('Service worker startup');
     enableRightClickVote();
-    if(chrome.runtime.lastError) {
+    if (chrome.runtime.lastError) {
         console.warn("Whoops.. " + chrome.runtime.lastError.message);
     }
 })
 
 chrome.runtime.onSuspend.addListener(() => {
     console.info('Service worker suspend');
-    if(chrome.runtime.lastError) {
+    if (chrome.runtime.lastError) {
         console.warn("Whoops.. " + chrome.runtime.lastError.message);
     }
 })
 
-async function pasteAddress() {
-        const currentAddress = (await (window as any).ethereum?.request({
-            method: 'eth_accounts',
-            params: []
-        }))
-        if(currentAddress.length > 0) {
-            document.execCommand("insertText", false, currentAddress[0]);
+async function pasteAddress () {
+    const currentAddress = (await (window as any).ethereum?.request({
+        method: 'eth_accounts',
+        params: []
+    }))
+    if (currentAddress.length > 0) {
+        document.execCommand("insertText", false, currentAddress[0]);
     }
 }
 
@@ -88,9 +118,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
                 func: pasteAddress
             });
         } catch {
-          // igonre
+            // igonre
         }
-    } else if(isOwnExtension) {
+    } else if (isOwnExtension) {
         chrome.runtime.sendMessage({ method: 'paste', type: 'CLWALLET_PAGE_MSG' }, (r) => {
             if (chrome.runtime.lastError) {
                 console.warn("LOC3: Error sending message:", chrome.runtime.lastError);
@@ -105,23 +135,23 @@ chrome.alarms.create('updatePrices', {
 })
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if(alarm.name === 'updatePrices') {
-    updatePrices().then(() => {
-        console.info('Prices updated')
-    }).catch((err) => {
-        console.warn('Prices update failed', err)
-    })
-  }
-  getSettings().then((settings) => {
-    if( ((settings.lastLock + settings.lockOutPeriod * 6e4) < Date.now()) && settings.lockOutEnabled && !settings.lockOutBlocked ) {
-        settings.lastLock = Date.now()
-        clearPk()
+    if (alarm.name === 'updatePrices') {
+        updatePrices().then(() => {
+            console.info('Prices updated')
+        }).catch((err) => {
+            console.warn('Prices update failed', err)
+        })
     }
-  })
+    getSettings().then((settings) => {
+        if (((settings.lastLock + settings.lockOutPeriod * 6e4) < Date.now()) && settings.lockOutEnabled && !settings.lockOutBlocked) {
+            settings.lastLock = Date.now()
+            clearPk()
+        }
+    })
 })
 
 chrome.windows.onRemoved.addListener(async (winId) => {
-    if (winId in (userReject ?? {})){
+    if (winId in (userReject ?? {})) {
         userReject[winId]?.()
     }
     userReject[winId] = undefined
@@ -129,9 +159,9 @@ chrome.windows.onRemoved.addListener(async (winId) => {
     rIdWin[winId] = undefined
     rIdData[winId] = undefined
     const wins = await chrome.windows.getAll()
-    if(wins.length === 0) {
+    if (wins.length === 0) {
         const s = await getSettings()
-        if(s.enableStorageEnctyption) {
+        if (s.enableStorageEnctyption) {
             await clearPk()
         }
     }
@@ -147,7 +177,7 @@ const viewTxListner = async (id: string) => {
     }
 }
 
-if (!chrome.notifications.onButtonClicked.hasListener(viewTxListner)){
+if (!chrome.notifications.onButtonClicked.hasListener(viewTxListner)) {
     chrome.notifications.onButtonClicked.addListener(viewTxListner)
 }
 
@@ -159,33 +189,30 @@ const chainIdThrottleFn = async (website: string) => {
     } catch {
         urlKey = 'invalid'
     }
-    if(chainIdThrottle[urlKey] === undefined) {
+    if (chainIdThrottle[urlKey] === undefined) {
         chainIdThrottle[urlKey] = 0
     }
     chainIdThrottle[urlKey] += 1
 
-    if( chainIdThrottle[urlKey] > 3) {
+    if (chainIdThrottle[urlKey] > 6) {
         await new Promise((resolve, reject) => {
             setTimeout(() => {
                 resolve(null)
-            }, 450)
+            }, 250)
         })
-        // console.log('throttling', chainIdThrottle)
     }
     return urlKey
 }
 
-const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: any) => any) => {
+const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: any) => any) => {
     if (chrome.runtime.lastError) {
         console.info("Error receiving message:", chrome.runtime.lastError);
     }
-    if(message?.type !== "CLWALLET_CONTENT_MSG") {
+    if (message?.type !== "CLWALLET_CONTENT_MSG") {
         return true
     }
- 
-    (async () => {
-        // console.info('Message:', message)
 
+    (async () => {
         if (!(message?.method)) {
             sendResponse({
                 code: 500,
@@ -196,7 +223,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
             switch (message.method) {
                 case 'eth_call': {
                     try {
-                    sendResponse(await evmCall(message?.params ?? []))
+                        sendResponse(await evmCall(message?.params ?? []))
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -209,15 +236,15 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'eth_getBlockByNumber': {
                     try {
-                    const params = message?.params?.[0] as any
-                    const block = await getBlockByNumber(params) as any
-                    const newBlock = {...block}
-                    newBlock.gasLimit = numToHexStr(block.gasLimit)
-                    newBlock.gasUsed = numToHexStr(block.gasUsed)
-                    newBlock.baseFeePerGas  = numToHexStr(block.baseFeePerGas)
-                    newBlock._difficulty = numToHexStr(block.difficulty)
-                    newBlock.difficulty = block._difficulty
-                    sendResponse(newBlock)
+                        const params = message?.params?.[0] as any
+                        const block = await getBlockByNumber(params) as any
+                        const newBlock = { ...block }
+                        newBlock.gasLimit = numToHexStr(block.gasLimit)
+                        newBlock.gasUsed = numToHexStr(block.gasUsed)
+                        newBlock.baseFeePerGas = numToHexStr(block.baseFeePerGas)
+                        newBlock._difficulty = numToHexStr(block.difficulty)
+                        newBlock.difficulty = block._difficulty
+                        sendResponse(newBlock)
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -230,11 +257,11 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'eth_getTransactionCount': {
                     try {
-                     if(message?.params?.[1]) {
-                        sendResponse(numToHexStr(Number(await getTxCount(message?.params?.[0] as string, message?.params?.[1] as string))))
-                     }else {
-                        sendResponse(numToHexStr(Number(await getTxCount(message?.params?.[0] as string))))
-                     }
+                        if (message?.params?.[1]) {
+                            sendResponse(numToHexStr(Number(await getTxCount(message?.params?.[0] as string, message?.params?.[1] as string))))
+                        } else {
+                            sendResponse(numToHexStr(Number(await getTxCount(message?.params?.[0] as string))))
+                        }
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -247,7 +274,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'eth_getTransactionByHash': {
                     try {
-                    sendResponse(await getTxByHash(message?.params?.[0] as string))
+                        sendResponse(await getTxByHash(message?.params?.[0] as string))
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -258,9 +285,9 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                     }
                     break
                 }
-                case 'eth_getTransactionReceipt':{
+                case 'eth_getTransactionReceipt': {
                     try {
-                    sendResponse(await getTxReceipt(message?.params?.[0] as string))
+                        sendResponse(await getTxReceipt(message?.params?.[0] as string))
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -273,8 +300,8 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'eth_gasPrice': {
                     try {
-                    sendResponse(numToHexStr(BigInt(Math.trunc(await getGasPrice() * 1e9))))
-                    } catch(e) {
+                        sendResponse(numToHexStr(BigInt(Math.trunc((await getGasPrice()).price * 1e9))))
+                    } catch (e) {
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
@@ -286,9 +313,9 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'eth_getBalance': {
                     try {
-                    const balance = await getBalance()
-                    const balanceHex = numToHexStr(balance ?? 0n)
-                    sendResponse(balanceHex)
+                        const balance = await getBalance()
+                        const balanceHex = numToHexStr(balance ?? 0n)
+                        sendResponse(balanceHex)
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -301,7 +328,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'eth_getCode': {
                     try {
-                    sendResponse(await getCode(message?.params?.[0] as string))
+                        sendResponse(await getCode(message?.params?.[0] as string))
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -314,7 +341,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 }
                 case 'eth_blockNumber': {
                     try {
-                    sendResponse(numToHexStr(await getBlockNumber()))
+                        sendResponse(numToHexStr(await getBlockNumber()))
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -323,89 +350,89 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         })
                         console.warn('Error: eth_blockNumber', e)
                     }
-                    break               
+                    break
                 }
                 case 'eth_estimateGas': {
-                    try { 
-                    const params = message?.params?.[0] as any
-                    if(!params) {
-                        sendResponse({
-                            error: true,
-                            code: rpcError.INVALID_PARAM,
-                            message: 'Invalid param for gas estimate'
+                    try {
+                        const params = message?.params?.[0] as any
+                        if (!params) {
+                            sendResponse({
+                                error: true,
+                                code: rpcError.INVALID_PARAM,
+                                message: 'Invalid param for gas estimate'
+                            })
+                            break
+                        }
+                        const gas = await estimateGas({
+                            to: params?.to ?? '',
+                            from: params?.from ?? '',
+                            data: params?.data ?? '',
+                            value: params?.value ?? '0x0'
                         })
-                        break
+                        const gasHex = numToHexStr(gas ?? 0n)
+                        sendResponse(gasHex)
+                    } catch (err) {
+                        if (String(err).includes('UNPREDICTABLE_GAS_LIMIT')) {
+                            chrome.notifications.create({
+                                message: 'Gas estimate failed likely due to to many decimals substract 0.00001 form the value you have inpputed and try again.',
+                                title: 'Error',
+                                iconUrl: getUrl('assets/extension-icon/wallet_128.png'),
+                                type: 'basic'
+                            } as any)
+                            sendResponse({
+                                error: true,
+                                code: rpcError.USER_REJECTED,
+                                message: 'Gas estimate failed'
+                            })
+                        } else {
+                            sendResponse({
+                                error: true,
+                                code: rpcError.USER_REJECTED,
+                                message: 'No network or user selected'
+                            })
+                            console.warn('Error: eth_estimateGas', err)
+                        }
                     }
-                    const gas = await estimateGas({
-                        to: params?.to ?? '',
-                        from: params?.from ?? '',
-                        data: params?.data ?? '',
-                        value: params?.value ?? '0x0'
-                    })
-                    const gasHex = numToHexStr(gas ?? 0n)
-                    sendResponse(gasHex)
-                    } catch(err) {
-                    if(String(err).includes('UNPREDICTABLE_GAS_LIMIT')) {
-                        chrome.notifications.create({
-                            message: 'Gas estimate failed likely due to to many decimals substract 0.00001 form the value you have inpputed and try again.',
-                            title: 'Error',
-                            iconUrl: getUrl('assets/extension-icon/wallet_128.png'),
-                            type: 'basic'
-                        } as any)
-                        sendResponse({
-                            error: true,
-                            code: rpcError.USER_REJECTED,
-                            message: 'Gas estimate failed'
-                        })
-                    } else {
-                    sendResponse({
-                        error: true,
-                        code: rpcError.USER_REJECTED,
-                        message: 'No network or user selected'
-                    })
-                    console.warn('Error: eth_estimateGas', err)
-                    }
-                }
-                    break          
+                    break
                 }
                 case 'eth_requestAccounts':
                 case 'eth_accounts': {
-                try {
-                    sendResponse(await getSelectedAddress())
-                 } catch (e) {
-                    sendResponse({
-                        error: true,
-                        code: rpcError.USER_REJECTED,
-                        message: 'No network or user selected'
-                    })
-                    console.warn('Error: eth_accounts', e)
-                }
-                break
+                    try {
+                        sendResponse(await getSelectedAddress())
+                    } catch (e) {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'No network or user selected'
+                        })
+                        console.warn('Error: eth_accounts', e)
+                    }
+                    break
                 }
                 case 'eth_chainId':
-                case 'net_version': 
-                {
-                try {
-                    const isNetVersion = message.method === 'net_version'
-                    const urlKey = await chainIdThrottleFn(message?.website ?? '')
-                    const network = await getSelectedNetwork()
-                    const chainId = network?.chainId ?? 1
-                    sendResponse(isNetVersion ? chainId.toString() : `0x${chainId.toString(16)}`)
-                    chainIdThrottle[urlKey] -= 1
-                } catch (e) {
-                    sendResponse({
-                        error: true,
-                        code: rpcError.USER_REJECTED,
-                        message: 'No network or user selected'
-                    })
-                    console.warn('Error: eth_chainId', e)
-                }
-                break
-                }
+                case 'net_version':
+                    {
+                        try {
+                            const isNetVersion = message.method === 'net_version'
+                            const urlKey = await chainIdThrottleFn(message?.website ?? '')
+                            const network = await getSelectedNetwork()
+                            const chainId = network?.chainId ?? 1
+                            sendResponse(isNetVersion ? chainId.toString() : `0x${chainId.toString(16)}`)
+                            chainIdThrottle[urlKey] -= 1
+                        } catch (e) {
+                            sendResponse({
+                                error: true,
+                                code: rpcError.USER_REJECTED,
+                                message: 'No network or user selected'
+                            })
+                            console.warn('Error: eth_chainId', e)
+                        }
+                        break
+                    }
                 case 'eth_sendTransaction': {
                     try {
                         const params = message?.params?.[0] as any
-                        if(!params) {
+                        if (!params) {
                             sendResponse({
                                 error: true,
                                 code: rpcError.INVALID_PARAM,
@@ -414,7 +441,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             break
                         }
                         const [account, network] = await Promise.all([getSelectedAccount(), getSelectedNetwork()])
-                        if(!account || !('address' in account)) {
+                        if (!account || !('address' in account)) {
                             await chrome.windows.create({
                                 height: 450,
                                 width: 400,
@@ -423,7 +450,7 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                             })
                             return
                         }
-                        if(!network || !('chainId' in network)) {
+                        if (!network || !('chainId' in network)) {
                             await chrome.windows.create({
                                 height: 450,
                                 width: 400,
@@ -436,62 +463,63 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                         const serializeParams = strToHex(JSON.stringify(params)) ?? ''
                         let gWin: any
                         await new Promise((resolve, reject) => {
-                        chrome.windows.create({
-                            height: 450,
-                            width: 400,
-                            url: chrome.runtime.getURL(`index.html?route=sign-tx&param=${serializeParams}&rid=${String(message?.resId ?? '')}`),
-                            type: 'popup'
-                        }).then((win) => {
-                            gWin = win
-                            userReject[String(win.id)] = reject
-                            userApprove[String(win.id)] = resolve
-                            rIdWin[String(win.id)] = String(message.resId)
-                            rIdData[String(win.id)] = {}
-                        })
+                            chrome.windows.create({
+                                height: 450,
+                                width: 400,
+                                url: chrome.runtime.getURL(`index.html?route=sign-tx&param=${serializeParams}&rid=${String(message?.resId ?? '')}`),
+                                type: 'popup'
+                            }).then((win) => {
+                                gWin = win
+                                userReject[String(win.id)] = reject
+                                userApprove[String(win.id)] = resolve
+                                rIdWin[String(win.id)] = String(message.resId)
+                                rIdData[String(win.id)] = {}
+                            })
 
                         })
                         try {
-                        // console.log('waiting for user to approve or reject')
-                        // console.log(rIdData?.[String(gWin?.id ?? 0)])
-                        const tx = await sendTransaction({...params, ...(rIdData?.[String(gWin?.id ?? 0)] ?? {}) } )
-                        sendResponse(tx.hash)
-                        const buttons = {} as any
-                        const network = await getSelectedNetwork()
-                        addToHistory({
-                            date: Date.now(),
-                            txHash: tx.hash,
-                            chainId: network.chainId,
-                            ...(network.explorer ? {txUrl: `${network.explorer}/tx/${tx.hash}`.replace('//', '/') } : {}),
-                            webiste: (message?.website)
-                        })
-                        const notificationId = crypto.randomUUID()
-                        if(network?.explorer) {
-                            notificationUrl = `${network.explorer}/tx/${tx.hash}`.replace('//', '/')
-                            buttons.buttons = [{
-                                title: 'View Transaction',
-                            }]
-                            setTimeout(() => {
-                                try {
-                                    chrome.notifications.clear(notificationId)
-                                } catch {
-                                    // ignore
-                                }
-                            }, 6e4)
-                        }
-                        chrome.notifications.create(notificationId,{
-                            message: 'Transaction Confirmed',
-                            title: 'Success',
-                            iconUrl: getUrl('assets/extension-icon/wallet_128.png'),
-                            type: 'basic',
-                            ...(buttons)
-                        } as any)
+                            console.log('waiting for user to approve or reject')
+                            console.log(rIdData?.[String(gWin?.id ?? 0)])
+                            const tx = await sendTransaction({ ...params, ...(rIdData?.[String(gWin?.id ?? 0)] ?? {}) })
+                            sendResponse(tx.hash)
+                            const buttons = {} as any
+                            const network = await getSelectedNetwork()
+                            addToHistory({
+                                date: Date.now(),
+                                txHash: tx.hash,
+                                chainId: network.chainId,
+                                ...(network.explorer ? { txUrl: `${network.explorer}/tx/${tx.hash}`.replace('//', '/') } : {}),
+                                webiste: (message?.website)
+                            })
+                            const notificationId = crypto.randomUUID()
+                            if (network?.explorer) {
+                                notificationUrl = `${network.explorer}/tx/${tx.hash}`.replace('//', '/')
+                                buttons.buttons = [{
+                                    title: 'View Transaction',
+                                }]
+                                setTimeout(() => {
+                                    try {
+                                        chrome.notifications.clear(notificationId)
+                                    } catch {
+                                        // ignore
+                                    }
+                                }, 6e4)
+                            }
+                            chrome.notifications.create(notificationId, {
+                                message: 'Transaction Confirmed',
+                                title: 'Success',
+                                iconUrl: getUrl('assets/extension-icon/wallet_128.png'),
+                                type: 'basic',
+                                ...(buttons)
+                            } as any)
 
-                        const settings = await getSettings()
-                        if(settings.encryptAfterEveryTx) {
-                          clearPk()
-                        }
+                            const settings = await getSettings()
+                            if (settings.encryptAfterEveryTx) {
+                                clearPk()
+                            }
 
                         } catch (err) {
+                            console.info('Error: eth_sendTransaction', err)
                             sendResponse({
                                 error: true,
                                 code: rpcError.USER_REJECTED,
@@ -510,73 +538,73 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                                 type: 'basic'
                             } as any)
                         }
-                        } catch(err) {
-                            console.warn('Error: eth_sendTransaction', err)
-                            sendResponse({
-                                error: true,
-                                code: rpcError.USER_REJECTED,
-                                message: 'User Rejected Signature'
-                            })
-                        }
+                    } catch (err) {
+                        console.warn('Error: eth_sendTransaction', err)
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'User Rejected Signature'
+                        })
+                    }
                     break
                 }
                 case 'signTypedData':
                 case 'eth_signTypedData':
                 case 'signTypedData_v1':
                 case 'eth_signTypedData_v1':
-                case 'signTypedData_v3': 
+                case 'signTypedData_v3':
                 case 'eth_signTypedData_v3':
                 case 'signTypedData_v4':
                 case 'eth_signTypedData_v4':
                 case 'personal_sign':
                 case 'eth_sign': {
                     try {
-                    
-                    const account = await getSelectedAccount()
-                    
-                    if(!account || !('address' in account)) {
-                        await chrome.windows.create({
-                            height: 450,
-                            width: 400,
-                            url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${strToHex('No account is selected you need to have an account selected before trying sign a message')}&rid=${String(message?.resId ?? '')}`),
-                            type: 'popup'
+
+                        const account = await getSelectedAccount()
+
+                        if (!account || !('address' in account)) {
+                            await chrome.windows.create({
+                                height: 450,
+                                width: 400,
+                                url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${strToHex('No account is selected you need to have an account selected before trying sign a message')}&rid=${String(message?.resId ?? '')}`),
+                                type: 'popup'
+                            })
+                            return
+                        }
+
+                        const isTypedSigned = [
+                            'signTypedData',
+                            'eth_signTypedData',
+                            'signTypedData_v1',
+                            'eth_signTypedData_v1',
+                            'signTypedData_v3',
+                            'eth_signTypedData_v3',
+                            'signTypedData_v4',
+                            'eth_signTypedData_v4'].includes(message?.method);
+                        const signMsgData = isTypedSigned ? String(message?.params?.[1] ?? '') : String(message?.params?.[0] ?? '');
+
+                        await new Promise((resolve, reject) => {
+                            chrome.windows.create({
+                                height: 510,
+                                width: 480,
+                                url: chrome.runtime.getURL(`index.html?route=sign-msg&param=${strToHex(signMsgData)}&rid=${String(message?.resId ?? '')}`),
+                                type: 'popup'
+                            }).then((win) => {
+                                userReject[String(win.id)] = reject
+                                userApprove[String(win.id)] = resolve
+                                rIdWin[String(win.id)] = String(message.resId)
+                            })
+
                         })
-                        return
-                    }
-
-                    const isTypedSigned = [
-                    'signTypedData', 
-                    'eth_signTypedData', 
-                    'signTypedData_v1', 
-                    'eth_signTypedData_v1',
-                    'signTypedData_v3',
-                    'eth_signTypedData_v3',
-                    'signTypedData_v4',
-                    'eth_signTypedData_v4'].includes(message?.method);
-                    const signMsgData = isTypedSigned ? String(message?.params?.[1] ?? '' ) : String(message?.params?.[0] ?? '' );
-
-                    await new Promise((resolve, reject) => {
-                    chrome.windows.create({
-                        height: 510,
-                        width: 480,
-                        url: chrome.runtime.getURL(`index.html?route=sign-msg&param=${strToHex(signMsgData)}&rid=${String(message?.resId ?? '')}`),
-                        type: 'popup'
-                    }).then((win) => {
-                        userReject[String(win.id)] = reject
-                        userApprove[String(win.id)] = resolve
-                        rIdWin[String(win.id)] = String(message.resId)
-                    })
-                    
-                    })
-                    sendResponse(
-                        isTypedSigned ?
-                        await signTypedData(signMsgData):
-                        await signMsg(signMsgData)
-                    )
-                    const settings = await getSettings()
-                    if(settings.encryptAfterEveryTx) {
-                      clearPk()
-                    }
+                        sendResponse(
+                            isTypedSigned ?
+                                await signTypedData(signMsgData) :
+                                await signMsg(signMsgData)
+                        )
+                        const settings = await getSettings()
+                        if (settings.encryptAfterEveryTx) {
+                            clearPk()
+                        }
                     } catch (e) {
                         console.warn('Error: signTypedData', e)
                         sendResponse({
@@ -609,9 +637,9 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                     sendResponse([{
                         id: smallRandomString(21),
                         parentCapability: 'eth_accounts',
-                        invoker: message?.website?.split('/').slice(0,3).join('/') ?? '',
+                        invoker: message?.website?.split('/').slice(0, 3).join('/') ?? '',
                         caveats: [{
-                            type:'restrictReturnedAccounts',
+                            type: 'restrictReturnedAccounts',
                             value: address
                         }],
                         date: Date.now(),
@@ -633,127 +661,130 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                 case 'wallet_switchEthereumChain': {
                     try {
                         const currentChainId = `0x${((await getSelectedNetwork())?.chainId ?? 0).toString(16)}`
-                        if(currentChainId === String(message?.params?.[0]?.chainId ?? '' )) {
+                        if (currentChainId === String(message?.params?.[0]?.chainId ?? '')) {
                             sendResponse(null)
-                        }else {
-                        await new Promise((resolve, reject) => {
-                        chrome.windows.create({
-                            height: 450,
-                            width: 400,
-                            url: chrome.runtime.getURL(`index.html?route=switch-network&param=${String(message?.params?.[0]?.chainId ?? '' )}&rid=${String(message?.resId ?? '')}`),
-                            type: 'popup'
-                        }).then((win) => {
-                            userReject[String(win.id)] = reject
-                            userApprove[String(win.id)] = resolve
-                            rIdWin[String(win.id)] = String(message.resId)
-                        })
-                        })
-                        sendResponse(null)
-                        }
-                        } catch {
-                            sendResponse({
-                                error: true,
-                                code: rpcError.USER_REJECTED,
-                                message: 'User Rejected chain switch'
+                        } else {
+                            await new Promise((resolve, reject) => {
+                                chrome.windows.create({
+                                    height: 450,
+                                    width: 400,
+                                    url: chrome.runtime.getURL(`index.html?route=switch-network&param=${String(message?.params?.[0]?.chainId ?? '')}&rid=${String(message?.resId ?? '')}`),
+                                    type: 'popup'
+                                }).then((win) => {
+                                    userReject[String(win.id)] = reject
+                                    userApprove[String(win.id)] = resolve
+                                    rIdWin[String(win.id)] = String(message.resId)
+                                })
                             })
+                            sendResponse(null)
                         }
+                    } catch {
+                        sendResponse({
+                            error: true,
+                            code: rpcError.USER_REJECTED,
+                            message: 'User Rejected chain switch'
+                        })
+                    }
                     break
                 }
                 case 'wallet_addEthereumChain': {
                     const userNetworks = await getNetworks()
-                    const networks = {...allTemplateNets, ...userNetworks}
+                    const networks = { ...allTemplateNets, ...userNetworks }
                     const chainId = Number(message?.params?.[0]?.chainId ?? '0')
-                    if(!chainId) {
+                    if (!chainId) {
                         sendResponse({
                             error: true,
                             code: rpcError.USER_REJECTED,
                             message: 'Invalid Network'
                         })
                     }
-                    if( chainId in networks ) {
-                        mainListner({...message, method:'wallet_switchEthereumChain', params: [{
-                            chainId: `0x${(chainId).toString(16)}`
-                        }] }, sender, sendResponse)
+                    if (chainId in networks) {
+                        mainListner({
+                            ...message, method: 'wallet_switchEthereumChain', params: [{
+                                chainId: `0x${(chainId).toString(16)}`
+                            }]
+                        }, sender, sendResponse)
                     } else {
-                        if ( !message?.params?.[0]?.chainId || 
-                             !message?.params?.[0]?.chainName || 
-                             !message?.params?.[0]?.rpcUrls ||
-                             !message?.params?.[0]?.blockExplorerUrls ||
-                             !message?.params?.[0]?.nativeCurrency?.symbol 
-                            ){
-                                sendResponse({
-                                    error: true,
-                                    code: rpcError.USER_REJECTED,
-                                    message: 'Invalid Network params chainId, chainName, rpcUrls, blockExplorerUrls, and nativeCurrency are required'
-                                })
-                            }else {
-                                try {
-                                    await new Promise((resolve, reject) => {
+                        if (!message?.params?.[0]?.chainId ||
+                            !message?.params?.[0]?.chainName ||
+                            !message?.params?.[0]?.rpcUrls ||
+                            !message?.params?.[0]?.blockExplorerUrls ||
+                            !message?.params?.[0]?.nativeCurrency?.symbol
+                        ) {
+                            sendResponse({
+                                error: true,
+                                code: rpcError.USER_REJECTED,
+                                message: 'Invalid Network params chainId, chainName, rpcUrls, blockExplorerUrls, and nativeCurrency are required'
+                            })
+                        } else {
+                            try {
+                                await new Promise((resolve, reject) => {
                                     chrome.windows.create({
                                         height: 450,
                                         width: 400,
-                                        url: chrome.runtime.getURL(`index.html?route=request-network&param=${strToHex(JSON.stringify({...{website: message?.website ?? ''}, ...(message?.params?.[0] ?? {})}) ?? '')}&rid=${String(message?.resId ?? '')}`),
+                                        url: chrome.runtime.getURL(`index.html?route=request-network&param=${strToHex(JSON.stringify({ ...{ website: message?.website ?? '' }, ...(message?.params?.[0] ?? {}) }) ?? '')}&rid=${String(message?.resId ?? '')}`),
                                         type: 'popup'
                                     }).then((win) => {
                                         userReject[String(win.id)] = reject
                                         userApprove[String(win.id)] = resolve
                                         rIdWin[String(win.id)] = String(message.resId)
                                     })
-                                    })
-                                    sendResponse(null)
-                                    } catch (err) {
-                                        console.error('err')
-                                        sendResponse({
-                                            error: true,
-                                            code: rpcError.USER_REJECTED,
-                                            message: 'User Rejected adding network'
-                                        })
-                                    }
+                                })
+                                sendResponse(null)
+                            } catch (err) {
+                                console.error('err')
+                                sendResponse({
+                                    error: true,
+                                    code: rpcError.USER_REJECTED,
+                                    message: 'User Rejected adding network'
+                                })
                             }
+                        }
                     }
                     break
                 }
                 // internal messeges
                 case 'wallet_connect': {
-                    const pNetwork =  getSelectedNetwork()
-                    const pAccount =  getSelectedAccount()
+                    const pNetwork = getSelectedNetwork()
+                    const pAccount = getSelectedAccount()
                     const [network, account] = await Promise.all([pNetwork, pAccount])
                     const address = account?.address ? [account?.address] : []
                     const chainId = `0x${(network?.chainId ?? 0).toString(16)}`
-                    const data = { 
+                    const data = {
                         type: "CLWALLET_PAGE_LISTENER", data: {
-                        listner: 'connect',
-                        data: {
-                            chainId
-                        },
-                        address
-                      }};
+                            listner: 'connect',
+                            data: {
+                                chainId
+                            },
+                            address
+                        }
+                    };
                     sendResponse(data)
                     break
                 }
                 case 'wallet_approve': {
-                    if(String(sender.tab?.windowId) in rIdWin){
+                    if (String(sender.tab?.windowId) in rIdWin) {
                         userApprove[String(sender.tab?.windowId)]?.(true)
                     }
                     try {
                         chrome.windows.remove(sender.tab?.windowId ?? 0)
-                    }catch (e) {
+                    } catch (e) {
                         console.info(e)
                         // ignore
                     }
                     break
                 }
                 case 'wallet_send_data': {
-                    if(String(sender.tab?.windowId) in rIdData){
+                    if (String(sender.tab?.windowId) in rIdData) {
                         const intData = rIdData[String(sender?.tab?.windowId ?? '')] ?? {}
-                        rIdData[String(sender?.tab?.windowId ?? '')] = {...intData, ...(message?.data ?? {})}
+                        rIdData[String(sender?.tab?.windowId ?? '')] = { ...intData, ...(message?.data ?? {}) }
                         sendResponse(true)
                     }
                     break
                 }
                 case 'wallet_get_data': {
-                    if(String(sender.tab?.windowId) in rIdData){
-                        sendResponse( rIdData[String(sender?.tab?.windowId ?? '')] ?? {})
+                    if (String(sender.tab?.windowId) in rIdData) {
+                        sendResponse(rIdData[String(sender?.tab?.windowId ?? '')] ?? {})
                     }
                     break
                 }
@@ -765,13 +796,13 @@ const mainListner = (message: RequestArguments, sender:any, sendResponse: (a: an
                     sendResponse({
                         error: true,
                         code: rpcError.INVALID_PARAM,
-                        message: 'ClearWallet: Invalid request method ' + (message?.method ?? '') 
+                        message: 'ClearWallet: Invalid request method ' + (message?.method ?? '')
                     })
                     break
                 }
             }
         }
- 
+
     }
     )();
     return true;

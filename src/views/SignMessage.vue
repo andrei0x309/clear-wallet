@@ -11,7 +11,12 @@
         <ion-label>Message to Sign</ion-label>
       </ion-item>
       <ion-item>
-        <div style="white-space: pre-wrap" disabled>{{ signMsg }}</div>
+        <div
+          style="white-space: pre-wrap; width: 100%; height: 250px; overflow-y: scroll"
+          disabled
+        >
+          {{ signMsg }}
+        </div>
       </ion-item>
       <ion-item>
         <ion-button @click="onCancel">Cancel</ion-button>
@@ -80,7 +85,19 @@ export default defineComponent({
     const route = useRoute();
     const loading = ref(false);
     const rid = (route?.params?.rid as string) ?? "";
-    const signMsg = ref(hexTostr(hexTostr((route?.params?.param as string) ?? "")));
+
+    let sigmMsg: string = "";
+
+    try {
+      const typeSign = JSON.parse(
+        hexTostr(hexTostr((route?.params?.param as string) ?? ""))
+      );
+      sigmMsg = JSON.stringify(typeSign, null, 2);
+    } catch (e) {
+      sigmMsg = hexTostr(hexTostr((route?.params?.param as string) ?? ""));
+    }
+
+    const signMsg = ref(sigmMsg);
     const alertOpen = ref(false);
     const alertMsg = ref("");
     const timerReject = ref(140);
