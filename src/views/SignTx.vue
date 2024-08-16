@@ -270,6 +270,29 @@ export default defineComponent({
       signTxData.value = JSON.stringify(paramsWithoutZeros, null, 2);
     }
 
+    const setItervalFn = async () => {
+      if (timerReject.value <= 0) {
+        onCancel();
+        return;
+      }
+      if (gasPriceReFetch.value) {
+        timerFee.value -= 1;
+        if (timerFee.value <= 0) {
+          timerFee.value = 20;
+          loading.value = true;
+          const { feed, price } = await getGasPrice();
+          gasFeed = feed;
+          gasPrice.value = parseFloat(price.toString() ?? 0.1);
+          await newGasData();
+          loading.value = false;
+        }
+      }
+
+      timerReject.value -= 1;
+      bars.value++;
+      walletPing();
+    };
+
     const openModal = async () => {
       const modal = await modalController.create({
         component: UnlockModal,
@@ -285,6 +308,9 @@ export default defineComponent({
 
     const onSign = async () => {
       loading.value = true;
+      if (interval) {
+        clearInterval(interval);
+      }
       const selectedAccount = await getSelectedAccount();
       loading.value = false;
       if ((selectedAccount.pk ?? "").length !== 66) {
@@ -370,28 +396,7 @@ export default defineComponent({
       await newGasData();
       loading.value = false;
 
-      interval = setInterval(async () => {
-        if (timerReject.value <= 0) {
-          onCancel();
-          return;
-        }
-        if (gasPriceReFetch.value) {
-          timerFee.value -= 1;
-          if (timerFee.value <= 0) {
-            timerFee.value = 20;
-            loading.value = true;
-            const { feed, price } = await getGasPrice();
-            gasFeed = feed;
-            gasPrice.value = parseFloat(price.toString() ?? 0.1);
-            await newGasData();
-            loading.value = false;
-          }
-        }
-
-        timerReject.value -= 1;
-        bars.value++;
-        walletPing();
-      }, 1000) as any;
+      interval = setInterval(setItervalFn, 1000) as any;
     });
 
     const setGasLimit = () => {

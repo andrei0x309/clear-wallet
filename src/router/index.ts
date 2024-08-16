@@ -33,6 +33,10 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/RequestNetwork.vue'),
   },
   {
+    path: '/farcaster-actions',
+    component: () => import('@/views/FarcasterActions.vue'),
+  },
+  {
     path: '/tabs/',
     component: AppTabs,
     children: [
