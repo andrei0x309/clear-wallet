@@ -1,5 +1,6 @@
 import { getSelectedAccount, getSelectedNetwork, numToHexStr } from '@/utils/platform';
 import { ethers } from "ethers"
+import { mainNets } from '@/utils/networks';
 
 let provider: ethers.JsonRpcProvider | null = null
 
@@ -14,6 +15,11 @@ export const getCurrentProvider = async () => {
     }
     provider = new ethers.JsonRpcProvider(network.rpc, ethers.Network.from(network.chainId), { staticNetwork: true, batchMaxCount: 6, polling: false })
     return {provider, network}
+}
+
+export const getOptimismProvider = async () => {
+    const network = mainNets[10]
+    return new ethers.JsonRpcProvider(network.rpc, ethers.Network.from(network.chainId), { staticNetwork: true, batchMaxCount: 6, polling: false })
 }
 
 const convertReceipt = (receipt: ethers.TransactionReceipt | null) => {

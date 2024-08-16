@@ -154,14 +154,29 @@ export default defineComponent({
       }
     };
 
-    onMounted(() => {
-      requestAnimationFrame(async () => {
-        if (passInput.value) {
-          await new Promise((resolve) => setTimeout(resolve, 50));
-          console.log("passInput.value", passInput.value);
+    onMounted(async () => {
+      console.log("rendered");
+      if (passInput.value) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        passInput.value.$el.setFocus();
+        passInput.value.$el.addEventListener("keyup", (e: any) => {
+          if (e.key === "Enter") {
+            unlock();
+          }
+        });
+        passInput.value.$el.addEventListener("blur", () => {
           passInput.value.$el.setFocus();
-        }
-      });
+          passInput.value.$el.selectionStart = passInput.value?.$el.value.length;
+        });
+      }
+
+      // requestAnimationFrame(async () => {
+      //   if (passInput.value) {
+      //     await new Promise((resolve) => setTimeout(resolve, 50));
+      //     console.log("passInput.value", passInput.value);
+      //     passInput.value.$el.setFocus();
+      //   }
+      // });
     });
 
     return {

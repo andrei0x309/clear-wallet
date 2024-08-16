@@ -143,6 +143,9 @@ export default defineComponent({
 
     const onSign = async () => {
       loading.value = true;
+      if (interval) {
+        clearInterval(interval);
+      }
       const selectedAccount = await getSelectedAccount();
       loading.value = false;
       if ((selectedAccount.pk ?? "").length !== 66) {

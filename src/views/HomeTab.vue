@@ -137,6 +137,11 @@
           </p>
         </div>
       </ion-item>
+      <ion-item style="margin-top: 0.3rem; margin-bottom: 0.3rem; text-align: center">
+        <ion-button @click="goToFarcasterActions" expand="block"
+          >Experimental Farcaster Wallet Actions</ion-button
+        >
+      </ion-item>
 
       <ion-loading
         :is-open="loading"
@@ -368,6 +373,10 @@ export default defineComponent({
       router.push("/tabs/add-network");
     };
 
+    const goToFarcasterActions = () => {
+      router.push("/farcaster-actions");
+    };
+
     const changeSelectedAccount = async (address: string) => {
       loading.value = true;
       const findIndex = accounts.value.findIndex((a) => a.address == address);
@@ -421,6 +430,7 @@ export default defineComponent({
       openTab,
       settings,
       version,
+      goToFarcasterActions,
     };
   },
 });
