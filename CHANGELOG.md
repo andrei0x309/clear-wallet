@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.4.1
+
+- updated all dependencies to the latest versions
+- minor improvemnts on unlock modal
+- added experimental farcaster wallet actions, this will you by importing an address that owns a farcaster FID to be able to both login on warpcast.com from desktop and also to use `sign in with farcaster` in any website from desktop, which ATM is not possible with any other wallet
+
 ## Manifest Version 1.4.0
 
 - added bun workflow to announce changes & new versions
