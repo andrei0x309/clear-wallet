@@ -81,10 +81,16 @@
 
       <ion-alert
         :is-open="alertOpen"
-        header="Error"
+        :header="alertHeader"
         :message="alertMsg"
         :buttons="['OK']"
-        @didDismiss="alertOpen = false"
+        @didDismiss="
+          () => {
+            alertOpen = false;
+            alertHeader = 'Error';
+            exitWallet && (window as any)?.close();
+          }
+        "
       ></ion-alert>
 
       <ion-modal :is-open="accountsModal">
@@ -248,6 +254,8 @@ export default defineComponent({
     const deepLink = ref("");
     const swloading = ref(false);
     const warpcastLoading = ref(false);
+    const exitWallet = ref(false);
+    const alertHeader = ref("Error");
 
     const loading = ref(false);
     const accounts = ref([]) as Ref<Account[]>;
@@ -293,6 +301,7 @@ export default defineComponent({
     };
 
     const farcasterSWIWAithorize = async () => {
+      exitWallet.value = false;
       if (!deepLink.value) {
         alertMsg.value = "Please enter the deep link";
         alertOpen.value = true;
@@ -322,6 +331,8 @@ export default defineComponent({
           link: deepLink.value,
         });
 
+        console.log("result", result);
+
         if (result === -1) {
           alertMsg.value =
             "Selected account does not own a FID please select an account that owns a FID";
@@ -333,16 +344,23 @@ export default defineComponent({
           alertOpen.value = true;
           swloading.value = false;
           return;
+        } else {
+          alertHeader.value = "OK";
+          alertMsg.value =
+            "Request sent successfully, if QR is still open, you should be signed in";
+          alertOpen.value = true;
+          swloading.value = false;
+          exitWallet.value = true;
         }
       } catch (e) {
         alertMsg.value = String(e);
         alertOpen.value = true;
       }
       swloading.value = false;
-      router.push("/tabs/home");
     };
 
     const promptForSignIn = async () => {
+      exitWallet.value = false;
       const targetUrl = "warpcast.com";
       chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
         const lastTab = tabs[0];
@@ -356,7 +374,6 @@ export default defineComponent({
         if (!lastTab?.url?.includes(targetUrl)) {
           alertOpen.value = true;
           alertMsg.value = "You are not on warpcast.com page";
-
           return;
         }
         if (!lastTab.id) {
@@ -419,12 +436,12 @@ export default defineComponent({
 
         const arg = { secret: token, expiresAt: 1777046287381 };
 
-        chrome.scripting.executeScript({
+        await chrome.scripting.executeScript({
           target: { tabId: lastTab.id },
           func: addWarpAuthToken,
           args: [arg],
         });
-
+        warpcastLoading.value = false;
         window.close();
       });
     };
@@ -462,6 +479,9 @@ export default defineComponent({
       swloading,
       promptForSignIn,
       warpcastLoading,
+      window,
+      exitWallet,
+      alertHeader,
     };
   },
 });

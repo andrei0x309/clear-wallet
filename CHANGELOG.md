@@ -1,5 +1,12 @@
 # Changelog
 
+## Manifest Version 1.4.2
+
+- better show farcaster wallet acion button
+- allow deep links to miss some non-essential parameters
+- better error handling on farcaster wallet actions
+- inform user why sign in with farcaster fails and close wallet if sign in succeeds
+
 ## Manifest Version 1.4.1
 
 - updated all dependencies to the latest versions

@@ -39,7 +39,7 @@
               type="password"
               @ion-input="mpPass = String($event.target.value)"
               fill="solid"
-              ref="passInput"
+              id="pass-input"
             ></ion-input>
 
             <!-- <ion-input
@@ -124,7 +124,6 @@ export default defineComponent({
     const loading = ref(false);
     const alertOpen = ref(false);
     const alertMsg = ref("");
-    const passInput = ref() as Ref<typeof IonInput>;
 
     const close = () => {
       return modalController?.dismiss(null, "cancel");
@@ -155,28 +154,20 @@ export default defineComponent({
     };
 
     onMounted(async () => {
-      console.log("rendered");
-      if (passInput.value) {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        passInput.value.$el.setFocus();
-        passInput.value.$el.addEventListener("keyup", (e: any) => {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const passInput = document.querySelector("#pass-input input") as HTMLInputElement;
+      console.log("passInput", passInput);
+      if (passInput) {
+        passInput?.focus();
+        passInput.addEventListener("keyup", (e: any) => {
           if (e.key === "Enter") {
             unlock();
           }
         });
-        passInput.value.$el.addEventListener("blur", () => {
-          passInput.value.$el.setFocus();
-          passInput.value.$el.selectionStart = passInput.value?.$el.value.length;
+        passInput.addEventListener("blur", () => {
+          passInput?.focus();
         });
       }
-
-      // requestAnimationFrame(async () => {
-      //   if (passInput.value) {
-      //     await new Promise((resolve) => setTimeout(resolve, 50));
-      //     console.log("passInput.value", passInput.value);
-      //     passInput.value.$el.setFocus();
-      //   }
-      // });
     });
 
     return {
@@ -186,7 +177,6 @@ export default defineComponent({
       alertOpen,
       alertMsg,
       close,
-      passInput,
     };
   },
 });

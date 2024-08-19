@@ -138,7 +138,10 @@
         </div>
       </ion-item>
       <ion-item style="margin-top: 0.3rem; margin-bottom: 0.3rem; text-align: center">
-        <ion-button @click="goToFarcasterActions" expand="block"
+        <ion-button
+          @click="goToFarcasterActions"
+          expand="block"
+          style="margin: auto; width: 98%; font-size: 0.8rem; padding: 0.6rem"
           >Experimental Farcaster Wallet Actions</ion-button
         >
       </ion-item>

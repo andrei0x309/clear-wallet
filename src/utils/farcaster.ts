@@ -11,11 +11,11 @@ const FC_ID_REGISTRY_CONTRACT = '0x00000000fc6c5f01fc30151999387bb99a9f489b'
 export const extractLinkData = (link: string) => {
     const url = new URL(link);
     const channelToken = url.searchParams.get('channelToken');
-    const nonce = url.searchParams.get('nonce');
     const siweUri = url.searchParams.get('siweUri');
     const domain = url.searchParams.get('domain');
-    const notBefore = url.searchParams.get('notBefore');
-    const expirationTime = url.searchParams.get('expirationTime');
+    const nonce = url.searchParams.get('nonce') || (Math.random() + 1).toString(36).substring(7);
+    const notBefore = url.searchParams.get('notBefore') || undefined;
+    const expirationTime = url.searchParams.get('expirationTime') || undefined;
 
     return {
         channelToken,
@@ -35,8 +35,8 @@ export const extractLinkData = (link: string) => {
 }
 
 export const validateLinkData = (link: string) => {
-    const { channelToken, nonce, siweUri, domain, notBefore, expirationTime } = extractLinkData(link);
-    if (!channelToken || !nonce || !siweUri || !domain || !notBefore || !expirationTime) {
+    const { channelToken, nonce, siweUri, domain} = extractLinkData(link);
+    if (!channelToken || !siweUri || !domain || !nonce) {
         return false;
     }
     return true;
@@ -55,12 +55,12 @@ export const constructWarpcastSWIEMsg = ({
     siweUri: string,
     domain: string,
     nonce: string,
-    notBefore: string,
-    expirationTime: string,
+    notBefore?: string,
+    expirationTime?: string,
     fid: number,
     custodyAddress: string
 }) => {
-    return `${domain} wants you to sign in with your Ethereum account:\n${custodyAddress}\n\nFarcaster Auth\n\nURI: ${siweUri}\nVersion: 1\nChain ID: 10\nNonce: ${nonce}\nIssued At: ${notBefore}\nExpiration Time: ${expirationTime}\nNot Before: ${notBefore}\nResources:\n- farcaster://fid/${fid}`
+    return `${domain} wants you to sign in with your Ethereum account:\n${custodyAddress}\n\nFarcaster Auth\n\nURI: ${siweUri}\nVersion: 1\nChain ID: 10\nNonce: ${nonce}${notBefore ? `\nIssued At: ${notBefore}`: `\nIssued At: ${new Date(Date.now() - 1000).toISOString()}`}${expirationTime ? `\nExpiration Time: ${expirationTime}` : ''}${notBefore ? `\nNot Before: ${notBefore}`: ''}\nResources:\n- farcaster://fid/${fid}`
 }
  
 
@@ -139,8 +139,6 @@ export const doSignInWithFarcaster = async ({
     if(genToken.success) {
         authToken = genToken.data;
     }
-
-    console.log('authToken', authToken);
 
     if (!authToken) {
         return -2;
