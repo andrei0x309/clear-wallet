@@ -344,6 +344,12 @@ export default defineComponent({
           alertOpen.value = true;
           swloading.value = false;
           return;
+        } else if (result === -3) {
+          alertMsg.value =
+            "Error could not get signer params from farcaster relay, try again";
+          alertOpen.value = true;
+          swloading.value = false;
+          return;
         } else {
           alertHeader.value = "OK";
           alertMsg.value =

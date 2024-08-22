@@ -3,10 +3,39 @@ import { FARCASTER_PARTIAL_KEY_ABI } from './abis'
 import { ethers } from 'ethers'
 import { getUrl } from './platform'
 import { generateApiToken } from './warpcast-auth'
+export interface TChannelTokenStatusResponse {
+    state:           string;
+    nonce:           string;
+    signatureParams: {
+        siweUri:        string;
+        domain:         string;
+        nonce:          string;
+        notBefore:      string;
+        expirationTime: string;
+    }
+    ;
+    metadata:        {
+        userAgent: string;
+        ip:        string;
+    };
+}
 
+const TOKEN_STATUS_ENDPOINT = 'https://relay.farcaster.xyz/v1/channel/status'
 const WARPCAST_BASE = 'https://client.warpcast.com/v2/'
 const EP_SIGNIN = `${WARPCAST_BASE}sign-in-with-farcaster`
 const FC_ID_REGISTRY_CONTRACT = '0x00000000fc6c5f01fc30151999387bb99a9f489b'
+
+
+const getChannelTokenStatus = async (channelToken: string) => {
+    const response = await fetch(`${TOKEN_STATUS_ENDPOINT}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization':  `Bearer ${channelToken}`
+        },
+    })
+    return response.json() as Promise<TChannelTokenStatusResponse>
+}
 
 export const extractLinkData = (link: string) => {
     const url = new URL(link);
@@ -34,9 +63,26 @@ export const extractLinkData = (link: string) => {
     }
 }
 
+export const extractResponseData = async (channelToken: string) => {
+    try {
+    const response = await getChannelTokenStatus(channelToken);
+    let { siweUri, domain, nonce, notBefore, expirationTime } = response.signatureParams;
+    nonce = nonce || (Math.random() + 1).toString(36).substring(7);
+    return {
+        siweUri,
+        domain,
+        nonce,
+        notBefore,
+        expirationTime
+    }
+   } catch (e) {
+         return null;
+    }
+}
+
 export const validateLinkData = (link: string) => {
-    const { channelToken, nonce, siweUri, domain} = extractLinkData(link);
-    if (!channelToken || !siweUri || !domain || !nonce) {
+    const { channelToken} = extractLinkData(link);
+    if (!channelToken) {
         return false;
     }
     return true;
@@ -118,12 +164,21 @@ export const doSignInWithFarcaster = async ({
 }: {
     link: string
 }) => {
-    const { channelToken, nonce, siweUri, domain, notBefore, expirationTime } = extractLinkData(link);
+    const { channelToken } = extractLinkData(link);
     const custodyAddress = (await getSelectedAddress())?.[0] || '';
     const fid =  custodyAddress && await getFidFromAddress(custodyAddress);
     if (!fid) {
         return -1;
     }
+
+    const extractResult = await extractResponseData(channelToken);
+
+    if (!extractResult) {
+        return -3;
+    }
+
+    const { siweUri, domain, nonce, notBefore, expirationTime } = extractResult
+
     const message = constructWarpcastSWIEMsg({
         siweUri,
         domain,

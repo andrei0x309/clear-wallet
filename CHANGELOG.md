@@ -1,5 +1,9 @@
 # Changelog
 
+## Manifest Version 1.4.3
+
+- changed sign in with farcaster to work with new type of QR code
+
 ## Manifest Version 1.4.2
 
 - better show farcaster wallet acion button

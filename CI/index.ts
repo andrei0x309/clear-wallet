@@ -68,9 +68,9 @@ const main = async () => {
         const VERSION = GithubEvent.inputs.version;
         const FCONLY = GithubEvent.inputs.fconly;
         const message = `Clear Wallet - New version ${VERSION} released! \n
-                ChangeLog: https://bit.ly/clw-cl \n
-                ChromeStore: https://bit.ly/clw-evm \n
-                `
+- ChromeStore: https://bit.ly/clw-evm \n
+- ChangeLog: https://bit.ly/clw-cl \n
+- Submited by @andrei0x309 \n`
         if (ENABLED) {
             if (!FCONLY) {
                 await yupAPI.sendPost({
@@ -103,9 +103,9 @@ const main = async () => {
         if (ENABLED && !GithubEvent.forced && GithubEvent?.head_commit?.message.includes('chore:') && !GithubEvent?.head_commit?.message.includes('!')) {
             const commiter = GithubEvent?.head_commit?.author.username || GithubEvent?.head_commit?.committer?.username || ''
             const message = `Github ClearWallet new repo commit!\n
-            ChromeStore: https://bit.ly/clw-evm \n
-            Commit: ${GithubEvent.head_commit.url} \n
-            ${commiter ? `By: ${commiter}` : ''}
+- ChromeStore: https://bit.ly/clw-evm \n
+- Commit: ${GithubEvent.head_commit.url} \n
+${commiter ? `- Commiter: @${commiter}` : ''}
             `;
 
             await yupAPI.sendPost({
