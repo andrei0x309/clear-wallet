@@ -64,7 +64,16 @@ export const mainNets: {[key: number]: Network} = {
         icon: 'base.webp',
         symbol: 'ETH',
         priceId: 'ethereum'
-    }
+    },
+    7560 : {
+        name: 'Cyber',
+        rpc: 'https://rpc.cyber.co',
+        chainId: 7560 ,
+        explorer: 'https://cyberscan.co',
+        icon: 'cyber.webp',
+        symbol: 'ETH',
+        priceId: 'ethereum'
+    },
 }
 
 export const testNets = {
@@ -123,6 +132,13 @@ export const testNets = {
         chainId: 421614,
         explorer: 'https://sepolia.arbiscan.io/',
         icon: 'arbitrum_t.webp'
+    },
+    111557560 : {
+        name: 'Cyber',
+        rpc: 'https://rpc.testnet.cyber.co',
+        chainId: 111557560 ,
+        explorer: 'https://testnet.cyberscan.co/',
+        icon: 'cyber_t.webp'
     },
 }
 
