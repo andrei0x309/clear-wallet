@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.4.4
+
+- added QR scaner for easier sign in with farcaster
+- added cyber network in the network templates
+- style changes and changes to fracaster action screen
+
 ## Manifest Version 1.4.3
 
 - changed sign in with farcaster to work with new type of QR code
