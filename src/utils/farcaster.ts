@@ -3,20 +3,21 @@ import { FARCASTER_PARTIAL_KEY_ABI } from './abis'
 import { ethers } from 'ethers'
 import { getUrl } from './platform'
 import { generateApiToken } from './warpcast-auth'
+import { getQRCode } from './QR'
 export interface TChannelTokenStatusResponse {
-    state:           string;
-    nonce:           string;
+    state: string;
+    nonce: string;
     signatureParams: {
-        siweUri:        string;
-        domain:         string;
-        nonce:          string;
-        notBefore:      string;
+        siweUri: string;
+        domain: string;
+        nonce: string;
+        notBefore: string;
         expirationTime: string;
     }
     ;
-    metadata:        {
+    metadata: {
         userAgent: string;
-        ip:        string;
+        ip: string;
     };
 }
 
@@ -25,13 +26,17 @@ const WARPCAST_BASE = 'https://client.warpcast.com/v2/'
 const EP_SIGNIN = `${WARPCAST_BASE}sign-in-with-farcaster`
 const FC_ID_REGISTRY_CONTRACT = '0x00000000fc6c5f01fc30151999387bb99a9f489b'
 
+export const getLinkFromQR = async () => {
+    const data = await chrome.tabs.captureVisibleTab()
+    return await getQRCode(data)
+}
 
 const getChannelTokenStatus = async (channelToken: string) => {
     const response = await fetch(`${TOKEN_STATUS_ENDPOINT}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization':  `Bearer ${channelToken}`
+            'Authorization': `Bearer ${channelToken}`
         },
     })
     return response.json() as Promise<TChannelTokenStatusResponse>
@@ -65,23 +70,23 @@ export const extractLinkData = (link: string) => {
 
 export const extractResponseData = async (channelToken: string) => {
     try {
-    const response = await getChannelTokenStatus(channelToken);
-    let { siweUri, domain, nonce, notBefore, expirationTime } = response.signatureParams;
-    nonce = nonce || (Math.random() + 1).toString(36).substring(7);
-    return {
-        siweUri,
-        domain,
-        nonce,
-        notBefore,
-        expirationTime
-    }
-   } catch (e) {
-         return null;
+        const response = await getChannelTokenStatus(channelToken);
+        let { siweUri, domain, nonce, notBefore, expirationTime } = response.signatureParams;
+        nonce = nonce || (Math.random() + 1).toString(36).substring(7);
+        return {
+            siweUri,
+            domain,
+            nonce,
+            notBefore,
+            expirationTime
+        }
+    } catch (e) {
+        return null;
     }
 }
 
 export const validateLinkData = (link: string) => {
-    const { channelToken} = extractLinkData(link);
+    const { channelToken } = extractLinkData(link);
     if (!channelToken) {
         return false;
     }
@@ -106,16 +111,16 @@ export const constructWarpcastSWIEMsg = ({
     fid: number,
     custodyAddress: string
 }) => {
-    return `${domain} wants you to sign in with your Ethereum account:\n${custodyAddress}\n\nFarcaster Auth\n\nURI: ${siweUri}\nVersion: 1\nChain ID: 10\nNonce: ${nonce}${notBefore ? `\nIssued At: ${notBefore}`: `\nIssued At: ${new Date(Date.now() - 1000).toISOString()}`}${expirationTime ? `\nExpiration Time: ${expirationTime}` : ''}${notBefore ? `\nNot Before: ${notBefore}`: ''}\nResources:\n- farcaster://fid/${fid}`
+    return `${domain} wants you to sign in with your Ethereum account:\n${custodyAddress}\n\nFarcaster Auth\n\nURI: ${siweUri}\nVersion: 1\nChain ID: 10\nNonce: ${nonce}${notBefore ? `\nIssued At: ${notBefore}` : `\nIssued At: ${new Date(Date.now() - 1000).toISOString()}`}${expirationTime ? `\nExpiration Time: ${expirationTime}` : ''}${notBefore ? `\nNot Before: ${notBefore}` : ''}\nResources:\n- farcaster://fid/${fid}`
 }
- 
+
 
 export const signInWithFarcaster = async ({
     channelToken,
     message,
     signature,
     authToken
-} : {
+}: {
     channelToken: string,
     message: string,
     signature: string,
@@ -125,7 +130,7 @@ export const signInWithFarcaster = async ({
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization':  `Bearer ${authToken}`
+            'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
             channelToken,
@@ -148,15 +153,75 @@ const noFidNotification = () => {
     });
 }
 
-export const getFidFromAddress = async (address: string) : Promise<number | null> => {
+export const getFidFromAddress = async (address: string): Promise<number | null> => {
     const provider = await getOptimismProvider();
-    const contract =  new ethers.Contract(FC_ID_REGISTRY_CONTRACT, FARCASTER_PARTIAL_KEY_ABI, provider);
+    const contract = new ethers.Contract(FC_ID_REGISTRY_CONTRACT, FARCASTER_PARTIAL_KEY_ABI, provider);
     const FID = await contract.idOf(address);
     if (FID > 0) {
         return FID;
     }
     noFidNotification();
     return 0;
+}
+
+export const doSignInWithFarcasterQR = async () => {
+    const custodyAddress = (await getSelectedAddress())?.[0] || '';
+    const fid = custodyAddress && await getFidFromAddress(custodyAddress);
+    if (!fid) {
+        return -1;
+    }
+
+    const link = await getLinkFromQR();
+    if (!link) {
+        return -2;
+    }
+
+    const validateLinkDataResult = validateLinkData(link);
+    if (!validateLinkDataResult) {
+        return -3;
+    }
+
+    const { channelToken } = extractLinkData(link);
+
+    const extractResult = await extractResponseData(channelToken);
+
+    if (!extractResult) {
+        return -4;
+    }
+
+    const { siweUri, domain, nonce, notBefore, expirationTime } = extractResult
+
+    const message = constructWarpcastSWIEMsg({
+        siweUri,
+        domain,
+        nonce,
+        notBefore,
+        expirationTime,
+        fid,
+        custodyAddress
+    });
+
+    const genToken = await generateApiToken();
+
+    let authToken = '';
+    if (genToken.success) {
+        authToken = genToken.data;
+    }
+
+    if (!authToken) {
+        return -5;
+    }
+
+    const signature = await signMsg(message);
+    await signInWithFarcaster({
+        channelToken,
+        message,
+        signature,
+        authToken
+    });
+
+    return 1
+
 }
 
 export const doSignInWithFarcaster = async ({
@@ -166,7 +231,7 @@ export const doSignInWithFarcaster = async ({
 }) => {
     const { channelToken } = extractLinkData(link);
     const custodyAddress = (await getSelectedAddress())?.[0] || '';
-    const fid =  custodyAddress && await getFidFromAddress(custodyAddress);
+    const fid = custodyAddress && await getFidFromAddress(custodyAddress);
     if (!fid) {
         return -1;
     }
@@ -191,7 +256,7 @@ export const doSignInWithFarcaster = async ({
 
     const genToken = await generateApiToken();
     let authToken = '';
-    if(genToken.success) {
+    if (genToken.success) {
         authToken = genToken.data;
     }
 
@@ -209,4 +274,3 @@ export const doSignInWithFarcaster = async ({
 
     return 1
 }
-

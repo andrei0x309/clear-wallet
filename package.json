@@ -20,6 +20,7 @@
     "@ionic/vue-router": "^8.2.6",
     "core-js": "^3.38.0",
     "ethers": "^6.13.2",
+    "qr-scanner": "^1.4.2",
     "vue": "^3.4.37",
     "vue-router": "^4.4.3"
   },
