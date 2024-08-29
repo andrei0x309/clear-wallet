@@ -1,10 +1,10 @@
 const pFs = import('fs')
-const pCps = import ('child_process') 
+const pCps = import('child_process')
 
-async function ghRelease(changes: string[]) {
+async function ghRelease (changes: string[], isRebuild: boolean) {
   const fs = (await pFs).default
 
-  if (!fs.existsSync('releases')){
+  if (!fs.existsSync('releases')) {
     fs.mkdirSync('releases');
   }
 
@@ -32,29 +32,31 @@ async function ghRelease(changes: string[]) {
     arch.finalize();
   });
 
-  const changeLogPath = `releases/${pkg.version}.changelog.md`;
+  if (!isRebuild) {
+    const changeLogPath = `releases/${pkg.version}.changelog.md`;
 
-  fs.writeFileSync(
-    changeLogPath,
-    `# ${pkg.version} \n
+    fs.writeFileSync(
+      changeLogPath,
+      `# ${pkg.version} \n
   ${changes.reduce((acc: string, change: string) => {
-    return acc + `- ${change}\n`;
-  }, '')}`,
-  );
-  const cps = (await pCps)
-  console.log(
-    await new Promise((resolve) => {
-      const p = cps.spawn('gh', ['release', 'create', `v${pkg.version}`, `./${outputPath}`, '-F', `./${changeLogPath}`], {
-        shell: true,
-      });
-      let result = '';
-      p.stdout.on('data', (data) => (result += data.toString()));
-      p.stderr.on('data', (data) => (result += data.toString()));
-      p.on('close', () => {
-        resolve(result);
-      });
-    }),
-  );
+        return acc + `- ${change}\n`;
+      }, '')}`,
+    );
+    const cps = (await pCps)
+    console.log(
+      await new Promise((resolve) => {
+        const p = cps.spawn('gh', ['release', 'create', `v${pkg.version}`, `./${outputPath}`, '-F', `./${changeLogPath}`], {
+          shell: true,
+        });
+        let result = '';
+        p.stdout.on('data', (data) => (result += data.toString()));
+        p.stderr.on('data', (data) => (result += data.toString()));
+        p.on('close', () => {
+          resolve(result);
+        });
+      }),
+    );
+  }
 }
 
 (async () => {
@@ -63,6 +65,9 @@ async function ghRelease(changes: string[]) {
     return;
   }
   const changes = process.argv[2].split(',');
-  await ghRelease(changes);
+
+  const isRebuild = changes.includes('rebuild');
+
+  await ghRelease(changes, isRebuild);
   console.log('Release created', changes);
 })();

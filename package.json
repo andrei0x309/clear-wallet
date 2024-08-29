@@ -1,6 +1,6 @@
 {
   "name": "clear-wallet",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "private": true,
   "description": "Clear Wallet (CLW) is a wallet that helps you manage your Ethereum assets and interact with Ethereum dApps and contracts with the main focus on absolute privacy.",
   "type": "module",
@@ -10,6 +10,7 @@
     "content": "tsc --outFile src/extension/content.js src/extension/content.ts",
     "post-build": "yarn tsx ./release-scripts/post-build.ts",
     "build": "yarn inject && yarn content && vue-tsc --noEmit && vite build && yarn post-build",
+    "rebuild": "yarn build && yarn tsx ./release-scripts/create-release.ts rebuild",
     "preview": "vite preview",
     "release": "yarn config set version-tag-prefix clear-wallet@v &&  yarn config set version-git-message 'clear-wallet@v%s' && yarn version --patch && yarn postversion",
     "postversion": "git push",

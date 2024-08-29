@@ -127,7 +127,7 @@
               ></ion-input>
             </ion-item>
             <ion-item>
-              <ion-button @click="setGasLimit">Set Price</ion-button>
+              <ion-button @click="setGasLimit">Set Limit</ion-button>
             </ion-item>
           </ion-list>
         </ion-content>
@@ -399,16 +399,16 @@ export default defineComponent({
       interval = setInterval(setItervalFn, 1000) as any;
     });
 
-    const setGasLimit = () => {
+    const setGasLimit = async () => {
       gasLimit.value = inGasLimit.value;
-      newGasData();
+      await newGasData();
       gasLimitModal.value = false;
     };
 
-    const setGasPrice = () => {
+    const setGasPrice = async () => {
       gasPrice.value = inGasPrice.value;
       gasPriceReFetch.value = false;
-      newGasData();
+      await newGasData();
       gasPriceModal.value = false;
     };
 
