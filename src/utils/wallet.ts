@@ -4,7 +4,7 @@ import { mainNets } from '@/utils/networks';
 
 let provider: ethers.JsonRpcProvider | null = null
 
-const bigIntMax = (...args: bigint[]) => args.reduce((m, e) => e > m ? e : m);
+const bigIntMax = (...args: bigint[]) => args.reduce((m, e) => e > m ? e : m, BigInt(0))
 
 export const getCurrentProvider = async () => {
     const network = await getSelectedNetwork()
