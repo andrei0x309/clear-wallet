@@ -146,6 +146,15 @@
         >
       </ion-item>
 
+      <ion-item style="margin-top: 0.3rem; margin-bottom: 0.3rem; text-align: center">
+        <ion-button
+          @click="goToPersonalSign"
+          expand="block"
+          style="margin: auto; width: 98%; font-size: 0.8rem; padding: 0.6rem"
+          >Personal Sign Messages</ion-button
+        >
+      </ion-item>
+
       <ion-loading
         :is-open="loading"
         cssClass="my-custom-class"
@@ -380,6 +389,10 @@ export default defineComponent({
       router.push("/farcaster-actions");
     };
 
+    const goToPersonalSign = () => {
+      router.push("/personal-sign");
+    };
+
     const changeSelectedAccount = async (address: string) => {
       loading.value = true;
       const findIndex = accounts.value.findIndex((a) => a.address == address);
@@ -434,6 +447,7 @@ export default defineComponent({
       settings,
       version,
       goToFarcasterActions,
+      goToPersonalSign,
     };
   },
 });

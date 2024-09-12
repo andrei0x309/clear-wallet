@@ -27,7 +27,11 @@
         ></ion-input>
       </ion-item>
       <ion-item button>
-        <ion-icon :icon="clipboardOutline" @click="paste('pasteRpc')" />
+        <ion-icon
+          :icon="clipboardOutline"
+          @click="paste('pasteRpc')"
+          style="margin-right: 0.5rem; cursor: pointer"
+        />
         <ion-input
           label="RPC URL(*)"
           labelPlacement="stacked"
@@ -46,7 +50,11 @@
         ></ion-input>
       </ion-item>
       <ion-item button>
-        <ion-icon :icon="clipboardOutline" @click="paste('pasteExplorer')" />
+        <ion-icon
+          :icon="clipboardOutline"
+          @click="paste('pasteExplorer')"
+          style="margin-right: 0.5rem; cursor: pointer"
+        />
         <ion-input
           label="Explorer"
           labelPlacement="stacked"

@@ -1,5 +1,13 @@
 # Changelog
 
+## Manifest Version 1.4.5
+
+- improved gas estimation for transactions
+- fixed paste buttons with new Ionic version
+- improved error display
+- added personal sign view for signing messages with the private key
+- changed send token view to allow sending ERC20 besides native tokens
+
 ## Manifest Version 1.4.4
 
 - added QR scaner for easier sign in with farcaster

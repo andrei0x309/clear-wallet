@@ -213,6 +213,12 @@ import {
   IonModal,
   IonButtons,
   IonTextarea,
+  IonList,
+  IonListHeader,
+  IonRadioGroup,
+  IonLoading,
+  IonText,
+  IonRadio,
 } from "@ionic/vue";
 import { saveSelectedAccount, paste, replaceAccounts } from "@/utils/platform";
 import router from "@/router";
@@ -247,6 +253,12 @@ export default defineComponent({
     IonModal,
     IonButtons,
     IonTextarea,
+    IonList,
+    IonListHeader,
+    IonRadioGroup,
+    IonLoading,
+    IonText,
+    IonRadio,
   },
   setup: () => {
     const name = ref("");

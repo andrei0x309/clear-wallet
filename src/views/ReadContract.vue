@@ -20,7 +20,11 @@
         <ion-button @click="openAbiListModal()" expand="block">Load Abi</ion-button>
       </ion-item>
       <ion-item>
-        <ion-icon :icon="clipboardOutline" @click="paste('pasteContract')" />
+        <ion-icon
+          :icon="clipboardOutline"
+          @click="paste('pasteContract')"
+          style="margin-right: 0.5rem; cursor: pointer"
+        />
         <ion-input
           label="Contract Address(*)"
           label-placement="stacked"

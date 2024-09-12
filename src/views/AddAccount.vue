@@ -17,7 +17,7 @@
       </ion-item>
       <ion-item v-if="!isEdit">
         <ion-icon
-          style="margin-right: 0.5rem"
+          style="margin-right: 0.5rem; cursor: pointer"
           @click="paste('pastePk')"
           :icon="clipboardOutline"
           button
