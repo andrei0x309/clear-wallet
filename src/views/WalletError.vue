@@ -15,8 +15,8 @@
           label="Error:"
           labelPlacement="stacked"
           style="overflow-y: scroll"
-          :rows="10"
-          :cols="20"
+          :rows="18"
+          :cols="70"
           :value="error"
           readonly
         ></ion-textarea>

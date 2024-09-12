@@ -34,8 +34,8 @@
         <ion-textarea
           style="overflow-y: scroll"
           aria-label="Error"
-          :rows="10"
-          :cols="20"
+          :rows="12"
+          :cols="60"
           :value="error"
           readonly
         ></ion-textarea>

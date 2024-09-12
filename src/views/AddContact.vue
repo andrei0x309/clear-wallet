@@ -13,8 +13,12 @@
       </ion-item>
       <ion-item>
         <ion-icon
-          style="margin-right: 0.5rem"
-          @click="paste('address')"
+          style="margin-right: 0.5rem; cursor: pointer"
+          @click="
+            () => {
+              paste('address');
+            }
+          "
           :icon="clipboardOutline"
           button
         />
@@ -131,10 +135,10 @@ export default defineComponent({
 
     const close = () => {
       try {
-modalController.dismiss(null, "cancel");
-} catch {
-// ignore 
-}
+        modalController.dismiss(null, "cancel");
+      } catch {
+        // ignore
+      }
     };
 
     return {

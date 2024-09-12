@@ -9,3 +9,5 @@ export const exportFile = (fileName: string, content: string, type = 'json') => 
     link.click()
     document.body.removeChild(link)
   }
+
+export const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))

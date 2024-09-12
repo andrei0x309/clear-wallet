@@ -4,6 +4,8 @@ import { mainNets } from '@/utils/networks';
 
 let provider: ethers.JsonRpcProvider | null = null
 
+const bigIntMax = (...args: bigint[]) => args.reduce((m, e) => e > m ? e : m);
+
 export const getCurrentProvider = async () => {
     const network = await getSelectedNetwork()
     if (provider) {
@@ -77,7 +79,9 @@ export const getBalance = async () =>{
 export const getGasPrice = async () => {
     const { provider } = await getCurrentProvider()
     const feed = await provider.getFeeData()
-    const gasPrice = feed.maxFeePerGas ?? feed.gasPrice ?? 0n
+    const gasPrices = [ feed.gasPrice, feed.maxFeePerGas, feed.maxPriorityFeePerGas ].filter(Boolean).map((p: any) => BigInt(p))
+    const gasPriceFeed = bigIntMax(...gasPrices)
+    const gasPrice = gasPriceFeed + (gasPriceFeed / BigInt(25))
     return {
         price: Number(gasPrice) / 1e9,
         feed

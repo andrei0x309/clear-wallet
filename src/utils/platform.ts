@@ -281,7 +281,15 @@ export const copyText = async (address: string, toastRef: Ref<boolean>) => {
 export const getUrl = (url: string) => chrome.runtime.getURL(url)
 
 export const paste = (id: string) => {
-    const el = document.getElementById(id)
+    const el = document.querySelector(`#${id} input.native-input`) as HTMLInputElement
+    if(el){
+      el.focus();
+      (document as any)?.execCommand('paste')
+    }
+}
+
+export const pasteTextArea = (id: string) => {
+    const el = document.querySelector(`#${id} textarea`) as HTMLTextAreaElement
     if(el){
       el.focus();
       (document as any)?.execCommand('paste')

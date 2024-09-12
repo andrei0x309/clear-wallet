@@ -37,6 +37,10 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/FarcasterActions.vue'),
   },
   {
+    path: '/personal-sign',
+    component: () => import('@/views/PersonalSign.vue'),
+  },
+  {
     path: '/tabs/',
     component: AppTabs,
     children: [
