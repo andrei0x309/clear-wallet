@@ -29,6 +29,15 @@ export const mainNets: {[key: number]: Network} = {
         symbol: 'xDAI',
         priceId: 'xdai'
     },
+    30: {
+        name: 'Rootstock',
+        rpc: 'https://public-node.rsk.co',
+        chainId: 30,
+        explorer: 'https://explorer.rootstock.io',
+        icon: 'rootstock.webp',
+        symbol: 'RBTC',
+        priceId: 'rootstock'
+    },
     10: {
         name: 'Optimism',
         rpc: 'https://mainnet.optimism.io',
@@ -104,6 +113,14 @@ export const testNets = {
         chainId: 100200,
         explorer: 'https://gnosis-chiado.blockscout.com',
         icon:'xdai_t.webp'
+    },
+    31: {
+        name: 'Rootstock Testnet',
+        rpc: 'https://public-node.testnet.rsk.co',
+        chainId: 31,
+        explorer: 'https://explorer.testnet.rootstock.io',
+        icon: 'rootstock_t.webp',
+        symbol: 'tRBTC',
     },
     420: {
         name: 'TESTNET Optimism Goreli',
