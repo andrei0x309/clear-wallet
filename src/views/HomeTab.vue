@@ -187,12 +187,16 @@
           <ion-radio-group :value="selectedAccount?.address ?? ''">
             <ion-list-header>
               <ion-label>Accounts</ion-label>
+              <ion-searchbar
+                placeholder="search..."
+                @ionInput="searchAccount"
+              ></ion-searchbar>
             </ion-list-header>
 
             <ion-list
               @click="changeSelectedAccount(account.address)"
               class="ion-padding"
-              v-for="account of accounts"
+              v-for="account of filtredAccounts"
               :key="account.address"
               button
             >
@@ -228,11 +232,15 @@
           <ion-radio-group :value="selectedNetwork.chainId">
             <ion-list-header>
               <ion-label>Networks</ion-label>
+              <ion-searchbar
+                placeholder="search..."
+                @ionInput="searchNetwork"
+              ></ion-searchbar>
             </ion-list-header>
 
             <ion-list
               class="ion-padding"
-              v-for="network of networks"
+              v-for="network of filtredNetworks"
               :key="network.chainId"
             >
               <ion-item>
@@ -284,6 +292,7 @@ import {
   IonToast,
   IonIcon,
   IonAvatar,
+  IonSearchbar,
 } from "@ionic/vue";
 import {
   getAccounts,
@@ -332,9 +341,12 @@ export default defineComponent({
     IonIcon,
     IonAvatar,
     GitHub,
+    IonSearchbar,
   },
   setup: () => {
     const loading = ref(false);
+    const filtredAccounts = ref([]) as Ref<Account[]>;
+    const filtredNetworks = ref({}) as Ref<Networks>;
     const accounts = ref([]) as Ref<Account[]>;
     const networks = ref({}) as Ref<Networks>;
     const accountsModal = ref(false) as Ref<boolean>;
@@ -362,6 +374,8 @@ export default defineComponent({
       ]).then((res) => {
         accounts.value = res[0];
         networks.value = res[1];
+        filtredAccounts.value = res[0];
+        filtredNetworks.value = res[1];
         selectedAccount.value = res[2];
         selectedNetwork.value = res[3];
         settings.value = res[4];
@@ -425,6 +439,45 @@ export default defineComponent({
       loading.value = false;
     };
 
+    const searchAccount = (e: any) => {
+      const text = e.target.value;
+      if (text) {
+        filtredAccounts.value = accounts.value.filter(
+          (item) =>
+            item.name.toLowerCase().includes(text.toLowerCase()) ||
+            item.address.toLowerCase().includes(text.toLowerCase())
+        );
+      } else {
+        filtredAccounts.value = accounts.value;
+      }
+    };
+
+    const searchNetwork = (e: any) => {
+      const text = e.target.value;
+      if (text) {
+        const filtred = Object.keys(networks.value).reduce(
+          (acc: Networks, key: string) => {
+            if (
+              networks.value[Number(key)].name
+                .toLowerCase()
+                .includes(text.toLowerCase()) ||
+              networks.value[Number(key)].rpc
+                .toLowerCase()
+                .includes(text.toLowerCase()) ||
+              networks.value[Number(key)].chainId.toString().includes(text)
+            ) {
+              acc[Number(key)] = networks.value[Number(key)];
+            }
+            return acc;
+          },
+          {} as Networks
+        );
+        filtredNetworks.value = filtred;
+      } else {
+        filtredNetworks.value = networks.value;
+      }
+    };
+
     return {
       loading,
       accounts,
@@ -448,6 +501,10 @@ export default defineComponent({
       version,
       goToFarcasterActions,
       goToPersonalSign,
+      filtredAccounts,
+      filtredNetworks,
+      searchAccount,
+      searchNetwork,
     };
   },
 });

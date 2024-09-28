@@ -339,8 +339,9 @@ export default defineComponent({
     const extractMnemonic = () => {
       mnemonic.value = mnemonic.value.trim().replace(/\s+/g, " ");
       mnemonicIndex.value = Number(mnemonicIndex.value);
+      const wordCount = mnemonic.value.trim().split(" ").length;
 
-      if (mnemonic.value.split(" ").length !== 12) {
+      if (wordCount !== 12 && wordCount !== 24) {
         alertMsg.value = "Invalid mnemonic.";
         alertOpen.value = true;
         return;

@@ -1,5 +1,12 @@
 # Changelog
 
+## Manifest Version 1.4.6
+
+- added support for 24 words seed phrases besides 12 words
+- added templete for Degen network with assets
+- added search when selectiing accounts and networks
+- added small memory cache layer to help with websites that spam the wallet with requests
+
 ## Manifest Version 1.4.5
 
 - improved gas estimation for transactions

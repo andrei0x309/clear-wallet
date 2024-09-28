@@ -17,7 +17,7 @@ export const mainNets: {[key: number]: Network} = {
         chainId: 137,
         explorer: 'https://polygonscan.com',
         icon:'polygon.webp',
-        symbol: 'MATIC',
+        symbol: 'POL',
         priceId: 'matic-network'
     },
     100: {
@@ -73,6 +73,15 @@ export const mainNets: {[key: number]: Network} = {
         icon: 'cyber.webp',
         symbol: 'ETH',
         priceId: 'ethereum'
+    },
+    666666666: {
+        name: 'Degen',
+        rpc: 'https://rpc.degen.tips',
+        chainId: 666666666,
+        explorer: 'https://explorer.degen.tips/',
+        icon: 'degen.webp',
+        symbol: 'DEGEN',
+        priceId: 'degen'
     },
 }
 
