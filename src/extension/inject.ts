@@ -24,6 +24,9 @@ function loadEIP1193Provider(provider: any) {
 
     function announceProvider() {
       const info: EIP6963ProviderInfo = ProviderInfo
+      if(!provider.accounts) {
+        return
+      }
       window.dispatchEvent(
         new CustomEvent("eip6963:announceProvider", {
           detail: Object.freeze({ info, provider }),
@@ -40,6 +43,7 @@ function loadEIP1193Provider(provider: any) {
     );
   
     announceProvider();
+    // console.info('EIP-1193 Provider loaded')
   }
 
 const listners = {
@@ -119,7 +123,8 @@ const sendMessage = (args: RequestArguments, ping = false, from = 'request'): Pr
 class MetaMaskAPI {
     isMetaMask = true
     isClWallet = true
-    _state = {accounts: Array(1), isConnected: true, isUnlocked: true, initialized: true, isPermanentlyDisconnected: false}
+    accounts = []
+    _state = {accounts: [], isConnected: false, isUnlocked: true, initialized: true, isPermanentlyDisconnected: false}
     _sentWarnings = {enable: false, experimentalMethods: false, send: false, events: {}}
     // Deprecated - hardcoded for now, websites should not access this directly since is deprecated for a long time
     chainId = "0x89"
@@ -145,7 +150,7 @@ class MetaMaskAPI {
         _events: {}, _eventsCount: 0, _maxListeners: undefined, _middleware: Array(4)
     }
     isConnected() {
-        return true
+        return false
     }
     // for maximum compatibility since is cloning the same API
     
@@ -374,12 +379,15 @@ const listner =  function(event: any) {
                     (<any>eth).chainId = eventDataDataData?.chainId ?? '0x89';
                     (<any>eth).selectedAddress = eventDataData?.address?.[0] ?? null;
                     (<any>eth).accounts = eventDataData.address?.[0] ? [eventDataData.address?.[0]] : [];
+                    (<any>eth)._state.accounts = (<any>eth).accounts;
                     (<any>eth).isConnected = () => true;
+                    loadEIP1193Provider(eth)
                 } else if( listnerName === 'chainChanged' ) {
                     (<any>eth).networkVersion = String(parseInt(eventDataDataData ?? "0x89", 16));
                     (<any>eth).chainId = eventDataData ?? '0x89';
                 } else if ( listnerName === 'accountsChanged' ) {
                     (<any>eth).accounts = eventDataData?.[0] ? [eventDataData?.[0]] : [];
+                    (<any>eth)._state.accounts = (<any>eth).accounts;
                     (<any>eth).selectedAddress = eventDataData?.[0] ?? '';
                 }
                 listners[listnerName].forEach(listner => listner(eventDataDataData));
@@ -433,8 +441,7 @@ sendMessage({
 }
 
 injectWallet();
-loadEIP1193Provider(eth)
-
+loadEIP1193Provider(eth);
 
 // HELPERS TO CLONE METAMASK API
 

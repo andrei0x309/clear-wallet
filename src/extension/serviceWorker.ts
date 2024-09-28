@@ -39,12 +39,14 @@ import type { RequestArguments } from '@/extension/types'
 import { rpcError } from '@/extension/rpcConstants'
 import { updatePrices } from '@/utils/gecko'
 import { allTemplateNets } from '@/utils/networks'
+import { cyrb64Hash } from '@/utils/misc'
 
 // const METAMAKS_EXTENSION_ID = 'nkbihfbeogaeaoehlefnkodbefgpgknn'
 
 let notificationUrl: string
 
 const chainIdThrottle: { [key: string]: number } = {}
+const cache = new Map<string, { [key: string]: any }>()
 
 const reInjectContentScripts = async () => {
     const cts = chrome.runtime.getManifest().content_scripts ?? []
@@ -223,7 +225,15 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
             switch (message.method) {
                 case 'eth_call': {
                     try {
-                        sendResponse(await evmCall(message?.params ?? []))
+                        const hash = cyrb64Hash('eth_call' + JSON.stringify(message?.params))
+                        const cacheItem = cache.get(hash)
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                            sendResponse(cacheItem?.data);
+                            break
+                        }
+                        const resp = await evmCall(message?.params ?? [])
+                        sendResponse(resp)
+                        cache.set(hash, { time: Date.now(), data: resp })
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -236,6 +246,14 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 }
                 case 'eth_getBlockByNumber': {
                     try {
+
+                        const hash = cyrb64Hash('eth_call' + JSON.stringify(message?.params))
+                        const cacheItem = cache.get(hash)
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                            sendResponse(cacheItem?.data);
+                            break
+                        }
+
                         const params = message?.params?.[0] as any
                         const block = await getBlockByNumber(params) as any
                         const newBlock = { ...block }
@@ -245,6 +263,9 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                         newBlock._difficulty = numToHexStr(block.difficulty)
                         newBlock.difficulty = block._difficulty
                         sendResponse(newBlock)
+
+                        cache.set(hash, { time: Date.now(), data: newBlock })
+
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -258,9 +279,25 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 case 'eth_getTransactionCount': {
                     try {
                         if (message?.params?.[1]) {
-                            sendResponse(numToHexStr(Number(await getTxCount(message?.params?.[0] as string, message?.params?.[1] as string))))
+                            const hash = cyrb64Hash('eth_getTransactionCount' + JSON.stringify(message?.params))
+                            const cacheItem = cache.get(hash)
+                            if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                                sendResponse(cacheItem?.data);
+                                break
+                            }
+                            const resp = numToHexStr(Number(await getTxCount(message?.params?.[0] as string, message?.params?.[1] as string)))
+                            sendResponse(resp)
+                            cache.set(hash, { time: Date.now(), data: resp })
                         } else {
-                            sendResponse(numToHexStr(Number(await getTxCount(message?.params?.[0] as string))))
+                            const hash = cyrb64Hash('eth_getTransactionCount' + JSON.stringify(message?.params))
+                            const cacheItem = cache.get(hash)
+                            if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                                sendResponse(cacheItem?.data);
+                                break
+                            }
+                            const resp = numToHexStr(Number(await getTxCount(message?.params?.[0] as string)))
+                            sendResponse(resp)
+                            cache.set(hash, { time: Date.now(), data: resp })
                         }
                     } catch (e) {
                         sendResponse({
@@ -274,7 +311,15 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 }
                 case 'eth_getTransactionByHash': {
                     try {
-                        sendResponse(await getTxByHash(message?.params?.[0] as string))
+                        const hash = cyrb64Hash('eth_getTransactionByHash' + JSON.stringify(message?.params))
+                        const cacheItem = cache.get(hash)
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                            sendResponse(cacheItem?.data);
+                            break
+                        }
+                        const resp = await getTxByHash(message?.params?.[0] as string)
+                        sendResponse(resp)
+                        cache.set(hash, { time: Date.now(), data: resp })
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -287,7 +332,15 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 }
                 case 'eth_getTransactionReceipt': {
                     try {
-                        sendResponse(await getTxReceipt(message?.params?.[0] as string))
+                        const hash = cyrb64Hash('eth_getTransactionByHash' + JSON.stringify(message?.params))
+                        const cacheItem = cache.get(hash)
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                            sendResponse(cacheItem?.data);
+                            break
+                        }
+                        const resp = await getTxReceipt(message?.params?.[0] as string)
+                        sendResponse(resp)
+                        cache.set(hash, { time: Date.now(), data: resp })
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -300,7 +353,15 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 }
                 case 'eth_gasPrice': {
                     try {
-                        sendResponse(numToHexStr(BigInt(Math.trunc((await getGasPrice()).price * 1e9))))
+                        const hash = cyrb64Hash('eth_gasPrice' + JSON.stringify(message?.params))
+                        const cacheItem = cache.get(hash)
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                            sendResponse(cacheItem?.data);
+                            break
+                        }
+                        const resp = numToHexStr(BigInt(Math.trunc((await getGasPrice()).price * 1e9)))
+                        sendResponse(resp)
+                        cache.set(hash, { time: Date.now(), data: resp })
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -313,9 +374,16 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 }
                 case 'eth_getBalance': {
                     try {
+                        const hash = cyrb64Hash('eth_getBalance' + JSON.stringify(message?.params))
+                        const cacheItem = cache.get(hash)
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                            sendResponse(cacheItem?.data);
+                            break
+                        }
                         const balance = await getBalance()
                         const balanceHex = numToHexStr(balance ?? 0n)
                         sendResponse(balanceHex)
+                        cache.set(hash, { time: Date.now(), data: balanceHex })
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -328,7 +396,15 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 }
                 case 'eth_getCode': {
                     try {
-                        sendResponse(await getCode(message?.params?.[0] as string))
+                        const hash = cyrb64Hash('eth_getCode' + JSON.stringify(message?.params))
+                        const cacheItem = cache.get(hash)
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                            sendResponse(cacheItem?.data);
+                            break
+                        }
+                        const resp = await getCode(message?.params?.[0] as string)
+                        sendResponse(resp)
+                        cache.set(hash, { time: Date.now(), data: resp })
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -341,7 +417,15 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 }
                 case 'eth_blockNumber': {
                     try {
-                        sendResponse(numToHexStr(await getBlockNumber()))
+                        const hash = cyrb64Hash('eth_blockNumber' + JSON.stringify(message?.params))
+                        const cacheItem = cache.get(hash)
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                            sendResponse(cacheItem?.data);
+                            break
+                        }
+                        const resp = numToHexStr(await getBlockNumber())
+                        sendResponse(resp)
+                        cache.set(hash, { time: Date.now(), data: resp })
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -363,14 +447,22 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                             })
                             break
                         }
+                        const hash = cyrb64Hash('eth_estimateGas' + JSON.stringify(message?.params))
+                        const cacheItem = cache.get(hash)
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 3e3) {
+                            sendResponse(cacheItem?.data);
+                            break
+                        }
                         const gas = await estimateGas({
                             to: params?.to ?? '',
                             from: params?.from ?? '',
                             data: params?.data ?? '',
                             value: params?.value ?? '0x0'
                         })
+
                         const gasHex = numToHexStr(gas ?? 0n)
                         sendResponse(gasHex)
+                        cache.set(hash, { time: Date.now(), data: gasHex })
                     } catch (err) {
                         if (String(err).includes('UNPREDICTABLE_GAS_LIMIT')) {
                             chrome.notifications.create({
@@ -398,7 +490,15 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 case 'eth_requestAccounts':
                 case 'eth_accounts': {
                     try {
-                        sendResponse(await getSelectedAddress())
+                        const hash = cyrb64Hash('eth_accounts' + JSON.stringify(message?.params))
+                        const cacheItem = cache.get(hash)
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 3e3) {
+                            sendResponse(cacheItem?.data);
+                            break
+                        }
+                        const resp = await getSelectedAddress()
+                        sendResponse(resp)
+                        cache.set(hash, { time: Date.now(), data: resp })
                     } catch (e) {
                         sendResponse({
                             error: true,
@@ -413,12 +513,20 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 case 'net_version':
                     {
                         try {
+                            const hash = cyrb64Hash('eth_chainId' + JSON.stringify(message?.params))
+                            const cacheItem = cache.get(hash)
+                            if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                                sendResponse(cacheItem?.data);
+                                break
+                            }
                             const isNetVersion = message.method === 'net_version'
                             const urlKey = await chainIdThrottleFn(message?.website ?? '')
                             const network = await getSelectedNetwork()
                             const chainId = network?.chainId ?? 1
-                            sendResponse(isNetVersion ? chainId.toString() : `0x${chainId.toString(16)}`)
+                            const resp = isNetVersion ? chainId.toString() : `0x${chainId.toString(16)}`
+                            sendResponse(resp)
                             chainIdThrottle[urlKey] -= 1
+                            cache.set(hash, { time: Date.now(), data: resp })
                         } catch (e) {
                             sendResponse({
                                 error: true,
@@ -515,7 +623,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
 
                             const settings = await getSettings()
                             if (settings.encryptAfterEveryTx) {
-                                clearPk()
+                                await clearPk()
                             }
 
                         } catch (err) {
@@ -603,7 +711,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                         )
                         const settings = await getSettings()
                         if (settings.encryptAfterEveryTx) {
-                            clearPk()
+                            await clearPk()
                         }
                     } catch (e) {
                         console.warn('Error: signTypedData', e)
