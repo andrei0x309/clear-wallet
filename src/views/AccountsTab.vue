@@ -27,7 +27,7 @@
       </ion-item>
       <ion-list v-for="account of accounts" :key="account.address">
         <ion-item>
-          <ion-label>
+          <ion-label style="color: var(--primary-color)">
             {{ account.name }}
           </ion-label>
         </ion-item>

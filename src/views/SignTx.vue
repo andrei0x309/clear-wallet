@@ -2,7 +2,16 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Send Transaction</ion-title>
+        <ion-title
+          >Send Transaction
+          {{
+            `${
+              intialSelectedAccount?.name
+                ? "- [ " + intialSelectedAccount?.name + " ]"
+                : ""
+            }`
+          }}</ion-title
+        >
       </ion-toolbar>
     </ion-header>
 
@@ -200,7 +209,7 @@ import {
   hexTostr,
 } from "@/utils/platform";
 import { getBalance, getGasPrice, estimateGas } from "@/utils/wallet";
-import type { Network } from "@/extension/types";
+import type { Network, Account } from "@/extension/types";
 import { allTemplateNets, chainIdToPriceId } from "@/utils/networks";
 import UnlockModal from "@/views/UnlockModal.vue";
 import router from "@/router";
@@ -245,6 +254,7 @@ export default defineComponent({
     const insuficientBalance = ref(false);
     const gasPriceReFetch = ref(true);
     const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
+    const intialSelectedAccount = ref(null as unknown) as Ref<Account>;
     const dollarPrice = ref(0);
     const gasLimitModal = ref(false);
     const gasPriceModal = ref(false);
@@ -367,7 +377,9 @@ export default defineComponent({
       const pGasPrice = getGasPrice();
       const pBalance = getBalance();
       const pGetPrices = getPrices();
-      selectedNetwork.value = await getSelectedNetwork();
+      const data = await Promise.all([getSelectedNetwork(), getSelectedAccount()]);
+      selectedNetwork.value = data[0];
+      intialSelectedAccount.value = data[1];
       userBalance.value = Number(
         ethers.formatEther((await pBalance).toString() ?? "0x0")
       );
@@ -442,6 +454,7 @@ export default defineComponent({
       gasPriceModal,
       inGasPrice,
       inGasLimit,
+      intialSelectedAccount,
     };
   },
 });

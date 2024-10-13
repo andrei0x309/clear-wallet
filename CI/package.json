@@ -6,11 +6,11 @@
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.5.3"
   },
   "dependencies": {
-    "farcaster-hub-utils": "^0.1.8",
-    "yup-api-interact": "^0.1.6"
+    "farcaster-hub-utils": "0.1.8",
+    "yup-api-interact": "0.1.7"
   },
   "license": "MIT"
 }

@@ -106,7 +106,7 @@
           label-placement="stacked"
           style="overflow-y: scroll"
           :rows="10"
-          :cols="20"
+          :cols="40"
           :value="result"
           readonly
         ></ion-textarea>

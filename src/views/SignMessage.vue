@@ -8,7 +8,16 @@
 
     <ion-content class="ion-padding">
       <ion-item>
-        <ion-label>Message to Sign</ion-label>
+        <ion-label
+          >Message to Sign
+          {{
+            `${
+              intialSelectedAccount?.name
+                ? "- [ " + intialSelectedAccount?.name + " ]"
+                : ""
+            }`
+          }}
+        </ion-label>
       </ion-item>
       <ion-item>
         <div
@@ -67,6 +76,7 @@ import {
   hexTostr,
 } from "@/utils/platform";
 import UnlockModal from "@/views/UnlockModal.vue";
+import type { Account } from "@/extension/types";
 
 export default defineComponent({
   components: {
@@ -84,6 +94,7 @@ export default defineComponent({
   setup: () => {
     const route = useRoute();
     const loading = ref(false);
+    const intialSelectedAccount = ref(null as Account | null);
     const rid = (route?.params?.rid as string) ?? "";
 
     let sigmMsg: string = "";
@@ -117,6 +128,9 @@ export default defineComponent({
 
     onIonViewWillEnter(async () => {
       blockLockout();
+      getSelectedAccount().then((account) => {
+        intialSelectedAccount.value = account;
+      });
       interval = setInterval(async () => {
         if (timerReject.value <= 0) {
           onCancel();
@@ -172,6 +186,7 @@ export default defineComponent({
       onSign,
       loading,
       timerReject,
+      intialSelectedAccount,
     };
   },
 });

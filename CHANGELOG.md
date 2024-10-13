@@ -1,5 +1,15 @@
 # Changelog
 
+## Manifest Version 1.4.7
+
+- added network(Rootstock Network) template from @ahsan-javaiid
+- updated all deps
+- tweaked the local memory cache
+- switched to bun packet manager
+- added a small demo video of the latest version in repo
+- UI changes
+- Sign Tx And Sign message now show selected account in the header
+
 ## Manifest Version 1.4.6
 
 - added support for 24 words seed phrases besides 12 words

@@ -104,13 +104,14 @@ const main = async () => {
             const commiter = GithubEvent?.head_commit?.author.username || GithubEvent?.head_commit?.committer?.username || ''
             const message = `Github ClearWallet new repo commit!\n
 - ChromeStore: https://bit.ly/clw-evm \n
+- Docs: https://clear-wallet.flashsoft.eu \n
 - Commit: ${GithubEvent.head_commit.url} \n
 ${commiter ? `- Commiter: @${commiter}` : ''}
             `;
 
             await yupAPI.sendPost({
                 content: message,
-                platforms: ['twitter', 'threads', 'bsky', 'lens']
+                platforms: ['twitter', 'threads', 'bsky', 'lens', 'mastodon']
             })
 
             await fchubUtils.createFarcasterPost({

@@ -20,6 +20,10 @@ For more info you can check [docs website](https://clear-wallet.flashsoft.eu)
 
 [Article on Mirror](https://mirror.xyz/andrei0x309.eth/9nc8UXrGIGOvz694ZY2gouS1JM9L8-Z8ITLNtirqD6Q)
 
+### Latest Demo Clip
+
+https://github.com/user-attachments/assets/4f7d267a-7410-43cf-b3bd-0256f1ccc954
+
 ### FAQ
 
 Q: Why use Ionic?
@@ -42,7 +46,7 @@ A:  - It assumes that the user has some knowledge about the EVM ecosystem. It do
 
 Q: Is this ready to use?
 
-A: Should work on most modern websites as a Metamask replacement. Currently is pretty stable. It has a nice set of features that I needed. 
+A: Should work on most modern websites as a Metamask replacement. Currently is pretty stable. It has a nice set of features that I needed.
 I developed this pretty fast in my free time, and you should always back-up your keys( since I've seen even well-known wallets sometimes render keys inaccessible). This wallet only handles the keys and personal data locally for maximum privacy and trust.
 
 Q: Will this project be heavily maintained?
