@@ -17,7 +17,7 @@
               position: absolute;
               right: 1.1rem;
               margin-left: 0.3rem;
-              color: coral;
+              color: #645285;
               font-weight: bold;
               font-size: 0.65rem;
             "
@@ -60,7 +60,7 @@
             )
           "
         >
-          <p style="font-size: 0.7rem; color: coral">{{ selectedAccount?.address }}</p>
+          <p style="font-size: 0.7rem; color: #645285">{{ selectedAccount?.address }}</p>
           <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
         </ion-item>
         <ion-item
@@ -107,7 +107,7 @@
           @click="copyText(String(selectedNetwork?.chainId), getToastRef())"
           style="cursor: pointer"
           >Selected Network ID:
-          <span style="color: coral; font-weight: bold">{{
+          <span style="color: #645285; font-weight: bold">{{
             selectedNetwork?.chainId
           }}</span>
           <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
@@ -121,21 +121,6 @@
           "
           >Select</ion-button
         >
-      </ion-item>
-      <ion-item style="margin-top: 0.3rem">
-        <div class="display: flex; flex-direction: column">
-          <img
-            alt="stealthex"
-            @click="openTab('https://stealthex.io')"
-            id="exchange-btn"
-            :src="getUrl('assets/exchange-btn-min.svg')"
-            class="exchange-btn"
-            style=""
-          />
-          <p style="font-size: 0.75rem; opacity: 0.8; padding: 0.2rem">
-            This button does not contain any referral to maximize privacy.
-          </p>
-        </div>
       </ion-item>
       <ion-item style="margin-top: 0.3rem; margin-bottom: 0.3rem; text-align: center">
         <ion-button
@@ -154,7 +139,21 @@
           >Personal Sign Messages</ion-button
         >
       </ion-item>
-
+      <ion-item style="margin-top: 0.3rem">
+        <div class="display: flex; flex-direction: column">
+          <img
+            alt="stealthex"
+            @click="openTab('https://stealthex.io')"
+            id="exchange-btn"
+            :src="getUrl('assets/exchange-btn-min.svg')"
+            class="exchange-btn"
+            style=""
+          />
+          <p style="font-size: 0.75rem; opacity: 0.8; padding: 0.2rem">
+            This button does not contain any referral to maximize privacy.
+          </p>
+        </div>
+      </ion-item>
       <ion-loading
         :is-open="loading"
         cssClass="my-custom-class"
@@ -189,6 +188,13 @@
               <ion-label>Accounts</ion-label>
               <ion-searchbar
                 placeholder="search..."
+                autocomplete="off"
+                autocorrect="off"
+                :autofocus="true"
+                :clear-input="false"
+                :clear-on-edit="false"
+                :spellcheck="false"
+                :tabindex="0"
                 @ionInput="searchAccount"
               ></ion-searchbar>
             </ion-list-header>
@@ -233,6 +239,13 @@
             <ion-list-header>
               <ion-label>Networks</ion-label>
               <ion-searchbar
+                autocomplete="off"
+                autocorrect="off"
+                :autofocus="true"
+                :clear-input="false"
+                :clear-on-edit="false"
+                :spellcheck="false"
+                :tabindex="0"
                 placeholder="search..."
                 @ionInput="searchNetwork"
               ></ion-searchbar>
@@ -530,7 +543,7 @@ export default defineComponent({
   top: 0.9rem;
   right: 2.4rem;
   margin-left: 0.3rem;
-  color: coral;
+  color: #645285;
   font-weight: bold;
   font-size: 0.65rem;
   cursor: pointer;

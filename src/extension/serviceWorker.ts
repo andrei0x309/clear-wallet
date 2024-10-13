@@ -376,7 +376,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                     try {
                         const hash = cyrb64Hash('eth_getBalance' + JSON.stringify(message?.params))
                         const cacheItem = cache.get(hash)
-                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e2) {
                             sendResponse(cacheItem?.data);
                             break
                         }
@@ -419,7 +419,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                     try {
                         const hash = cyrb64Hash('eth_blockNumber' + JSON.stringify(message?.params))
                         const cacheItem = cache.get(hash)
-                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 3e3) {
                             sendResponse(cacheItem?.data);
                             break
                         }
@@ -449,7 +449,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                         }
                         const hash = cyrb64Hash('eth_estimateGas' + JSON.stringify(message?.params))
                         const cacheItem = cache.get(hash)
-                        if (cacheItem &&  cacheItem?.time > Date.now() - 3e3) {
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e2) {
                             sendResponse(cacheItem?.data);
                             break
                         }
@@ -492,7 +492,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                     try {
                         const hash = cyrb64Hash('eth_accounts' + JSON.stringify(message?.params))
                         const cacheItem = cache.get(hash)
-                        if (cacheItem &&  cacheItem?.time > Date.now() - 3e3) {
+                        if (cacheItem &&  cacheItem?.time > Date.now() - 5e2) {
                             sendResponse(cacheItem?.data);
                             break
                         }
@@ -515,7 +515,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                         try {
                             const hash = cyrb64Hash('eth_chainId' + JSON.stringify(message?.params))
                             const cacheItem = cache.get(hash)
-                            if (cacheItem &&  cacheItem?.time > Date.now() - 5e3) {
+                            if (cacheItem &&  cacheItem?.time > Date.now() - 1e3) {
                                 sendResponse(cacheItem?.data);
                                 break
                             }

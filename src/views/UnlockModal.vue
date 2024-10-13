@@ -33,14 +33,22 @@
         <ion-list>
           <ion-item>
             <ion-input
+              label-placement="floating"
               aria-label="password"
-              placeholder=""
-              class="password-input"
               type="password"
-              @ion-input="mpPass = String($event.target.value)"
-              fill="solid"
+              v-model="mpPass"
+              autocomplete="off"
+              autocorrect="off"
+              :autofocus="true"
+              :clear-input="false"
+              :clear-on-edit="false"
+              :spellcheck="false"
+              :tabindex="0"
+              @ionInput="mpPass = $event.target.value"
               id="pass-input"
-            ></ion-input>
+            >
+              <div slot="label"><ion-text color="danger">(Password)</ion-text></div>
+            </ion-input>
 
             <!-- <ion-input
             label="Password"
@@ -48,7 +56,6 @@
             fill="outline"
             placeholder=""
             type="password"
-            ref="ionInput"
             @ion-input="mpPass = String($event.target.value)"
           ></ion-input> -->
           </ion-item>
@@ -156,16 +163,12 @@ export default defineComponent({
     onMounted(async () => {
       await new Promise((resolve) => setTimeout(resolve, 150));
       const passInput = document.querySelector("#pass-input input") as HTMLInputElement;
-      console.log("passInput", passInput);
       if (passInput) {
         passInput?.focus();
         passInput.addEventListener("keyup", (e: any) => {
           if (e.key === "Enter") {
             unlock();
           }
-        });
-        passInput.addEventListener("blur", () => {
-          passInput?.focus();
         });
       }
     });
