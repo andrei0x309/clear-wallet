@@ -131,7 +131,8 @@
             <ion-label
               ><h2>Try to scan QR</h2>
               <p style="font-size: 0.8rem">
-                (must be visible on current page)
+                (must be visible on current page, might fail if QR is small or too
+                complex)
               </p></ion-label
             >
           </ion-item>
@@ -143,16 +144,20 @@
           <ion-item>
             <ion-label
               ><h2>Alternative: paste link from QR</h2>
-              <p style="font-size: 0.8rem; opacity: 0.9">
-                similar to: https://warpcast.com/~/siwf?channelToken=AXLUD4S4
+              <p style="font-size: 0.7rem; opacity: 0.9">
+                Privy has copy link, if you see `I am on mobile` you can also right click
+                to copy. Link is similar to:
+                https://warpcast.com/~/siwf?channelToken=AXXXXXXX
               </p></ion-label
             >
           </ion-item>
 
           <ion-item>
             <ion-label>
-              <p>Account needs to own a fid</p>
-              <p>QR needs to be visible on the website you click authorize</p>
+              <p style="font-size: 0.7rem; opacity: 0.9">
+                Account needs to own a fid, WC API has become slow you might need to try
+                multiple, times if you don't get signed in
+              </p>
             </ion-label>
           </ion-item>
           <ion-item>

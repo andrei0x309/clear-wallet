@@ -44,7 +44,7 @@
               :clear-on-edit="false"
               :spellcheck="false"
               :tabindex="0"
-              @ionInput="mpPass = $event.target.value"
+              @ionInput="(e: any) => (mpPass = String(e.target.value))"
               id="pass-input"
             >
               <div slot="label"><ion-text color="danger">(Password)</ion-text></div>

@@ -137,7 +137,7 @@ class MetaMaskAPI {
     _eventsCount = 2
     _jsonRpcConnection = {}
     _log = {}
-    _maxListeners=  100
+    _maxListeners = 10
     _metamask = new Proxy({
         isUnlocked: () => { 
             return Promise.resolve(true)
@@ -153,7 +153,6 @@ class MetaMaskAPI {
         return false
     }
     // for maximum compatibility since is cloning the same API
-    
     enable() {
         return sendMessage({ method: 'eth_requestAccounts', params: Array(0)})
     }
@@ -314,7 +313,7 @@ class MetaMaskAPI {
     }
 
     getMaxListeners()  {
-        return 100
+        return 10
     }
     _getExperimentalApi ()  {
         return this._metamask
@@ -380,6 +379,7 @@ const listner =  function(event: any) {
                     (<any>eth).selectedAddress = eventDataData?.address?.[0] ?? null;
                     (<any>eth).accounts = eventDataData.address?.[0] ? [eventDataData.address?.[0]] : [];
                     (<any>eth)._state.accounts = (<any>eth).accounts;
+                    (<any>eth)._state.isConnected = true;
                     (<any>eth).isConnected = () => true;
                     loadEIP1193Provider(eth)
                 } else if( listnerName === 'chainChanged' ) {

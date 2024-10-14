@@ -1,9 +1,11 @@
 import { signMsg, getSelectedAddress, getOptimismProvider } from './wallet'
 import { FARCASTER_PARTIAL_KEY_ABI } from './abis'
 import { ethers } from 'ethers'
-import { getUrl } from './platform'
-import { generateApiToken } from './warpcast-auth'
+import { getUrl, setCachedFcAuthToken, getCachedFcAuthToken } from './platform'
+import { generateApiToken} from './warpcast-auth'
 import { getQRCode } from './QR'
+import { wait } from './misc'
+ 
 export interface TChannelTokenStatusResponse {
     state: string;
     nonce: string;
@@ -114,7 +116,8 @@ export const constructWarpcastSWIEMsg = ({
     return `${domain} wants you to sign in with your Ethereum account:\n${custodyAddress}\n\nFarcaster Auth\n\nURI: ${siweUri}\nVersion: 1\nChain ID: 10\nNonce: ${nonce}${notBefore ? `\nIssued At: ${notBefore}` : `\nIssued At: ${new Date(Date.now() - 1000).toISOString()}`}${expirationTime ? `\nExpiration Time: ${expirationTime}` : ''}${notBefore ? `\nNot Before: ${notBefore}` : ''}\nResources:\n- farcaster://fid/${fid}`
 }
 
-
+// WC API has become slow authtoken is many times not considered valid until a few retries
+// we use cached older token first
 export const signInWithFarcaster = async ({
     channelToken,
     message,
@@ -126,11 +129,20 @@ export const signInWithFarcaster = async ({
     signature: string,
     authToken: string
 }) => {
-    const response = await fetch(`${EP_SIGNIN}`, {
+    const maxRetries = 4
+    let retries = 1
+    let response: Response
+    const newToken = authToken
+    const cachedToken = await getCachedFcAuthToken()
+    let token = cachedToken || newToken
+    const isCachedToken = token === cachedToken
+    do {
+    await wait(200 * retries)
+     response = await fetch(`${EP_SIGNIN}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
+            'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
             channelToken,
@@ -138,6 +150,15 @@ export const signInWithFarcaster = async ({
             signature,
         })
     });
+    if (response.ok) {
+        setCachedFcAuthToken(token)
+        return response.json();
+    }
+    if (isCachedToken) {
+        token = newToken
+    }
+    retries++
+    } while (retries < maxRetries)
 
     return response.json();
 }

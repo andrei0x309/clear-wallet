@@ -161,7 +161,6 @@ export const removeAllAbis = async (): Promise<void> => {
     await storageSave('abis', defaultAbis)
 }
 
-
 export const readCAGetAll = async (): Promise<ContractActions> => {
     return ((await storageGet('read-actions'))?.['read-actions'] ?? {}) as ContractActions
 }
@@ -207,6 +206,15 @@ export const writeCARemove = async (action: string): Promise<void> => {
 export const writeCAWipe = async (): Promise<void> => {
     await storageSave('write-actions', {})
 }
+
+export const setCachedFcAuthToken = async (token: string): Promise<void> => {
+    await storageSave('fcAuthToken', token)
+}
+
+export const getCachedFcAuthToken = async (): Promise<string> => {
+    return (await storageGet('fcAuthToken'))?.fcAuthToken ?? ''
+}
+
 
 export const blockLockout = async (): Promise<Settings> => {
     const settings = await getSettings()
