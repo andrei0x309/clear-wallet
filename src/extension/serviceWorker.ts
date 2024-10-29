@@ -586,8 +586,6 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
 
                         })
                         try {
-                            console.log('waiting for user to approve or reject')
-                            console.log(rIdData?.[String(gWin?.id ?? 0)])
                             const tx = await sendTransaction({ ...params, ...(rIdData?.[String(gWin?.id ?? 0)] ?? {}) })
                             sendResponse(tx.hash)
                             const buttons = {} as any
@@ -620,12 +618,6 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                                 type: 'basic',
                                 ...(buttons)
                             } as any)
-
-                            const settings = await getSettings()
-                            if (settings.encryptAfterEveryTx) {
-                                await clearPk()
-                            }
-
                         } catch (err) {
                             console.info('Error: eth_sendTransaction', err)
                             sendResponse({
@@ -654,6 +646,14 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                             message: 'User Rejected Signature'
                         })
                     }
+                    try {
+                        const settings = await getSettings()
+                        if (settings.encryptAfterEveryTx) {
+                            await clearPk()
+                        }
+                    } catch {
+                        // ignore
+                    }
                     break
                 }
                 case 'signTypedData':
@@ -667,7 +667,6 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 case 'personal_sign':
                 case 'eth_sign': {
                     try {
-
                         const account = await getSelectedAccount()
 
                         if (!account || !('address' in account)) {
@@ -709,10 +708,6 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                                 await signTypedData(signMsgData) :
                                 await signMsg(signMsgData)
                         )
-                        const settings = await getSettings()
-                        if (settings.encryptAfterEveryTx) {
-                            await clearPk()
-                        }
                     } catch (e) {
                         console.warn('Error: signTypedData', e)
                         sendResponse({
@@ -720,6 +715,14 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                             code: rpcError.USER_REJECTED,
                             message: 'User Rejected Signature'
                         })
+                    }
+                    try {
+                        const settings = await getSettings()
+                        if (settings.encryptAfterEveryTx) {
+                            await clearPk()
+                        }
+                    } catch {
+                        // ignore
                     }
                     break
                 }
@@ -735,7 +738,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                     break
                 }
                 case 'web3_clientVersion': {
-                    sendResponse("MetaMask/v11.0.0")
+                    sendResponse("MetaMask/v12.3.0")
                     break
                 }
                 case 'wallet_getPermissions':

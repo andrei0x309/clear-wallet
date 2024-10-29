@@ -367,12 +367,6 @@ export default defineComponent({
 
     onIonViewWillEnter(async () => {
       (window as any)?.resizeTo?.(600, 800);
-      const pEstimateGas = estimateGas({
-        to: params?.to ?? "",
-        from: params?.from ?? "",
-        data: params?.data ?? "",
-        value: params?.value ?? "0x0",
-      });
       blockLockout();
       const pGasPrice = getGasPrice();
       const pBalance = getBalance();
@@ -387,6 +381,13 @@ export default defineComponent({
       gasFeed = feed;
 
       gasPrice.value = parseFloat(price.toString() ?? 0.1);
+
+      const pEstimateGas = estimateGas({
+        to: params?.to ?? "",
+        from: params?.from ?? "",
+        data: params?.data ?? "",
+        value: params?.value ?? "0x0",
+      });
 
       try {
         gasLimit.value = parseInt((await pEstimateGas).toString(), 10);
