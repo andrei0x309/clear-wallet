@@ -1,5 +1,12 @@
 # Changelog
 
+## Manifest Version 1.4.8
+
+- updated dependencies
+- updated release script
+- better clearing of storage
+- return higher MM vestion when wallet queried
+
 ## Manifest Version 1.4.7
 
 - added network(Rootstock Network) template from @ahsan-javaiid

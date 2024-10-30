@@ -13,7 +13,7 @@ async function main() {
 
   // 3. Commit changes
   execSync(`git add .`);
-  execSync(`git commit -m "Release v${newVersion}"`);
+  execSync(`git commit -m "clear-wallet@v${newVersion}"`);
 
   // 4. Create and push tag
   execSync(`git tag v${newVersion}`);
