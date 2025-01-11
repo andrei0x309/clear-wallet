@@ -1,5 +1,12 @@
 # Changelog
 
+## Manifest Version 1.4.9
+
+- updated dependencies and Vite to 6
+- added celo network to the network templates
+- updated some network icons & added a network icon template
+- added ability to also select from account address(in your wallet) when selecting a contact
+
 ## Manifest Version 1.4.8
 
 - updated dependencies
