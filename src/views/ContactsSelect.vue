@@ -5,12 +5,14 @@
         <ion-buttons slot="start">
           <ion-button @click="close">Close</ion-button>
         </ion-buttons>
-        <ion-title>Select Contact</ion-title>
+        <ion-title>Select Address</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
       <ion-item>
-        <ion-button @click="openModalAddContact()" expand="block">Add contact</ion-button>
+        <ion-button @click="openModalAddContact()" expand="block"
+          >Add Contact Addr</ion-button
+        >
       </ion-item>
 
       <ion-item>
@@ -19,41 +21,85 @@
 
       <ion-radio-group :value="selectedContact">
         <ion-list-header>
-          <ion-label>Contacts</ion-label>
+          <ion-segment
+            style="width: auto; padding: 0.5rem; margin: 0.5rem"
+            :value="currentSegment"
+            mode="ios"
+            @ion-change="segmentChange"
+          >
+            <ion-segment-button value="contacts">
+              <ion-label>Addrs Contacts</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="wallet">
+              <ion-label>Addrs from Wallet</ion-label>
+            </ion-segment-button>
+          </ion-segment>
         </ion-list-header>
 
-        <ion-list class="ion-padding" v-for="(item, index) in contacts" :key="index">
-          <ion-item>
-            <ion-radio
-              @click="changeSelected(item.address)"
-              slot="start"
-              :value="item"
-              :aria-label="item"
-            >
-              <ion-list>
-                <ion-item>
-                  <ion-label>{{ item.name }}</ion-label>
-                </ion-item>
-                <ion-item>
-                  <ion-label style="font-size: 0.75rem">{{ item.address }}</ion-label>
-                </ion-item>
-              </ion-list>
-            </ion-radio>
-          </ion-item>
-          <ion-item>
-            <ion-button @click="openModalAddContact(item.address)" expand="block"
-              >Edit contact</ion-button
-            >
-            <ion-button @click="deleteContact(item.address)" expand="block"
-              >Delete contact</ion-button
-            >
-          </ion-item>
-        </ion-list>
-        <ion-list v-if="!!!contacts.length">
-          <ion-item class="ion-padding">
-            <ion-label>No contacts found, please add at least one</ion-label>
-          </ion-item>
-        </ion-list>
+        <template v-if="currentSegment === 'contacts'">
+          <ion-list class="ion-padding" v-for="(item, index) in contacts" :key="index">
+            <ion-item>
+              <ion-radio
+                @click="changeSelected(item.address)"
+                slot="start"
+                :value="item"
+                :aria-label="item"
+              >
+                <ion-list>
+                  <ion-item>
+                    <ion-label>{{ item.name }}</ion-label>
+                  </ion-item>
+                  <ion-item>
+                    <ion-label style="font-size: 0.75rem">{{ item.address }}</ion-label>
+                  </ion-item>
+                </ion-list>
+              </ion-radio>
+            </ion-item>
+            <ion-item>
+              <ion-button @click="openModalAddContact(item.address)" expand="block"
+                >Edit contact</ion-button
+              >
+              <ion-button @click="deleteContact(item.address)" expand="block"
+                >Delete contact</ion-button
+              >
+            </ion-item>
+          </ion-list>
+          <ion-list v-if="!!!contacts.length">
+            <ion-item class="ion-padding">
+              <ion-label>No contacts found, please add at least one</ion-label>
+            </ion-item>
+          </ion-list>
+        </template>
+        <template v-if="currentSegment === 'wallet'">
+          <ion-list
+            class="ion-padding"
+            v-for="(item, index) in walletAddresses"
+            :key="index"
+          >
+            <ion-item>
+              <ion-radio
+                @click="changeSelected(item.address)"
+                slot="start"
+                :value="item"
+                :aria-label="item"
+              >
+                <ion-list>
+                  <ion-item>
+                    <ion-label>{{ item.name }}</ion-label>
+                  </ion-item>
+                  <ion-item>
+                    <ion-label style="font-size: 0.75rem">{{ item.address }}</ion-label>
+                  </ion-item>
+                </ion-list>
+              </ion-radio>
+            </ion-item>
+          </ion-list>
+          <ion-list v-if="!!!walletAddresses.length">
+            <ion-item class="ion-padding">
+              <ion-label>No addresses found in wallet, please add at least one</ion-label>
+            </ion-item>
+          </ion-list>
+        </template>
       </ion-radio-group>
 
       <ion-loading
@@ -90,13 +136,15 @@ import {
 } from "@ionic/vue";
 import { ref, onMounted, Ref } from "vue";
 import AddContact from "@/views/AddContact.vue";
-import { getContacts, replaceContacts } from "@/utils/platform";
+import { getContacts, replaceContacts, getAccounts } from "@/utils/platform";
 import type { Contact } from "@/extension/types";
 
 const loading = ref(false);
 let intialContacts = [] as Contact[];
 const contacts = ref([]) as Ref<Contact[]>;
+const walletAddresses = ref([]) as Ref<Contact[]>;
 const selectedContact = ref(null) as Ref<Contact | null>;
+const currentSegment = ref("contacts");
 
 const onSearch = (e: any) => {
   const text = e.target.value;
@@ -111,10 +159,23 @@ const onSearch = (e: any) => {
   }
 };
 
+const convertAccountsToContacts = async () => {
+  const accounts = await getAccounts();
+  walletAddresses.value = accounts.map((item) => ({
+    name: item.name,
+    address: item.address,
+  }));
+};
+
+const segmentChange = (e: CustomEvent) => {
+  currentSegment.value = e.detail.value;
+};
+
 const loadContacts = async () => {
   loading.value = true;
   intialContacts = await getContacts();
   contacts.value = intialContacts;
+  await convertAccountsToContacts();
   loading.value = false;
 };
 
@@ -165,9 +226,9 @@ const changeSelected = (address: string) => {
 
 const close = () => {
   try {
-modalController.dismiss(null, "cancel");
-} catch {
-// ignore 
-}
+    modalController.dismiss(null, "cancel");
+  } catch {
+    // ignore
+  }
 };
 </script>
