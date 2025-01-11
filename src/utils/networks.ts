@@ -92,6 +92,15 @@ export const mainNets: {[key: number]: Network} = {
         symbol: 'DEGEN',
         priceId: 'degen'
     },
+    42220: {
+        name: 'Celo Mainenet',
+        rpc: 'https://forno.celo.org',
+        chainId: 42220,
+        explorer: 'https://celoscan.io/',
+        icon: 'celo.webp',
+        symbol: 'CELO',
+        priceId: 'celo'
+    }
 }
 
 export const testNets = {
@@ -166,6 +175,14 @@ export const testNets = {
         explorer: 'https://testnet.cyberscan.co/',
         icon: 'cyber_t.webp'
     },
+    42220: {
+        name: 'Celo Mainenet',
+        rpc: 'https://forno.celo.org',
+        chainId: 42220,
+        explorer: 'https://celoscan.io/',
+        icon: 'celo.webp',
+        symbol: 'CELO',
+    }
 }
 
 export const allTemplateNets = {...mainNets, ...testNets}
