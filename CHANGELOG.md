@@ -1,5 +1,13 @@
 # Changelog
 
+## Manifest Version 1.4.10
+
+- changed release script to automatically take the changes from the CHANGELOG.md
+- bumped all dependencies to the latest versions
+- improved network selection UI and UX ( network selection view )
+- minor UI change to main view of the wallet
+- fixed release script to work with `bun` package manager
+
 ## Manifest Version 1.4.9
 
 - updated dependencies and Vite to 6
