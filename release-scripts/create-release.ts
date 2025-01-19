@@ -1,7 +1,65 @@
 const pFs = import('fs')
 const pCps = import('child_process')
 
-async function ghRelease (changes: string[], isRebuild: boolean) {
+
+async function readFirst2000Characters(filePath: string): Promise<string> {
+
+  const fs = (await pFs).default
+  try {
+    const fileStream = fs.createReadStream(filePath, { encoding: 'utf8' });
+    let data = '';
+
+    for await (const chunk of fileStream) {
+      data += chunk;
+      if (data.length >= 2000) {
+        break;
+      }
+    }
+
+    return data.substring(0, 2000); 
+  } catch (err) {
+    console.error(`Error reading file: ${err}`);
+    throw err;
+  }
+}
+
+function limitedSplit(str: string, delimiter: string, limit: number): string[] {
+  if (limit <= 0) {
+    throw new Error("Limit must be greater than 0");
+  }
+
+  const result: string[] = [];
+  let current = 0;
+  let found;
+
+  do {
+    found = str.indexOf(delimiter, current);
+    if (found === -1 || result.length === limit - 1) {
+      result.push(str.substring(current));
+      break;
+    }
+    result.push(str.substring(current, found));
+    current = found + delimiter.length; 
+  } while (true);
+
+  return result;
+}
+
+const getLastChangeLog = async () => {
+  const mainChainLogPath = 'CHANGELOG.md';
+  const fs = (await pFs).default
+  if (!fs.existsSync(mainChainLogPath)) {
+    return '';
+  }
+  const mainChainLog = await readFirst2000Characters(mainChainLogPath)
+  const manifestVersions = limitedSplit(mainChainLog, '## ', 2)[1]
+  const changesText = '## ' + manifestVersions
+  return changesText
+}
+
+
+
+async function ghRelease (isRebuild: boolean) {
   const fs = (await pFs).default
 
   if (!fs.existsSync('releases')) {
@@ -38,14 +96,12 @@ async function ghRelease (changes: string[], isRebuild: boolean) {
     fs.writeFileSync(
       changeLogPath,
       `# ${pkg.version} \n
-  ${changes.reduce((acc: string, change: string) => {
-        return acc + `- ${change}\n`;
-      }, '')}`,
+  ${await getLastChangeLog()}`,
     );
     const cps = (await pCps)
     console.log(
       await new Promise((resolve) => {
-        const p = cps.spawn('gh', ['release', 'create', `v${pkg.version}`, `./${outputPath}`, '-F', `./${changeLogPath}`], {
+        const p = cps.spawn('gh', ['release', 'create', `v${pkg.version}`, `./${outputPath}`, '-F', `./${changeLogPath}`, '--target', 'main'], {
           shell: true,
         });
         let result = '';
@@ -60,14 +116,9 @@ async function ghRelease (changes: string[], isRebuild: boolean) {
 }
 
 (async () => {
-  if (!process.argv[2]) {
-    console.log('No changes provided');
-    return;
-  }
-  const changes = process.argv[2].split(',');
 
-  const isRebuild = changes.includes('rebuild');
+  const isRebuild = process.argv[2] === 'rebuild';
 
-  await ghRelease(changes, isRebuild);
-  console.log('Release created', changes);
+  await ghRelease(isRebuild);
+  console.log('Release created');
 })();
