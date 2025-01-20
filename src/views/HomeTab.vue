@@ -106,11 +106,14 @@
           button
           @click="copyText(String(selectedNetwork?.chainId), getToastRef())"
           style="cursor: pointer"
-          >Selected Network ID:
+          >Selected Network ID:&nbsp;
           <span style="color: #645285; font-weight: bold">{{
             selectedNetwork?.chainId
           }}</span>
-          <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
+          <ion-icon
+            style="margin-left: 0.5rem; top: 2px; position: relative"
+            :icon="copyOutline"
+          ></ion-icon>
         </ion-label>
         <ion-button
           @click="
@@ -230,14 +233,13 @@
           <ion-buttons slot="start">
             <ion-button @click="networksModal = false">Close</ion-button>
           </ion-buttons>
-          <ion-title>Select</ion-title>
+          <ion-title>Select Network</ion-title>
         </ion-toolbar>
       </ion-header>
       <ion-content class="ion-padding">
         <ion-list style="margin-bottom: 4rem">
           <ion-radio-group :value="selectedNetwork.chainId">
             <ion-list-header>
-              <ion-label>Networks</ion-label>
               <ion-searchbar
                 autocomplete="off"
                 autocorrect="off"
@@ -262,17 +264,43 @@
                   slot="start"
                   :value="network.chainId"
                   :aria-label="network.name"
+                  labelPlacement="start"
+                  mode="ios"
+                  justify="space-between"
                 >
-                  <span style="opacity: 0.7; font-size: 0.8rem">
-                    ID: {{ network.chainId }} ->
-                  </span>
-                  {{ network.name }}
+                  <div>
+                    <ion-avatar
+                      v-if="(allTemplateNets as any)[network.chainId]?.icon"
+                      style="
+                        margin-right: 0.5rem;
+                        width: 1.4rem;
+                        height: 1.4rem;
+                        margin-bottom: 0.5rem;
+                      "
+                    >
+                      <img
+                        :alt="selectedNetwork?.name"
+                        :src="getUrl('assets/chain-icons/' + (allTemplateNets as any)[network.chainId]?.icon)"
+                      />
+                    </ion-avatar>
+                    {{
+                      (network.name?.length || 0) > 18
+                        ? (network.name || "").slice(0, 15) + "..."
+                        : network.name
+                    }}&nbsp;
+                    <span style="opacity: 0.7; font-size: 0.7rem">
+                      ({{ network.chainId }})
+                    </span>
+                  </div>
+                  <div>
+                    <ion-text style="opacity: 0.9; font-size: 0.85rem"
+                      >RPC:&nbsp;</ion-text
+                    >
+                    <ion-text style="opacity: 0.8; font-size: 0.75rem">{{
+                      network.rpc.replace("https://", "").replace("http://", "")
+                    }}</ion-text>
+                  </div>
                 </ion-radio>
-              </ion-item>
-              <ion-item>
-                <ion-text style="opacity: 0.8; font-size: 0.85rem">{{
-                  network.rpc
-                }}</ion-text>
               </ion-item>
             </ion-list>
           </ion-radio-group>
