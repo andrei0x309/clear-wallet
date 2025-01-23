@@ -5,25 +5,29 @@ import { resolve } from 'path';
 async function main() {
   // 0. Check tag is not already created
   const tags = execSync(`git tag --list`).toString();
-  if (tags.includes(`v${process.env.npm_package_version}`)) {
-    console.log(`Tag v${process.env.npm_package_version} already exists`);
+  if(!process.env.npm_package_version) {
+    console.log('No version found in package.json');
+    return;
+  }
+
+  const nextVersion = bumpVersion(process.env.npm_package_version);
+  if (tags.includes(`v${nextVersion}`)) {
+    console.log(`Tag v${nextVersion} already exists`);
     return;
   }
 
   // 1. Bump version in package.json
   const packageJsonPath = resolve('./package.json');
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
-  const currentVersion = packageJson.version;
-  const newVersion = bumpVersion(currentVersion);
-  packageJson.version = newVersion;
+  packageJson.version = nextVersion;
   writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
   // 3. Commit changes
   execSync(`git add .`);
-  execSync(`git commit -m "clear-wallet@v${newVersion}"`);
+  execSync(`git commit -m "clear-wallet@v${nextVersion}"`);
 
   // 4. Create and push tag
-  execSync(`git tag v${newVersion}`);
+  execSync(`git tag v${nextVersion}`);
   execSync(`git push --follow-tags`);
 
 }
