@@ -81,35 +81,57 @@
             <ion-buttons slot="start">
               <ion-button @click="accountsModal = false">Close</ion-button>
             </ion-buttons>
-            <ion-title>Select</ion-title>
+            <ion-title>Select Account</ion-title>
           </ion-toolbar>
         </ion-header>
         <ion-content class="ion-padding">
           <ion-list style="margin-bottom: 4rem">
             <ion-radio-group :value="selectedAccount?.address ?? ''">
               <ion-list-header>
-                <ion-label>Accounts</ion-label>
+                <ion-searchbar
+                  placeholder="search..."
+                  autocomplete="off"
+                  autocorrect="off"
+                  :autofocus="true"
+                  :clear-input="false"
+                  :clear-on-edit="false"
+                  :spellcheck="false"
+                  :tabindex="0"
+                  @ionInput="searchAccount"
+                ></ion-searchbar>
               </ion-list-header>
 
               <ion-list
                 @click="changeSelectedAccount(account.address)"
                 class="ion-padding"
-                v-for="account of accounts"
+                v-for="account of filtredAccounts"
                 :key="account.address"
                 button
               >
                 <ion-item>
                   <ion-radio
                     :aria-label="account.name"
-                    slot="start"
                     :value="account.address"
-                    >{{ account.name }}</ion-radio
+                    slot="end"
+                    labelPlacement="end"
+                    mode="ios"
+                    justify="start"
+                    color="warning"
+                    style="margin-left: 0.1rem"
                   >
-                </ion-item>
-                <ion-item>
-                  <ion-text style="font-size: 0.7rem; color: coral">{{
-                    account.address
-                  }}</ion-text>
+                    <div style="margin-left: 0.5rem">{{ account.name }}</div>
+                    <div style="margin-top: 0.1rem">
+                      <ion-text style="font-size: 0.65rem; color: coral">{{
+                        account.address.slice(0, 6)
+                      }}</ion-text>
+                      <ion-text style="font-size: 0.65rem">{{
+                        account.address.slice(6, -4)
+                      }}</ion-text>
+                      <ion-text style="font-size: 0.65rem; color: coral">{{
+                        account.address.slice(-4)
+                      }}</ion-text>
+                    </div>
+                  </ion-radio>
                 </ion-item>
               </ion-list>
             </ion-radio-group>
@@ -279,6 +301,7 @@ export default defineComponent({
 
     const loading = ref(false);
     const accounts = ref([]) as Ref<Account[]>;
+    const filtredAccounts = ref([]) as Ref<Account[]>;
     const accountsModal = ref(false) as Ref<boolean>;
     const selectedAccount = (ref(null) as unknown) as Ref<Account>;
     const toastState = ref(false);
@@ -289,6 +312,7 @@ export default defineComponent({
       const pSelectedAccount = getSelectedAccount();
       Promise.all([pAccounts, pSelectedAccount]).then((res) => {
         accounts.value = res[0];
+        filtredAccounts.value = res[0];
         selectedAccount.value = res[1];
         loading.value = false;
       });
@@ -543,6 +567,19 @@ export default defineComponent({
       return false;
     };
 
+    const searchAccount = (e: any) => {
+      const text = e.target.value;
+      if (text) {
+        filtredAccounts.value = accounts.value.filter(
+          (item) =>
+            item.name.toLowerCase().includes(text.toLowerCase()) ||
+            item.address.toLowerCase().includes(text.toLowerCase())
+        );
+      } else {
+        filtredAccounts.value = accounts.value;
+      }
+    };
+
     return {
       name,
       pk,
@@ -567,6 +604,8 @@ export default defineComponent({
       exitWallet,
       alertHeader,
       farcasterSWIWQRAuthorize,
+      searchAccount,
+      filtredAccounts,
     };
   },
 });

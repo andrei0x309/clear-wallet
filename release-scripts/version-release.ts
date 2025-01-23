@@ -3,6 +3,13 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 async function main() {
+  // 0. Check tag is not already created
+  const tags = execSync(`git tag --list`).toString();
+  if (tags.includes(`v${process.env.npm_package_version}`)) {
+    console.log(`Tag v${process.env.npm_package_version} already exists`);
+    return;
+  }
+
   // 1. Bump version in package.json
   const packageJsonPath = resolve('./package.json');
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));

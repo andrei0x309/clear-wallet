@@ -33,7 +33,8 @@
         </ion-item>
         <ion-item @click="copyText(account.address, getToastRef())">
           <p style="font-size: 0.7rem">{{ account.address }}</p>
-          <ion-icon :icon="copyOutline"></ion-icon>
+          &nbsp;
+          <ion-icon class="copy-icon" :icon="copyOutline"></ion-icon>
         </ion-item>
         <ion-item>
           <ion-chip @click="viewPk(account.address)">View Pk</ion-chip>
@@ -233,3 +234,18 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+
+.copy-icon {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  margin-left: 0.5rem;
+}
+
+.copy-icon:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+  transform: scale(1.05);
+}
+</style>

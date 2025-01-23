@@ -1,5 +1,14 @@
 # Changelog
 
+## Manifest Version 1.4.11
+
+- bumped all dependencies to the latest versions
+- changed release script to automatically take the latest version changes from the CHANGELOG.md
+- minor UI change to main view of the wallet
+- improved account selection UI and UX ( network selection view )
+- updated CI script logic and dependencies
+- added search in account selection in farcaster action view too
+
 ## Manifest Version 1.4.10
 
 - changed release script to automatically take the changes from the CHANGELOG.md

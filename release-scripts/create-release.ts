@@ -27,33 +27,28 @@ function limitedSplit(str: string, delimiter: string, limit: number): string[] {
   if (limit <= 0) {
     throw new Error("Limit must be greater than 0");
   }
-
   const result: string[] = [];
-  let current = 0;
-  let found;
-
-  do {
-    found = str.indexOf(delimiter, current);
-    if (found === -1 || result.length === limit - 1) {
-      result.push(str.substring(current));
+  let remaining: string = str;
+  for (let i = 0; i < limit; i++) {
+    const index = remaining.indexOf(delimiter);
+    if (index === -1) {
       break;
     }
-    result.push(str.substring(current, found));
-    current = found + delimiter.length; 
-  } while (true);
-
+    result.push(remaining.substring(0, index));
+    remaining = remaining.substring(index + delimiter.length);
+  }
   return result;
 }
 
-const getLastChangeLog = async () => {
+export const getLastChangeLog = async () => {
   const mainChainLogPath = 'CHANGELOG.md';
   const fs = (await pFs).default
   if (!fs.existsSync(mainChainLogPath)) {
     return '';
   }
   const mainChainLog = await readFirst2000Characters(mainChainLogPath)
-  const manifestVersions = limitedSplit(mainChainLog, '## ', 2)[1]
-  const changesText = '## ' + manifestVersions
+  const manifestVersions = limitedSplit(mainChainLog, '##', 2)[1]
+  const changesText = '##' + manifestVersions
   return changesText
 }
 
@@ -92,10 +87,11 @@ async function ghRelease (isRebuild: boolean) {
 
   if (!isRebuild) {
     const changeLogPath = `releases/${pkg.version}.changelog.md`;
+    const releaseCreationDate = new Date().toISOString();
 
     fs.writeFileSync(
       changeLogPath,
-      `# ${pkg.version} \n
+      `# Latest changes - (${releaseCreationDate})\n\n
   ${await getLastChangeLog()}`,
     );
     const cps = (await pCps)
