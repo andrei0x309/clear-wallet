@@ -8,18 +8,22 @@
           >
             <img alt="clw" :src="getUrl('assets/extension-icon/wallet_32.png')" />
           </ion-avatar>
-          <span style="position: absolute; top: 0.45rem; margin-left: 0.3rem"
-            >CL Wallet</span
-          >
+          <span style="position: absolute; top: 0.35rem; margin-left: 0.3rem">
+            <span style="font-size: 0.9rem; font-weight: bold; color: #aca3bb">
+              Clear
+            </span>
+            <span style="font-size: 0.9rem; color: #aca3bb"> Wallet </span>
+          </span>
           <span
             v-if="version"
             style="
               position: absolute;
               right: 1.1rem;
               margin-left: 0.3rem;
-              color: #645285;
+              color: #aca3bb;
               font-weight: bold;
               font-size: 0.65rem;
+              top: -1px;
             "
             >Version: {{ version }}</span
           >
@@ -38,7 +42,13 @@
       </ion-item>
       <ion-list v-else>
         <ion-item>
-          <ion-label>Selected Account: {{ selectedAccount?.name }}</ion-label>
+          <ion-label>
+            <span style="color: #aca3bb; font-weight: bold; font-size: 0.85rem"
+              >[ Selected Account ]:</span
+            >&nbsp;
+
+            {{ selectedAccount?.name }}</ion-label
+          >
           <ion-button
             @click="
               () => {
@@ -60,7 +70,7 @@
             )
           "
         >
-          <p style="font-size: 0.7rem; color: #645285">{{ selectedAccount?.address }}</p>
+          <p style="font-size: 0.7rem; color: #aca3bb">{{ selectedAccount?.address }}</p>
           <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
         </ion-item>
         <ion-item
@@ -106,10 +116,12 @@
           button
           @click="copyText(String(selectedNetwork?.chainId), getToastRef())"
           style="cursor: pointer"
-          >Selected Network ID:&nbsp;
-          <span style="color: #645285; font-weight: bold">{{
-            selectedNetwork?.chainId
-          }}</span>
+        >
+          <span style="color: #aca3bb; font-weight: bold; font-size: 0.85rem"
+            >[ Selected Network ID ]:</span
+          >
+          &nbsp;
+          <span style="font-weight: bold">{{ selectedNetwork?.chainId }}</span>
           <ion-icon
             style="margin-left: 0.5rem; top: 2px; position: relative"
             :icon="copyOutline"
@@ -181,14 +193,13 @@
           <ion-buttons slot="start">
             <ion-button @click="accountsModal = false">Close</ion-button>
           </ion-buttons>
-          <ion-title>Select</ion-title>
+          <ion-title>Select Account</ion-title>
         </ion-toolbar>
       </ion-header>
       <ion-content class="ion-padding">
         <ion-list style="margin-bottom: 4rem">
           <ion-radio-group :value="selectedAccount?.address ?? ''">
             <ion-list-header>
-              <ion-label>Accounts</ion-label>
               <ion-searchbar
                 placeholder="search..."
                 autocomplete="off"
@@ -212,15 +223,27 @@
               <ion-item>
                 <ion-radio
                   :aria-label="account.name"
-                  slot="start"
                   :value="account.address"
-                  >{{ account.name }}</ion-radio
+                  slot="end"
+                  labelPlacement="end"
+                  mode="ios"
+                  justify="start"
+                  color="warning"
+                  style="margin-left: 0.1rem"
                 >
-              </ion-item>
-              <ion-item>
-                <ion-text style="font-size: 0.7rem; color: coral">{{
-                  account.address
-                }}</ion-text>
+                  <div style="margin-left: 0.5rem">{{ account.name }}</div>
+                  <div style="margin-top: 0.1rem">
+                    <ion-text style="font-size: 0.65rem; color: coral">{{
+                      account.address.slice(0, 6)
+                    }}</ion-text>
+                    <ion-text style="font-size: 0.65rem">{{
+                      account.address.slice(6, -4)
+                    }}</ion-text>
+                    <ion-text style="font-size: 0.65rem; color: coral">{{
+                      account.address.slice(-4)
+                    }}</ion-text>
+                  </div>
+                </ion-radio>
               </ion-item>
             </ion-list>
           </ion-radio-group>
@@ -261,12 +284,14 @@
               <ion-item>
                 <ion-radio
                   @click="changeSelectedNetwork(network.chainId)"
-                  slot="start"
                   :value="network.chainId"
                   :aria-label="network.name"
+                  slot="start"
                   labelPlacement="start"
                   mode="ios"
                   justify="space-between"
+                  color="warning"
+                  style="padding: 0.5rem"
                 >
                   <div>
                     <ion-avatar
@@ -571,7 +596,7 @@ export default defineComponent({
   top: 0.9rem;
   right: 2.4rem;
   margin-left: 0.3rem;
-  color: #645285;
+  color: #aca3bb;
   font-weight: bold;
   font-size: 0.65rem;
   cursor: pointer;

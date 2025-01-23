@@ -3,13 +3,13 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "^1.1.18"
   },
   "peerDependencies": {
-    "typescript": "^5.5.3"
+    "typescript": "^5.7.3"
   },
   "dependencies": {
-    "farcaster-hub-utils": "0.1.8",
+    "farcaster-hub-utils": "0.1.10",
     "yup-api-interact": "0.1.7"
   },
   "license": "MIT"

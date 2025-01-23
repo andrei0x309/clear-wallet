@@ -612,7 +612,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                                 }, 6e4)
                             }
                             chrome.notifications.create(notificationId, {
-                                message: 'Transaction Confirmed',
+                                message: 'Transaction Sent',
                                 title: 'Success',
                                 iconUrl: getUrl('assets/extension-icon/wallet_128.png'),
                                 type: 'basic',

@@ -6,6 +6,7 @@ const args = Bun.argv.slice(2);
 const secrets = args[0]
 const event = args[1]
 const action = args[2]
+const changeLogUrl = 'https://clear-wallet.flashsoft.eu/docs/automated-changelog/'
 
 type TGithubEvent = {
     inputs: {
@@ -41,9 +42,6 @@ const main = async () => {
     const ENABLED = true;
     let YUP_PK = '';
     let FC_SIGNER = ''
-    let HUB_URL = ''
-    let HUB_USER = ''
-    let HUB_PASS = ''
     let GithubEvent: TGithubEvent = {} as TGithubEvent;
     const USER_FID = 709233;
 
@@ -53,16 +51,13 @@ const main = async () => {
         const parsedSecrets = JSON.parse(secrets);
         YUP_PK = parsedSecrets.YUP_PK;
         FC_SIGNER = parsedSecrets.FC_SIGNER;
-        HUB_URL = parsedSecrets.HUB_URL;
-        HUB_USER = parsedSecrets.HUB_USER;
-        HUB_PASS = parsedSecrets.HUB_PASS;
         GithubEvent = JSON.parse(event);
     } catch (e) {
         console.error('Error parsing data', e)
     }
 
     const yupAPI = new YupAPI({ PK: YUP_PK });
-    const fchubUtils = new FCHubUtils(FC_SIGNER, USER_FID, HUB_URL, HUB_USER, HUB_PASS);
+    const fchubUtils = new FCHubUtils(FC_SIGNER, USER_FID);
 
     if (action === 'update') {
         const VERSION = GithubEvent.inputs.version;
@@ -84,7 +79,7 @@ const main = async () => {
             const fcPostHash = Buffer.from(fcPost).toString('hex');
             if (fcPostHash) {
                 await new Promise((resolve) => setTimeout(resolve, 3000));
-                const launchCasterMessage = `@launch`
+                const launchCasterMessage = `@launch New Clear Wallet version ${VERSION} released! \n\nChanges: ${changeLogUrl}`
 
                 await fchubUtils.createFarcasterPost({
                     content: launchCasterMessage, replyTo: {
