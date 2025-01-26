@@ -3,6 +3,7 @@
 ## Manifest Version 1.4.12
 
 - added more checks to release script
+- added network icons and templates for the following networks: World Chain, Linea, Scroll
 
 ## Manifest Version 1.4.11
 
