@@ -56,6 +56,15 @@ export const mainNets: {[key: number]: Network} = {
         symbol: 'BNB',
         priceId: 'binancecoin'
     },
+    480: {
+        name: 'World Chain',
+        rpc: 'https://worldchain-mainnet.g.alchemy.com/public',
+        chainId: 480,
+        explorer: 'https://worldscan.org',
+        icon: 'world.webp',
+        symbol: 'ETH',
+        priceId: 'ethereum'
+    },
     42161: {
         name: 'Arbitrum One',
         rpc: 'https://rpc.ankr.com/arbitrum',
@@ -77,9 +86,18 @@ export const mainNets: {[key: number]: Network} = {
     7560 : {
         name: 'Cyber',
         rpc: 'https://rpc.cyber.co',
-        chainId: 7560 ,
+        chainId: 7560,
         explorer: 'https://cyberscan.co',
         icon: 'cyber.webp',
+        symbol: 'ETH',
+        priceId: 'ethereum'
+    },
+    59144: {
+        name: 'Linea',
+        rpc: 'https://rpc.linea.build',
+        chainId: 59144,
+        explorer: 'https://lineascan.build',
+        icon: 'linea.webp',
         symbol: 'ETH',
         priceId: 'ethereum'
     },
@@ -100,6 +118,15 @@ export const mainNets: {[key: number]: Network} = {
         icon: 'celo.webp',
         symbol: 'CELO',
         priceId: 'celo'
+    },
+    534351: {
+        name: 'Scroll',
+        rpc: 'https://rpc.scroll.io/',
+        chainId: 534351,
+        explorer: 'https://scrollscan.com',
+        icon: 'scroll.webp',
+        symbol: 'ETH',
+        priceId: 'ethereum'
     }
 }
 
@@ -175,13 +202,37 @@ export const testNets = {
         explorer: 'https://testnet.cyberscan.co/',
         icon: 'cyber_t.webp'
     },
-    42220: {
-        name: 'Celo Mainenet',
-        rpc: 'https://forno.celo.org',
-        chainId: 42220,
-        explorer: 'https://celoscan.io/',
-        icon: 'celo.webp',
+    44787: {
+        name: 'Celo TestNet',
+        rpc: 'https://alfajores-forno.celo-testnet.org',
+        chainId: 44787,
+        explorer: 'https://alfajores.celoscan.io/',
+        icon: 'celo_t.webp',
         symbol: 'CELO',
+    },
+    59141: {
+        name: 'Linea Sepolia',
+        rpc: 'https://rpc.sepolia.linea.build',
+        chainId: 59141,
+        explorer: 'https://sepolia.lineascan.build/',
+        icon: 'linea_t.webp',
+        symbol: 'ETH'
+    },
+    4801: {
+        name: 'World Chain',
+        rpc: 'https://worldchain-sepolia.g.alchemy.com/public',
+        chainId: 4801,
+        explorer: 'https://worldchain-sepolia.explorer.alchemy.com',
+        icon: 'world_t.webp',
+        symbol: 'ETH',
+    },
+    534351: {
+        name: 'Scroll Sepolia',
+        rpc: 'https://sepolia-rpc.scroll.io/',
+        chainId: 534351,
+        explorer: 'https://sepolia.scrollscan.com',
+        icon: 'scroll_t.webp',
+        symbol: 'ETH'
     }
 }
 

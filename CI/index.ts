@@ -73,10 +73,9 @@ const main = async () => {
                     platforms: ['twitter', 'threads', 'bsky', 'lens']
                 })
             }
-            const fcPost = await fchubUtils.createFarcasterPost({
+            const fcPostHash = await fchubUtils.createFarcasterPost({
                 content: message,
             })
-            const fcPostHash = Buffer.from(fcPost).toString('hex');
             if (fcPostHash) {
                 await new Promise((resolve) => setTimeout(resolve, 3000));
                 const launchCasterMessage = `@launch New Clear Wallet version ${VERSION} released! \n\nChanges: ${changeLogUrl}`

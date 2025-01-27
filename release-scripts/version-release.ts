@@ -3,6 +3,14 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 async function main() {
+
+  // -1. Check if you are in the main branch
+  const branch = execSync(`git branch --show-current`).toString();
+  if (branch !== 'main') {
+    console.log('You must be in the main branch to create a release');
+    return
+  }
+
   // 0. Check tag is not already created
   const tags = execSync(`git tag --list`).toString();
   if(!process.env.npm_package_version) {
