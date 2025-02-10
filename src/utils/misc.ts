@@ -26,6 +26,40 @@ const cyrb64 = (str: string, seed = 0) => {
   return [h2>>>0, h1>>>0];
 };
 
+
+function safeStringifyReplacer (seen: any) {
+  return function (key: any, value: any) {
+    if (typeof value?.toJSON === 'function') {
+      value = value.toJSON()
+    }
+
+    if (!(value !== null && typeof value === 'object')) {
+      return value
+    }
+
+    if (seen.has(value)) {
+      return '[Circular]'
+    }
+
+    seen.add(value)
+
+    const newValue: { [key: string]: any } = Array.isArray(value) ? [] : {}
+
+    for (const [key2, value2] of Object.entries(value)) {
+      newValue[key2] = safeStringifyReplacer(seen)(key2, value2)
+    }
+
+    seen.delete(value)
+
+    return newValue
+  }
+}
+
+export const stringify = (obj: any) => {
+  const seen = new WeakSet()
+  return JSON.stringify(obj, safeStringifyReplacer(seen), 2)
+}
+
 export const cyrb64Hash =  (str: string, seed = 0) => {
   const [h2, h1] = cyrb64(str, seed);
   return h2.toString(36).padStart(7, '0') + h1.toString(36).padStart(7, '0');
