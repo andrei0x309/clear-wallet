@@ -10,5 +10,11 @@
 
 ### 𝐂𝐨𝐧𝐭𝐚𝐜𝐭&#x3a;
 
-Discord: andrei0x309
 Website: [https://flashsoft.eu/#section-contact](https://flashsoft.eu/#section-contact)
+
+### Contact on social&#x3a;
+
+Discord: andrei0x309
+Warpcast: andrei0x309
+Lens: andrei0x309
+Twitter: andrei0x309

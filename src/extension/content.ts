@@ -49,7 +49,7 @@ window.addEventListener("message", (event) => {
       try {
         chrome?.runtime?.sendMessage(event.data.data.data, (res) => {
           if (chrome.runtime.lastError) {
-            console.warn("LOC1: Error sending message:", chrome.runtime.lastError);
+            console.warn("LOC1: Error sending message:", JSON.stringify(chrome.runtime.lastError));
           }
           const id = Number(event.data.resId.replace(/[A-Za-z]/g, '').slice(0, 10))
           const data = {

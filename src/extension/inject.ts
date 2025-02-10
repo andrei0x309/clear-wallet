@@ -361,13 +361,13 @@ const listner =  function(event: any) {
     if (eventData?.type === "CLWALLET_PAGE") {
     try {
         if(result?.error){
-            promResolvers.get(resId).reject(result);
+            promResolvers?.get(resId)?.reject(result);
         }else {
-            promResolvers.get(resId).resolve(result);
+            promResolvers?.get(resId)?.resolve(result);
         }
     } catch (e) {
-        // console.error('Failed to connect resolve msg', e)
-        promResolvers.get(resId)?.reject({code: -32000, message: 'Failed to connect resolve msg', error: true });
+        console.error('Failed to connect resolve msg', e)
+        promResolvers?.get(resId)?.reject({code: -32000, message: 'Failed to connect resolve msg', error: true });
     }
     } else if(eventData?.type === "CLWALLET_PAGE_LISTENER") {
         if((eventDataData?.listner ?? 'x') in listners ) {

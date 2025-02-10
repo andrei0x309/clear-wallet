@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.4.13
+
+- bumped all dependencies to the latest versions
+- improved a hashing function used for local cache
+- refactored eth_getBlockByNumber
+
 ## Manifest Version 1.4.12
 
 - added more checks to release script

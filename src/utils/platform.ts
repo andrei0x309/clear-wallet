@@ -304,7 +304,7 @@ export const pasteTextArea = (id: string) => {
     }
 }
 
-export const enableRightClickVote = async () => {
+export const enableRightClickPasteAddr = async () => {
     try {
         await chrome.contextMenus.removeAll();
         await chrome.contextMenus.create({
