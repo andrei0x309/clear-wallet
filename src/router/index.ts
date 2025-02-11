@@ -9,27 +9,27 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/tabs/home',
   },
   {
-    path: '/sign-msg/:rid/:param',
+    path: '/sign-msg/:rid/:param/:website',
     component: () => import('@/views/SignMessage.vue'),
   },
   {
-    path: '/sign-tx/:rid/:param',
+    path: '/sign-tx/:rid/:param/:website',
     component: () => import('@/views/SignTx.vue'),
   },
   {
-    path: '/switch-network/:rid/:param',
+    path: '/switch-network/:rid/:param/:website',
     component: () => import('@/views/SwitchNetwork.vue'),
   },
   {
-    path: '/contract-error/:rid/:param/:contract',
+    path: '/contract-error/:rid/:param/:contract/:website',
     component: () => import('@/views/ContractError.vue'),
   },
   {
-    path: '/wallet-error/:rid/:param',
+    path: '/wallet-error/:rid/:param/:website',
     component: () => import('@/views/WalletError.vue'),
   },
   {
-    path: '/request-network/:rid/:param',
+    path: '/request-network/:rid/:param/:website',
     component: () => import('@/views/RequestNetwork.vue'),
   },
   {

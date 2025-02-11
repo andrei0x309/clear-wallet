@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.4.14
+
+- UI will try to display the domain from which the request is made in case of switching networks, signing messages, or sending transactions
+- UI will also show the address of the selected account when sending transactions
+- changed router and service worker to pass the domain to the UI
+
 ## Manifest Version 1.4.13
 
 - bumped all dependencies to the latest versions

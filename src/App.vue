@@ -21,7 +21,7 @@ export default defineComponent({
   setup() {
     const route = useRoute();
     const router = useRouter();
-    const { param, rid } = route.query;
+    const { param, rid, website } = route.query;
 
     const pageListener = (
       message: RequestArguments,
@@ -91,31 +91,31 @@ export default defineComponent({
       switch (route?.query?.route ?? "") {
         case "sign-msg": {
           router.push({
-            path: `/sign-msg/${rid}/${param}`,
+            path: `/sign-msg/${rid}/${param}/${website}`,
           });
           break;
         }
         case "sign-tx": {
           router.push({
-            path: `/sign-tx/${rid}/${param}`,
+            path: `/sign-tx/${rid}/${param}/${website}`,
           });
           break;
         }
         case "switch-network": {
           router.push({
-            path: `/switch-network/${rid}/${param}`,
+            path: `/switch-network/${rid}/${param}/${website}`,
           });
           break;
         }
         case "request-network": {
           router.push({
-            path: `/request-network/${rid}/${param}`,
+            path: `/request-network/${rid}/${param}/${website}`,
           });
           break;
         }
         case "wallet-error": {
           router.push({
-            path: `/wallet-error/${rid}/${param}`,
+            path: `/wallet-error/${rid}/${param}/${website}`,
           });
           break;
         }

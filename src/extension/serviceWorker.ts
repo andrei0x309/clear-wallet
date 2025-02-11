@@ -585,11 +585,21 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                         params.from = account.address
                         const serializeParams = strToHex(JSON.stringify(params)) ?? ''
                         let gWin: any
+
+                        
+                        let webDomain = ''
+                        try {
+                            const url = new URL(message?.website ?? '')
+                            webDomain = url.hostname
+                        } catch {
+                            webDomain = ''
+                        }
+
                         await new Promise((resolve, reject) => {
                             chrome.windows.create({
                                 height: 450,
                                 width: 400,
-                                url: chrome.runtime.getURL(`index.html?route=sign-tx&param=${serializeParams}&rid=${String(message?.resId ?? '')}`),
+                                url: chrome.runtime.getURL(`index.html?route=sign-tx&param=${serializeParams}&rid=${String(message?.resId ?? '')}&website=${strToHex(webDomain)}`),
                                 type: 'popup'
                             }).then((win) => {
                                 gWin = win
@@ -705,11 +715,19 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                             'eth_signTypedData_v4'].includes(message?.method);
                         const signMsgData = isTypedSigned ? String(message?.params?.[1] ?? '') : String(message?.params?.[0] ?? '');
 
+                        let webDomain = ''
+                        try {
+                            const url = new URL(message?.website ?? '')
+                            webDomain = url.hostname
+                        } catch {
+                            webDomain = ''
+                        }
+
                         await new Promise((resolve, reject) => {
                             chrome.windows.create({
                                 height: 510,
                                 width: 480,
-                                url: chrome.runtime.getURL(`index.html?route=sign-msg&param=${strToHex(signMsgData)}&rid=${String(message?.resId ?? '')}`),
+                                url: chrome.runtime.getURL(`index.html?route=sign-msg&param=${strToHex(signMsgData)}&rid=${String(message?.resId ?? '')}&website=${strToHex(webDomain)}`),
                                 type: 'popup'
                             }).then((win) => {
                                 userReject[String(win.id)] = reject
@@ -790,11 +808,20 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                         if (currentChainId === String(message?.params?.[0]?.chainId ?? '')) {
                             sendResponse(null)
                         } else {
+
+                            let webDomain = ''
+                            try {
+                                const url = new URL(message?.website ?? '')
+                                webDomain = url.hostname
+                            } catch {
+                                webDomain = ''
+                            }
+
                             await new Promise((resolve, reject) => {
                                 chrome.windows.create({
                                     height: 450,
                                     width: 400,
-                                    url: chrome.runtime.getURL(`index.html?route=switch-network&param=${String(message?.params?.[0]?.chainId ?? '')}&rid=${String(message?.resId ?? '')}`),
+                                    url: chrome.runtime.getURL(`index.html?route=switch-network&param=${String(message?.params?.[0]?.chainId ?? '')}&rid=${String(message?.resId ?? '')}&website=${strToHex(webDomain)}`),
                                     type: 'popup'
                                 }).then((win) => {
                                     userReject[String(win.id)] = reject

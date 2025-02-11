@@ -8,7 +8,11 @@
 
     <ion-content class="ion-padding">
       <ion-item>
-        <ion-text>Website requested network switch</ion-text>
+        <ion-text>
+          <b v-if="website">{{ website }}</b>
+          <span v-else>Website</span>
+          requested network switch</ion-text
+        >
       </ion-item>
       <ion-list>
         <ion-item v-if="networkCase === 'exists' || networkCase === 'inTemplates'">
@@ -130,6 +134,7 @@ import {
   saveNetwork,
   openTab,
   numToHexStr,
+  hexTostr,
 } from "@/utils/platform";
 import type { Network, Networks } from "@/extension/types";
 import { allTemplateNets } from "@/utils/networks";
@@ -156,6 +161,9 @@ export default defineComponent({
     const route = useRoute();
     const loading = ref(true);
     const rid = (route?.params?.rid as string) ?? "";
+    const website = route?.params?.website
+      ? hexTostr(route?.params?.website as string)
+      : "";
     const networkId = ref(String(Number((route?.params?.param as string) ?? "")));
     const alertOpen = ref(false);
     const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
@@ -247,6 +255,7 @@ export default defineComponent({
       addChainUrl,
       timerReject,
       existingNetworks,
+      website,
     };
   },
 });
