@@ -5,7 +5,7 @@ import { resolve } from 'path';
 async function main() {
 
   // -1. Check if you are in the main branch
-  const branch = execSync(`git branch --show-current`).toString();
+  const branch = execSync(`git branch --show-current`).toString().trim();
   if (branch !== 'main') {
     console.log('You must be in the main branch to create a release');
     return
