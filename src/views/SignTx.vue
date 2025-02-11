@@ -2,16 +2,43 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title
-          >Send Transaction
-          {{
-            `${
-              intialSelectedAccount?.name
-                ? "- [ " + intialSelectedAccount?.name + " ]"
-                : ""
-            }`
-          }}</ion-title
-        >
+        <ion-title>
+          <p style="margin-bottom: 0.5rem">
+            Send Transaction
+            {{
+              `${
+                intialSelectedAccount?.name
+                  ? "- [ " + intialSelectedAccount?.name + " ]"
+                  : ""
+              }`
+            }}
+          </p>
+          <p
+            v-if="intialSelectedAccount?.address"
+            style="
+              font-size: 0.7rem;
+              color: #aca3bb;
+              padding: 0;
+              margin: 0;
+              margin-left: 0.5rem;
+            "
+          >
+            Sending from: {{ intialSelectedAccount?.address }}
+          </p>
+          <p
+            v-if="website"
+            style="
+              font-size: 0.7rem;
+              color: #aca3bb;
+              padding: 0;
+              margin: 0;
+              margin-left: 0.5rem;
+            "
+          >
+            Request from domain: <b>{{ website }}</b>
+          </p>
+          <p style="margin: 0; padding: 0; margin-top: 0.5rem; font-size: 0">&nbsp;</p>
+        </ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -235,6 +262,9 @@ export default defineComponent({
   setup: () => {
     const route = useRoute();
     const rid = (route?.params?.rid as string) ?? "";
+    const website = route?.params?.website
+      ? hexTostr(route?.params?.website as string)
+      : "";
     let isError = false;
     const decodedParam = hexTostr((route.params?.param as string) ?? "");
     const params = JSON.parse(decodedParam);
@@ -366,7 +396,7 @@ export default defineComponent({
     };
 
     onIonViewWillEnter(async () => {
-      (window as any)?.resizeTo?.(600, 800);
+      (window as any)?.resizeTo?.(600, 1000);
       blockLockout();
       const pGasPrice = getGasPrice();
       const pBalance = getBalance();
@@ -456,7 +486,15 @@ export default defineComponent({
       inGasPrice,
       inGasLimit,
       intialSelectedAccount,
+      website,
     };
   },
 });
 </script>
+
+<style scoped>
+ion-item {
+  --margin-top: 2px;
+  --margin-bottom: 2px;
+}
+</style>

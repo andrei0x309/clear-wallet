@@ -9,7 +9,10 @@
     <ion-content class="ion-padding">
       <ion-item>
         <ion-label
-          >Message to Sign
+          >Sign Message<span v-if="website"
+            >(Request from <b>{{ website }}</b
+            >)</span
+          >
           {{
             `${
               intialSelectedAccount?.name
@@ -96,6 +99,9 @@ export default defineComponent({
     const loading = ref(false);
     const intialSelectedAccount = ref(null as Account | null);
     const rid = (route?.params?.rid as string) ?? "";
+    const website = route?.params?.website
+      ? hexTostr(route?.params?.website as string)
+      : "";
 
     let sigmMsg: string = "";
 
@@ -187,6 +193,7 @@ export default defineComponent({
       loading,
       timerReject,
       intialSelectedAccount,
+      website,
     };
   },
 });
