@@ -7,24 +7,40 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-      <ion-item>
-        <ion-label
-          >Sign Message<span v-if="website"
-            >(Request from <b>{{ website }}</b
-            >)</span
-          >
-          {{
-            `${
-              intialSelectedAccount?.name
-                ? "- [ " + intialSelectedAccount?.name + " ]"
-                : ""
-            }`
-          }}
-        </ion-label>
+      <ion-item style="margin-bottom: 6px">
+        <div style="display: flex; flex-direction: column">
+          <div v-if="website">
+            <span style="font-size: 0.95rem; opacity: 0.9">
+              Request from: <b>{{ website }}</b>
+            </span>
+          </div>
+          <div v-if="intialSelectedAccount?.name">
+            <span style="font-size: 0.95rem; opacity: 0.9"
+              >Sign Message with:
+              {{ "[ " + intialSelectedAccount?.name }}
+              <span style="font-size: 0.8rem; opacity: 0.7">
+                {{
+                  " ( " +
+                  intialSelectedAccount?.address.slice(0, 4) +
+                  "..." +
+                  intialSelectedAccount?.address.slice(-4) +
+                  " ) "
+                }}
+              </span>
+              {{ "]" }}
+            </span>
+          </div>
+        </div>
       </ion-item>
       <ion-item>
         <div
-          style="white-space: pre-wrap; width: 100%; height: 250px; overflow-y: scroll"
+          style="
+            white-space: pre-wrap;
+            width: 100%;
+            height: 250px;
+            overflow-y: scroll;
+            margin: 0.4rem;
+          "
           disabled
         >
           {{ signMsg }}

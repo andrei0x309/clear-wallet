@@ -262,20 +262,16 @@ export const clearPk = async (): Promise<void> => {
     await Promise.all([replaceAccounts(accounts), saveSelectedAccount(accounts[0])])
 }
 
-export const hexTostr = (hexStr: string) =>
- {  
-    if(hexStr.substring(0,2) === '0x') {
-        const chunks = [];
-        const hexCodes = hexStr.substring(2)
-    for (let i = 0, charsLength = hexCodes.length; i < charsLength; i += 2) {
-    chunks.push(hexCodes.substring(i, i + 2));
+export const hexTostr = (hexStr: string) => {
+    if (hexStr.substring(0, 2) === '0x') {
+        hexStr = hexStr.substring(2);
     }
-    return chunks.reduce(
-    (pv, cv) => `${pv}${String.fromCharCode(parseInt(cv, 16))}`,
-            '')
-    }
-    return hexStr
- }
+
+    const match = hexStr.match(/../g);
+    const bytes = new Uint8Array(match ? match.map(h => parseInt(h, 16)) : []);
+    const decoder = new TextDecoder('utf-8');
+    return decoder.decode(bytes);
+};
 
 export const strToHex = (str: string) =>  `0x${str.split('').map( s => s.charCodeAt(0).toString(16)).join('')}`
 

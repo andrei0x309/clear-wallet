@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.4.15
+
+- Chnages to Personal message signing UI
+- changed hexToStr to support UTF-8
+- bumped all dependencies to the latest versions
+
 ## Manifest Version 1.4.14
 
 - UI will try to display the domain from which the request is made in case of switching networks, signing messages, or sending transactions
