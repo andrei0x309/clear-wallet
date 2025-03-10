@@ -50,7 +50,9 @@
         <ion-button @click="onCancel">Cancel</ion-button>
         <ion-button @click="onSign">Sign</ion-button>
       </ion-item>
-      <ion-item>Auto-reject Timer: {{ timerReject }}</ion-item>
+      <ion-item style="margin-top: 6px"
+        >Auto-reject Timer:&nbsp;<b>{{ timerReject }}</b></ion-item
+      >
       <ion-alert
         :is-open="alertOpen"
         header="Error"
@@ -62,7 +64,6 @@
         :is-open="loading"
         cssClass="my-custom-class"
         message="Please wait..."
-        :duration="4000"
         :key="`k${loading}`"
         @didDismiss="loading = false"
       />
@@ -70,8 +71,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script lang="ts" setup>
+import { ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -79,7 +80,6 @@ import {
   IonTitle,
   IonToolbar,
   IonItem,
-  IonLabel,
   IonButton,
   IonAlert,
   IonLoading,
@@ -96,121 +96,103 @@ import {
 } from "@/utils/platform";
 import UnlockModal from "@/views/UnlockModal.vue";
 import type { Account } from "@/extension/types";
+import { setUnlockModalState } from "@/utils/unlockStore";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonButton,
-    IonAlert,
-    IonLoading,
-  },
-  setup: () => {
-    const route = useRoute();
-    const loading = ref(false);
-    const intialSelectedAccount = ref(null as Account | null);
-    const rid = (route?.params?.rid as string) ?? "";
-    const website = route?.params?.website
-      ? hexTostr(route?.params?.website as string)
-      : "";
+const route = useRoute();
+const loading = ref(false);
+const intialSelectedAccount = ref(null as Account | null);
+const rid = (route?.params?.rid as string) ?? "";
+const website = route?.params?.website ? hexTostr(route?.params?.website as string) : "";
 
-    let sigmMsg: string = "";
+let sigmMsg: string = "";
 
+try {
+  const typeSign = JSON.parse(hexTostr(hexTostr((route?.params?.param as string) ?? "")));
+  sigmMsg = JSON.stringify(typeSign, null, 2);
+} catch (e) {
+  sigmMsg = hexTostr(hexTostr((route?.params?.param as string) ?? ""));
+}
+
+const signMsg = ref(sigmMsg);
+const alertOpen = ref(false);
+const alertMsg = ref("");
+const timerReject = ref(140);
+let interval: any;
+const testin = ref(null) as any;
+
+const onCancel = () => {
+  window.close();
+  if (interval) {
     try {
-      const typeSign = JSON.parse(
-        hexTostr(hexTostr((route?.params?.param as string) ?? ""))
-      );
-      sigmMsg = JSON.stringify(typeSign, null, 2);
-    } catch (e) {
-      sigmMsg = hexTostr(hexTostr((route?.params?.param as string) ?? ""));
+      unBlockLockout();
+      clearInterval(interval);
+    } catch {
+      // ignore
     }
+  }
+};
 
-    const signMsg = ref(sigmMsg);
-    const alertOpen = ref(false);
-    const alertMsg = ref("");
-    const timerReject = ref(140);
-    let interval: any;
-
-    const onCancel = () => {
-      window.close();
-      if (interval) {
-        try {
-          unBlockLockout();
-          clearInterval(interval);
-        } catch {
-          // ignore
-        }
-      }
-    };
-
-    onIonViewWillEnter(async () => {
-      blockLockout();
-      getSelectedAccount().then((account) => {
-        intialSelectedAccount.value = account;
-      });
-      interval = setInterval(async () => {
-        if (timerReject.value <= 0) {
-          onCancel();
-          return;
-        }
-
-        timerReject.value -= 1;
-        walletPing();
-      }, 1000) as any;
-    });
-
-    const openModal = async () => {
-      const modal = await modalController.create({
-        component: UnlockModal,
-        componentProps: {
-          unlockType: "message",
-        },
-      });
-      modal.present();
-      const { role } = await modal.onWillDismiss();
-      if (role === "confirm") return true;
-      return false;
-    };
-
-    const onSign = async () => {
-      loading.value = true;
-      if (interval) {
-        clearInterval(interval);
-      }
-      const selectedAccount = await getSelectedAccount();
-      loading.value = false;
-      if ((selectedAccount.pk ?? "").length !== 66) {
-        const modalResult = await openModal();
-        if (modalResult) {
-          unBlockLockout();
-          loading.value = true;
-          approve(rid);
-        } else {
-          onCancel();
-        }
-      } else {
-        unBlockLockout();
-        approve(rid);
-      }
-      loading.value = false;
-    };
-
-    return {
-      signMsg,
-      onCancel,
-      alertOpen,
-      alertMsg,
-      onSign,
-      loading,
-      timerReject,
-      intialSelectedAccount,
-      website,
-    };
-  },
+onIonViewWillEnter(async () => {
+  blockLockout();
+  getSelectedAccount().then((account) => {
+    intialSelectedAccount.value = account;
+  });
+  interval = setInterval(async () => {
+    if (timerReject.value <= 0) {
+      onCancel();
+      return;
+    }
+    timerReject.value -= 1;
+    walletPing();
+  }, 1000) as any;
 });
+
+const openModal = async () => {
+  const modal = await modalController.create({
+    component: UnlockModal,
+    animated: true,
+    focusTrap: false,
+    backdropDismiss: false,
+    componentProps: {
+      unlockType: "message",
+    },
+  });
+  await modal.present();
+  setUnlockModalState(true);
+  const { role } = await modal.onWillDismiss();
+  if (role === "confirm") return true;
+  await setUnlockModalState(false);
+  return false;
+};
+
+const onSign = async () => {
+  loading.value = true;
+  if (interval) {
+    clearInterval(interval);
+  }
+  const selectedAccount = await getSelectedAccount();
+  loading.value = false;
+  if ((selectedAccount.pk ?? "").length !== 66) {
+    const modalResult = await openModal();
+    if (modalResult) {
+      unBlockLockout();
+      loading.value = true;
+      approve(rid);
+    } else {
+      onCancel();
+    }
+  } else {
+    unBlockLockout();
+    approve(rid);
+  }
+  loading.value = false;
+};
 </script>
+
+<style scoped>
+ion-item {
+  --min-height: 30px;
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+</style>

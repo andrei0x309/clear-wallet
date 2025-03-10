@@ -69,8 +69,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, Ref } from "vue";
+<script lang="ts" setup>
+import { ref, Ref } from "vue";
 import {
   getAccounts,
   copyText,
@@ -103,140 +103,108 @@ import {
 import { addCircleOutline, copyOutline } from "ionicons/icons";
 import router from "@/router";
 import UnlockModal from "@/views/UnlockModal.vue";
+import { setUnlockModalState } from "@/utils/unlockStore";
 
 import type { Account, Settings } from "@/extension/types";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonIcon,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonChip,
-    IonButtons,
-    IonButton,
-    IonToast,
-    IonInput,
-    IonModal,
-  },
-  setup() {
-    const accounts = ref([]) as Ref<Account[]>;
-    const loading = ref(true);
-    const toastState = ref(false);
-    const shownPk = ref("");
-    const pkModal = ref(false);
-    const settings = ref({}) as Ref<Settings>;
+const accounts = ref([]) as Ref<Account[]>;
+const loading = ref(true);
+const toastState = ref(false);
+const shownPk = ref("");
+const pkModal = ref(false);
+const settings = ref({}) as Ref<Settings>;
 
-    const getToastRef = () => toastState;
+const getToastRef = () => toastState;
 
-    const loadData = () => {
-      const pAccounts = getAccounts();
-      const pGetSettings = getSettings();
-      Promise.all([pAccounts, pGetSettings]).then((res) => {
-        accounts.value = res[0];
-        settings.value = res[1];
-        loading.value = false;
-      });
-    };
+const loadData = () => {
+  const pAccounts = getAccounts();
+  const pGetSettings = getSettings();
+  Promise.all([pAccounts, pGetSettings]).then((res) => {
+    accounts.value = res[0];
+    settings.value = res[1];
+    loading.value = false;
+  });
+};
 
-    const deleteAccount = async (address: string) => {
-      loading.value = true;
-      if (settings.value.enableStorageEnctyption) {
-        const modalR = await openModal("delAcc");
-        if (!modalR) {
-          return;
-        }
-      }
-      const findIndex = accounts.value.findIndex((a) => a.address === address);
-      const selectedAccount = await getSelectedAccount();
-      const pArr: Array<Promise<void>> = [];
-      if (findIndex !== -1) {
-        accounts.value.splice(findIndex, 1);
-        pArr.push(replaceAccounts([...accounts.value]));
-      }
-      if (selectedAccount.address === address) {
-        pArr.push(saveSelectedAccount({ name: "", pk: "", encPk: "", address: "" }));
-      }
-      await Promise.all(pArr);
-      loading.value = false;
-    };
+const deleteAccount = async (address: string) => {
+  loading.value = true;
+  if (settings.value.enableStorageEnctyption) {
+    const modalR = await openModal("delAcc");
+    if (!modalR) {
+      return;
+    }
+  }
+  const findIndex = accounts.value.findIndex((a) => a.address === address);
+  const selectedAccount = await getSelectedAccount();
+  const pArr: Array<Promise<void>> = [];
+  if (findIndex !== -1) {
+    accounts.value.splice(findIndex, 1);
+    pArr.push(replaceAccounts([...accounts.value]));
+  }
+  if (selectedAccount.address === address) {
+    pArr.push(saveSelectedAccount({ name: "", pk: "", encPk: "", address: "" }));
+  }
+  await Promise.all(pArr);
+  loading.value = false;
+};
 
-    const editAccount = (address: string) => {
-      router.push(`add-account/edit/${address}`);
-    };
+const editAccount = (address: string) => {
+  router.push(`add-account/edit/${address}`);
+};
 
-    const goToAddAccount = () => {
-      router.push("/tabs/add-account");
-    };
+const goToAddAccount = () => {
+  router.push("/tabs/add-account");
+};
 
-    onIonViewWillEnter(() => {
-      loadData();
-    });
+onIonViewWillEnter(() => {
+  loadData();
+});
 
-    const openModal = async (type: string) => {
-      const modal = await modalController.create({
-        component: UnlockModal,
-        componentProps: {
-          unlockType: type,
-        },
-      });
-      modal.present();
-      const { role } = await modal.onWillDismiss();
-      if (role === "confirm") return true;
-      return false;
-    };
+const openModal = async (type: string) => {
+  const modal = await modalController.create({
+    component: UnlockModal,
+    animated: true,
+    focusTrap: false,
+    backdropDismiss: false,
+    componentProps: {
+      unlockType: type,
+    },
+  });
+  await modal.present();
+  setUnlockModalState(true);
+  const { role } = await modal.onWillDismiss();
+  if (role === "confirm") return true;
+  setUnlockModalState(false);
+  return false;
+};
 
-    const viewPk = async (addr: string) => {
-      let pk = "";
-      const account = accounts.value.find((a) => a.address === addr);
-      if (settings.value.enableStorageEnctyption) {
-        if (account?.encPk) {
-          const modalR = await openModal("viewPk");
-          if (modalR) {
-            const account = (await getAccounts()).find((a) => a.address === addr);
-            pk = account?.pk ?? "";
-          }
-        } else {
-          pk = account?.pk ?? "";
-        }
-      } else {
+const viewPk = async (addr: string) => {
+  let pk = "";
+  const account = accounts.value.find((a) => a.address === addr);
+  if (settings.value.enableStorageEnctyption) {
+    if (account?.encPk) {
+      const modalR = await openModal("viewPk");
+      if (modalR) {
+        const account = (await getAccounts()).find((a) => a.address === addr);
         pk = account?.pk ?? "";
       }
-      if (pk) {
-        shownPk.value = pk;
-        if (settings.value.encryptAfterEveryTx) {
-          clearPk();
-        }
-        pkModal.value = true;
-      }
-    };
-
-    return {
-      accounts,
-      addCircleOutline,
-      copyOutline,
-      toastState,
-      copyText,
-      getToastRef,
-      deleteAccount,
-      editAccount,
-      loading,
-      goToAddAccount,
-      viewPk,
-      pkModal,
-      shownPk,
-    };
-  },
-});
+    } else {
+      pk = account?.pk ?? "";
+    }
+  } else {
+    pk = account?.pk ?? "";
+  }
+  if (pk) {
+    shownPk.value = pk;
+    if (settings.value.encryptAfterEveryTx) {
+      clearPk();
+    }
+    pkModal.value = true;
+  }
+};
 </script>
 
 <style scoped>
-
 .copy-icon {
   font-size: 1.5rem;
   color: var(--primary-color);

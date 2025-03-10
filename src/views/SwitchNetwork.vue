@@ -104,10 +104,10 @@
   </ion-page>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 const chainListPage = "https://chainlist.org/chain/";
 
-import { defineComponent, ref, Ref } from "vue";
+import { ref, Ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -141,122 +141,82 @@ import { allTemplateNets } from "@/utils/networks";
 import { approve, walletPing } from "@/extension/userRequest";
 import { triggerListner } from "@/extension/listners";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonButton,
-    IonAlert,
-    IonText,
-    IonLoading,
-    IonList,
-    IonAvatar,
-  },
-  setup: () => {
-    const route = useRoute();
-    const loading = ref(true);
-    const rid = (route?.params?.rid as string) ?? "";
-    const website = route?.params?.website
-      ? hexTostr(route?.params?.website as string)
-      : "";
-    const networkId = ref(String(Number((route?.params?.param as string) ?? "")));
-    const alertOpen = ref(false);
-    const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
-    const alertMsg = ref("");
-    const networkCase = ref("");
-    let pnetworks: Promise<Networks>;
-    const addChainUrl = `${chainListPage}${networkId.value}`;
-    const timerReject = ref(140);
-    let interval: any;
-    const existingNetworks = ref({});
+const route = useRoute();
+const loading = ref(true);
+const rid = (route?.params?.rid as string) ?? "";
+const website = route?.params?.website ? hexTostr(route?.params?.website as string) : "";
+const networkId = ref(String(Number((route?.params?.param as string) ?? "")));
+const alertOpen = ref(false);
+const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
+const alertMsg = ref("");
+const networkCase = ref("");
+let pnetworks: Promise<Networks>;
+const addChainUrl = `${chainListPage}${networkId.value}`;
+const timerReject = ref(140);
+let interval: any;
+const existingNetworks = ref({});
 
-    const onCancel = () => {
-      window.close();
-      if (interval) {
-        try {
-          clearInterval(interval);
-        } catch {
-          // ignore
-        }
-      }
-    };
+const onCancel = () => {
+  window.close();
+  if (interval) {
+    try {
+      clearInterval(interval);
+    } catch {
+      // ignore
+    }
+  }
+};
 
-    onIonViewWillEnter(async () => {
-      (window as any)?.resizeTo?.(600, 600);
-      pnetworks = getNetworks();
-      selectedNetwork.value = await getSelectedNetwork();
-      existingNetworks.value = await pnetworks;
-      if ((networkId.value ?? "0") in (existingNetworks?.value ?? {})) {
-        networkCase.value = "exists";
-      } else if ((networkId.value ?? "0") in allTemplateNets) {
-        existingNetworks.value = allTemplateNets;
-        networkCase.value = "inTemplates";
-      } else {
-        networkCase.value = "doesNotExist";
-      }
-      loading.value = false;
+onIonViewWillEnter(async () => {
+  (window as any)?.resizeTo?.(600, 600);
+  pnetworks = getNetworks();
+  selectedNetwork.value = await getSelectedNetwork();
+  existingNetworks.value = await pnetworks;
+  if ((networkId.value ?? "0") in (existingNetworks?.value ?? {})) {
+    networkCase.value = "exists";
+  } else if ((networkId.value ?? "0") in allTemplateNets) {
+    existingNetworks.value = allTemplateNets;
+    networkCase.value = "inTemplates";
+  } else {
+    networkCase.value = "doesNotExist";
+  }
+  loading.value = false;
 
-      interval = setInterval(async () => {
-        if (timerReject.value <= 0) {
-          onCancel();
-          return;
-        }
-
-        timerReject.value -= 1;
-        walletPing();
-      }, 1000) as any;
-    });
-
-    const onSwitchExists = async () => {
-      loading.value = true;
-      const existingNetworks = await pnetworks;
-      selectedNetwork.value = existingNetworks[Number(networkId.value)];
-      await saveSelectedNetwork(selectedNetwork.value);
-      triggerListner("chainChanged", numToHexStr(selectedNetwork.value?.chainId ?? 0));
-      approve(rid);
-      loading.value = false;
-    };
-
-    const onSwitchTemplates = async () => {
-      loading.value = true;
-      const nId = Number(networkId.value) as keyof typeof allTemplateNets;
-      selectedNetwork.value = allTemplateNets[nId];
-      await saveNetwork(allTemplateNets[nId]);
-      await saveSelectedNetwork(allTemplateNets[nId]);
-      triggerListner("chainChanged", numToHexStr(selectedNetwork.value?.chainId ?? 0));
-      approve(rid);
-      loading.value = false;
-    };
-
-    const onSwitchNotExisting = async () => {
-      loading.value = true;
-      openTab(addChainUrl);
+  interval = setInterval(async () => {
+    if (timerReject.value <= 0) {
       onCancel();
-    };
+      return;
+    }
 
-    return {
-      networkId,
-      onCancel,
-      alertOpen,
-      alertMsg,
-      onSwitchExists,
-      loading,
-      networkCase,
-      selectedNetwork,
-      allTemplateNets,
-      getUrl,
-      onSwitchTemplates,
-      onSwitchNotExisting,
-      addChainUrl,
-      timerReject,
-      existingNetworks,
-      website,
-    };
-  },
+    timerReject.value -= 1;
+    walletPing();
+  }, 1000) as any;
 });
+
+const onSwitchExists = async () => {
+  loading.value = true;
+  const existingNetworks = await pnetworks;
+  selectedNetwork.value = existingNetworks[Number(networkId.value)];
+  await saveSelectedNetwork(selectedNetwork.value);
+  triggerListner("chainChanged", numToHexStr(selectedNetwork.value?.chainId ?? 0));
+  approve(rid);
+  loading.value = false;
+};
+
+const onSwitchTemplates = async () => {
+  loading.value = true;
+  const nId = Number(networkId.value) as keyof typeof allTemplateNets;
+  selectedNetwork.value = allTemplateNets[nId];
+  await saveNetwork(allTemplateNets[nId]);
+  await saveSelectedNetwork(allTemplateNets[nId]);
+  triggerListner("chainChanged", numToHexStr(selectedNetwork.value?.chainId ?? 0));
+  approve(rid);
+  loading.value = false;
+};
+
+const onSwitchNotExisting = async () => {
+  loading.value = true;
+  openTab(addChainUrl);
+  onCancel();
+};
 </script>

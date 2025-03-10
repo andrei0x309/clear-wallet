@@ -135,7 +135,6 @@
         :is-open="loading"
         cssClass="my-custom-class"
         message="Please wait..."
-        :duration="4000"
         :key="`k${loading}`"
         @didDismiss="loading = false"
       >
@@ -200,8 +199,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, Ref } from "vue";
+<script lang="ts" setup>
+import { ref, Ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -240,261 +239,209 @@ import type { Network, Account } from "@/extension/types";
 import { allTemplateNets, chainIdToPriceId } from "@/utils/networks";
 import UnlockModal from "@/views/UnlockModal.vue";
 import router from "@/router";
+import { setUnlockModalState } from "@/utils/unlockStore";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonButton,
-    IonAlert,
-    IonTextarea,
-    IonList,
-    IonLoading,
-    IonModal,
-    IonButtons,
-    IonInput,
-  },
-  setup: () => {
-    const route = useRoute();
-    const rid = (route?.params?.rid as string) ?? "";
-    const website = route?.params?.website
-      ? hexTostr(route?.params?.website as string)
-      : "";
-    let isError = false;
-    const decodedParam = hexTostr((route.params?.param as string) ?? "");
-    const params = JSON.parse(decodedParam);
-    const signTxData = ref("");
-    const alertOpen = ref(false);
-    const alertMsg = ref("");
-    const loading = ref(true);
-    const contract = params.to;
-    const gasPrice = ref(0);
-    const gasLimit = ref(0);
-    const totalCost = ref(0);
-    const gasFee = ref(0);
-    const userBalance = ref(0);
-    const txValue = ref(0);
-    const timerReject = ref(140);
-    const timerFee = ref(20);
-    const insuficientBalance = ref(false);
-    const gasPriceReFetch = ref(true);
-    const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
-    const intialSelectedAccount = ref(null as unknown) as Ref<Account>;
-    const dollarPrice = ref(0);
-    const gasLimitModal = ref(false);
-    const gasPriceModal = ref(false);
-    const inGasPrice = ref(0);
-    const inGasLimit = ref(0);
-    let gasFeed = {} as Awaited<ReturnType<typeof getGasPrice>>["feed"];
+const route = useRoute();
+const rid = (route?.params?.rid as string) ?? "";
+const website = route?.params?.website ? hexTostr(route?.params?.website as string) : "";
+let isError = false;
+const decodedParam = hexTostr((route.params?.param as string) ?? "");
+const params = JSON.parse(decodedParam);
+const signTxData = ref("");
+const alertOpen = ref(false);
+const alertMsg = ref("");
+const loading = ref(true);
+const contract = params.to;
+const gasPrice = ref(0);
+const gasLimit = ref(0);
+const totalCost = ref(0);
+const gasFee = ref(0);
+const userBalance = ref(0);
+const txValue = ref(0);
+const timerReject = ref(140);
+const timerFee = ref(20);
+const insuficientBalance = ref(false);
+const gasPriceReFetch = ref(true);
+const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
+const intialSelectedAccount = ref(null as unknown) as Ref<Account>;
+const dollarPrice = ref(0);
+const gasLimitModal = ref(false);
+const gasPriceModal = ref(false);
+const inGasPrice = ref(0);
+const inGasLimit = ref(0);
+let gasFeed = {} as Awaited<ReturnType<typeof getGasPrice>>["feed"];
 
-    let interval = 0;
-    const bars = ref(0);
+let interval = 0;
+const bars = ref(0);
 
-    if (!rid) {
-      isError = true;
-    }
+if (!rid) {
+  isError = true;
+}
 
-    if (!decodedParam) {
-      isError = true;
-    } else {
-      const paramsWithoutZeros = Object.fromEntries(
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        Object.entries(params).filter(([_, v]) => v !== "0x0")
-      );
+if (!decodedParam) {
+  isError = true;
+} else {
+  const paramsWithoutZeros = Object.fromEntries(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    Object.entries(params).filter(([_, v]) => v !== "0x0")
+  );
 
-      signTxData.value = JSON.stringify(paramsWithoutZeros, null, 2);
-    }
+  signTxData.value = JSON.stringify(paramsWithoutZeros, null, 2);
+}
 
-    const setItervalFn = async () => {
-      if (timerReject.value <= 0) {
-        onCancel();
-        return;
-      }
-      if (gasPriceReFetch.value) {
-        timerFee.value -= 1;
-        if (timerFee.value <= 0) {
-          timerFee.value = 20;
-          loading.value = true;
-          const { feed, price } = await getGasPrice();
-          gasFeed = feed;
-          gasPrice.value = parseFloat(price.toString() ?? 0.1);
-          await newGasData();
-          loading.value = false;
-        }
-      }
-
-      timerReject.value -= 1;
-      bars.value++;
-      walletPing();
-    };
-
-    const openModal = async () => {
-      const modal = await modalController.create({
-        component: UnlockModal,
-        componentProps: {
-          unlockType: "transaction",
-        },
-      });
-      modal.present();
-      const { role } = await modal.onWillDismiss();
-      if (role === "confirm") return true;
-      return false;
-    };
-
-    const onSign = async () => {
+const setItervalFn = async () => {
+  if (timerReject.value <= 0) {
+    onCancel();
+    return;
+  }
+  if (gasPriceReFetch.value) {
+    timerFee.value -= 1;
+    if (timerFee.value <= 0) {
+      timerFee.value = 20;
       loading.value = true;
-      if (interval) {
-        clearInterval(interval);
-      }
-      const selectedAccount = await getSelectedAccount();
-      loading.value = false;
-      if ((selectedAccount.pk ?? "").length !== 66) {
-        const modalResult = await openModal();
-        if (modalResult) {
-          unBlockLockout();
-          loading.value = true;
-          approve(rid);
-        } else {
-          onCancel();
-        }
-      } else {
-        unBlockLockout();
-        approve(rid);
-      }
-      loading.value = false;
-    };
-
-    const onCancel = () => {
-      window.close();
-      if (interval) {
-        try {
-          unBlockLockout();
-          clearInterval(interval);
-        } catch {
-          // ignore
-        }
-      }
-    };
-
-    const newGasData = async () => {
-      await walletSendData(rid, {
-        gas: numToHexStr(gasLimit.value),
-        gasPrice: numToHexStr(BigInt(Math.trunc(gasPrice.value * 1e9))),
-        supportsEIP1559: gasFeed?.maxFeePerGas !== null,
-      });
-
-      gasFee.value = Number(
-        ethers.formatUnits(Math.trunc(gasLimit.value * gasPrice.value), "gwei")
-      );
-      txValue.value = Number(ethers.formatEther(params?.value ?? "0x0"));
-      totalCost.value = gasFee.value + txValue.value;
-    };
-
-    onIonViewWillEnter(async () => {
-      (window as any)?.resizeTo?.(600, 1000);
-      blockLockout();
-      const pGasPrice = getGasPrice();
-      const pBalance = getBalance();
-      const pGetPrices = getPrices();
-      const data = await Promise.all([getSelectedNetwork(), getSelectedAccount()]);
-      selectedNetwork.value = data[0];
-      intialSelectedAccount.value = data[1];
-      userBalance.value = Number(
-        ethers.formatEther((await pBalance).toString() ?? "0x0")
-      );
-      const { feed, price } = await pGasPrice;
+      const { feed, price } = await getGasPrice();
       gasFeed = feed;
-
       gasPrice.value = parseFloat(price.toString() ?? 0.1);
-
-      const pEstimateGas = estimateGas({
-        to: params?.to ?? "",
-        from: params?.from ?? "",
-        data: params?.data ?? "",
-        value: params?.value ?? "0x0",
-      });
-
-      try {
-        gasLimit.value = parseInt((await pEstimateGas).toString(), 10);
-      } catch (err) {
-        const errorToHex = strToHex(String(err));
-        router.push(`/contract-error/${rid}/${errorToHex}/${contract}`);
-        loading.value = false;
-        return;
-      }
-      inGasPrice.value = gasPrice.value;
-      inGasLimit.value = gasLimit.value;
-
-      if (userBalance.value < totalCost.value) {
-        insuficientBalance.value = true;
-      }
-      const prices = await pGetPrices;
-      dollarPrice.value =
-        prices[chainIdToPriceId(selectedNetwork.value?.chainId ?? 0)]?.usd ?? 0;
       await newGasData();
       loading.value = false;
+    }
+  }
 
-      interval = setInterval(setItervalFn, 1000) as any;
-    });
+  timerReject.value -= 1;
+  bars.value++;
+  walletPing();
+};
 
-    const setGasLimit = async () => {
-      gasLimit.value = inGasLimit.value;
-      await newGasData();
-      gasLimitModal.value = false;
-    };
+const openModal = async () => {
+  const modal = await modalController.create({
+    component: UnlockModal,
+    animated: true,
+    focusTrap: false,
+    backdropDismiss: false,
+    componentProps: {
+      unlockType: "transaction",
+    },
+  });
+  await modal.present();
+  setUnlockModalState(true);
+  const { role } = await modal.onWillDismiss();
+  if (role === "confirm") return true;
+  await setUnlockModalState(false);
+  return false;
+};
 
-    const setGasPrice = async () => {
-      gasPrice.value = inGasPrice.value;
-      gasPriceReFetch.value = false;
-      await newGasData();
-      gasPriceModal.value = false;
-    };
+const onSign = async () => {
+  loading.value = true;
+  if (interval) {
+    clearInterval(interval);
+  }
+  const selectedAccount = await getSelectedAccount();
+  loading.value = false;
+  if ((selectedAccount.pk ?? "").length !== 66) {
+    const modalResult = await openModal();
+    if (modalResult) {
+      unBlockLockout();
+      loading.value = true;
+      approve(rid);
+    } else {
+      onCancel();
+    }
+  } else {
+    unBlockLockout();
+    approve(rid);
+  }
+  loading.value = false;
+};
 
-    return {
-      signTxData,
-      onCancel,
-      alertOpen,
-      alertMsg,
-      onSign,
-      isError,
-      contract,
-      txValue,
-      gasPrice,
-      gasLimit,
-      totalCost,
-      gasFee,
-      timerReject,
-      timerFee,
-      insuficientBalance,
-      gasPriceReFetch,
-      userBalance,
-      bars,
-      loading,
-      selectedNetwork,
-      allTemplateNets,
-      getUrl,
-      setGasLimit,
-      setGasPrice,
-      dollarPrice,
-      gasLimitModal,
-      gasPriceModal,
-      inGasPrice,
-      inGasLimit,
-      intialSelectedAccount,
-      website,
-    };
-  },
+const onCancel = () => {
+  window.close();
+  if (interval) {
+    try {
+      unBlockLockout();
+      clearInterval(interval);
+    } catch {
+      // ignore
+    }
+  }
+};
+
+const newGasData = async () => {
+  await walletSendData(rid, {
+    gas: numToHexStr(gasLimit.value),
+    gasPrice: numToHexStr(BigInt(Math.trunc(gasPrice.value * 1e9))),
+    supportsEIP1559: gasFeed?.maxFeePerGas !== null,
+  });
+
+  gasFee.value = Number(
+    ethers.formatUnits(Math.trunc(gasLimit.value * gasPrice.value), "gwei")
+  );
+  txValue.value = Number(ethers.formatEther(params?.value ?? "0x0"));
+  totalCost.value = gasFee.value + txValue.value;
+};
+
+onIonViewWillEnter(async () => {
+  (window as any)?.resizeTo?.(600, 860);
+  blockLockout();
+  const pGasPrice = getGasPrice();
+  const pBalance = getBalance();
+  const pGetPrices = getPrices();
+  const data = await Promise.all([getSelectedNetwork(), getSelectedAccount()]);
+  selectedNetwork.value = data[0];
+  intialSelectedAccount.value = data[1];
+  userBalance.value = Number(ethers.formatEther((await pBalance).toString() ?? "0x0"));
+  const { feed, price } = await pGasPrice;
+  gasFeed = feed;
+
+  gasPrice.value = parseFloat(price.toString() ?? 0.1);
+
+  const pEstimateGas = estimateGas({
+    to: params?.to ?? "",
+    from: params?.from ?? "",
+    data: params?.data ?? "",
+    value: params?.value ?? "0x0",
+  });
+
+  try {
+    gasLimit.value = parseInt((await pEstimateGas).toString(), 10);
+  } catch (err) {
+    const errorToHex = strToHex(String(err));
+    router.push(`/contract-error/${rid}/${errorToHex}/${contract}`);
+    loading.value = false;
+    return;
+  }
+  inGasPrice.value = gasPrice.value;
+  inGasLimit.value = gasLimit.value;
+
+  if (userBalance.value < totalCost.value) {
+    insuficientBalance.value = true;
+  }
+  const prices = await pGetPrices;
+  dollarPrice.value =
+    prices[chainIdToPriceId(selectedNetwork.value?.chainId ?? 0)]?.usd ?? 0;
+  await newGasData();
+  loading.value = false;
+
+  interval = setInterval(setItervalFn, 1000) as any;
 });
+
+const setGasLimit = async () => {
+  gasLimit.value = inGasLimit.value;
+  await newGasData();
+  gasLimitModal.value = false;
+};
+
+const setGasPrice = async () => {
+  gasPrice.value = inGasPrice.value;
+  gasPriceReFetch.value = false;
+  await newGasData();
+  gasPriceModal.value = false;
+};
 </script>
 
 <style scoped>
 ion-item {
-  --margin-top: 2px;
-  --margin-bottom: 2px;
+  --min-height: 34px;
+  --padding-start: 8px;
+  --padding-end: 8px;
 }
 </style>

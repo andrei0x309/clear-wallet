@@ -92,8 +92,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script lang="ts" setup>
+import { ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -110,112 +110,79 @@ import {
   IonInput,
 } from "@ionic/vue";
 import { useRoute } from "vue-router";
-import { getUrl, saveSelectedNetwork, saveNetwork, hexTostr } from "@/utils/platform";
+import { saveSelectedNetwork, saveNetwork, hexTostr } from "@/utils/platform";
 import type { Network } from "@/extension/types";
 import { approve, walletPing } from "@/extension/userRequest";
 import { triggerListner } from "@/extension/listners";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonButton,
-    IonText,
-    IonLoading,
-    IonList,
-    IonInput,
-  },
-  setup: () => {
-    const route = useRoute();
-    const loading = ref(true);
-    const rid = (route?.params?.rid as string) ?? "";
-    const networkData = hexTostr((route.params?.param as string) ?? "");
-    const alertOpen = ref(false);
-    const timerReject = ref(140);
-    let interval: any;
-    const website = ref("");
-    const name = ref("");
-    const chainId = ref("");
-    const rpc = ref("");
-    const symbol = ref("");
-    const explorer = ref("");
+const route = useRoute();
+const loading = ref(true);
+const rid = (route?.params?.rid as string) ?? "";
+const networkData = hexTostr((route.params?.param as string) ?? "");
+const alertOpen = ref(false);
+const timerReject = ref(140);
+let interval: any;
+const website = ref("");
+const name = ref("");
+const chainId = ref("");
+const rpc = ref("");
+const symbol = ref("");
+const explorer = ref("");
 
-    const onCancel = () => {
-      window.close();
-      if (interval) {
-        try {
-          clearInterval(interval);
-        } catch {
-          // ignore
-        }
-      }
-    };
+const onCancel = () => {
+  window.close();
+  if (interval) {
+    try {
+      clearInterval(interval);
+    } catch {
+      // ignore
+    }
+  }
+};
 
-    onIonViewWillEnter(async () => {
-      (window as any)?.resizeTo?.(600, 600);
-      try {
-        if (!networkData) {
-          onCancel();
-        } else {
-          const data = JSON.parse(networkData);
-          name.value = data.chainName;
-          chainId.value = data.chainId;
-          rpc.value = data.rpcUrls[0];
-          symbol.value = data.nativeCurrency.symbol;
-          explorer.value = data.blockExplorerUrls[0];
-          website.value = data.website;
-        }
-      } catch {
-        onCancel();
-      }
-      loading.value = false;
+onIonViewWillEnter(async () => {
+  (window as any)?.resizeTo?.(600, 600);
+  try {
+    if (!networkData) {
+      onCancel();
+    } else {
+      const data = JSON.parse(networkData);
+      name.value = data.chainName;
+      chainId.value = data.chainId;
+      rpc.value = data.rpcUrls[0];
+      symbol.value = data.nativeCurrency.symbol;
+      explorer.value = data.blockExplorerUrls[0];
+      website.value = data.website;
+    }
+  } catch {
+    onCancel();
+  }
+  loading.value = false;
 
-      interval = setInterval(async () => {
-        if (timerReject.value <= 0) {
-          onCancel();
-          return;
-        }
+  interval = setInterval(async () => {
+    if (timerReject.value <= 0) {
+      onCancel();
+      return;
+    }
 
-        timerReject.value -= 1;
-        walletPing();
-      }, 1000) as any;
-    });
-
-    const onAddSwitch = async () => {
-      loading.value = true;
-      const network: Network = {
-        chainId: Number(chainId.value),
-        name: name.value,
-        explorer: explorer.value,
-        rpc: rpc.value,
-        symbol: symbol.value,
-      };
-      await saveNetwork(network);
-      await saveSelectedNetwork(network);
-      triggerListner("chainChanged", chainId.value);
-      approve(rid);
-      loading.value = false;
-    };
-
-    return {
-      onCancel,
-      alertOpen,
-      loading,
-      getUrl,
-      onAddSwitch,
-      timerReject,
-      website,
-      chainId,
-      name,
-      rpc,
-      explorer,
-      symbol,
-    };
-  },
+    timerReject.value -= 1;
+    walletPing();
+  }, 1000) as any;
 });
+
+const onAddSwitch = async () => {
+  loading.value = true;
+  const network: Network = {
+    chainId: Number(chainId.value),
+    name: name.value,
+    explorer: explorer.value,
+    rpc: rpc.value,
+    symbol: symbol.value,
+  };
+  await saveNetwork(network);
+  await saveSelectedNetwork(network);
+  triggerListner("chainChanged", chainId.value);
+  approve(rid);
+  loading.value = false;
+};
 </script>

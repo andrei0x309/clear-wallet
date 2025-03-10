@@ -57,8 +57,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, Ref } from "vue";
+<script lang="ts" setup>
+import { ref, Ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -77,45 +77,19 @@ import { getSelectedNetwork, getUrl, hexTostr } from "@/utils/platform";
 import type { Network } from "@/extension/types";
 import { allTemplateNets } from "@/utils/networks";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonButton,
-    IonTextarea,
-    IonLoading,
-  },
-  setup: () => {
-    const route = useRoute();
-    const error = hexTostr((route.params?.param as string) ?? "");
-    const loading = ref(true);
-    const contract = (route.params?.contract as string) ?? "";
-    const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
+const route = useRoute();
+const error = hexTostr((route.params?.param as string) ?? "");
+const loading = ref(true);
+const contract = (route.params?.contract as string) ?? "";
+const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
 
-    const onCancel = () => {
-      window.close();
-    };
+const onCancel = () => {
+  window.close();
+};
 
-    onIonViewWillEnter(async () => {
-      (window as any)?.resizeTo?.(700, 600);
-      selectedNetwork.value = await getSelectedNetwork();
-      loading.value = false;
-    });
-
-    return {
-      onCancel,
-      contract,
-      loading,
-      selectedNetwork,
-      allTemplateNets,
-      getUrl,
-      error,
-    };
-  },
+onIonViewWillEnter(async () => {
+  (window as any)?.resizeTo?.(700, 600);
+  selectedNetwork.value = await getSelectedNetwork();
+  loading.value = false;
 });
 </script>

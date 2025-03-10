@@ -163,8 +163,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { Ref, defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
+<script lang="ts" setup>
+import { Ref, ref, onMounted, onBeforeUnmount } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -193,453 +193,264 @@ import AbiSelectFunction from "./AbiSelectFunction.vue";
 import SavedReadWriteActionList from "./SavedReadWriteActionList.vue";
 import SelectedContacts from "./ContactsSelect.vue";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonButton,
-    IonIcon,
-    IonTextarea,
-    IonModal,
-    IonButtons,
-    IonList,
-    IonAlert,
-  },
-  setup: () => {
-    const savedModalState = ref(false);
-    const saveActionModal = ref(false);
-    const alertOpen = ref(false);
-    const alertMsg = ref("");
-    const name = ref("");
-    const contractAddress = ref("");
-    const functionName = ref("");
-    const params = ref([]) as Ref<{ value: string; type: string; name: "" }[]>;
-    const result = ref("");
-    const evalFrame = ref() as Ref<HTMLIFrameElement>;
-    let messagePromiseResolve: (v: unknown) => void = () => {};
-    const sandboxLoaded = ref(false);
-    const abiContent = ref("");
-    const selectedAbi = ref("");
-    const alertHeader = ref("");
-    let parsedAbi: any;
-    const functions = ref([]) as Ref<string[]>;
+const savedModalState = ref(false);
+const saveActionModal = ref(false);
+const alertOpen = ref(false);
+const alertMsg = ref("");
+const name = ref("");
+const contractAddress = ref("");
+const functionName = ref("");
+const params = ref([]) as Ref<{ value: string; type: string; name: "" }[]>;
+const result = ref("");
+const evalFrame = ref() as Ref<HTMLIFrameElement>;
+let messagePromiseResolve: (v: unknown) => void = () => {};
+const sandboxLoaded = ref(false);
+const abiContent = ref("");
+const selectedAbi = ref("");
+const alertHeader = ref("");
+let parsedAbi: any;
+const functions = ref([]) as Ref<string[]>;
 
-    const openAbiListModal = async () => {
-      const modal = await modalController.create({
-        component: AbiList,
+const openAbiListModal = async () => {
+  const modal = await modalController.create({
+    component: AbiList,
+  });
+
+  modal.present();
+
+  const { data, role } = await modal.onWillDismiss();
+
+  if (role === "confirm") {
+    abiContent.value = data.content;
+    selectedAbi.value = data.name;
+    parsedAbi = JSON.parse(abiContent.value);
+    functions.value = parsedAbi
+      .filter((fn: any) => fn.type === "function")
+      .map((fn: any) => fn.name);
+  }
+};
+
+const selectFunction = async () => {
+  const modal = await modalController.create({
+    component: AbiSelectFunction,
+    componentProps: {
+      functions: functions.value,
+    },
+  });
+
+  modal.present();
+
+  const { data, role } = await modal.onWillDismiss();
+
+  if (role === "confirm") {
+    functionName.value = data;
+    params.value = parsedAbi
+      .find((fn: any) => fn.name === data)
+      .inputs.map((input: any) => {
+        return { value: "", type: input.type, name: input.name };
       });
+  }
+};
 
-      modal.present();
+const selectSavedAction = async () => {
+  const modal = await modalController.create({
+    component: SavedReadWriteActionList,
+    componentProps: {
+      type: "read",
+    },
+  });
 
-      const { data, role } = await modal.onWillDismiss();
+  modal.present();
+  const { data, role } = (await modal.onWillDismiss()) as {
+    data: ContractAction;
+    role: string;
+  };
 
-      if (role === "confirm") {
-        abiContent.value = data.content;
-        selectedAbi.value = data.name;
-        parsedAbi = JSON.parse(abiContent.value);
-        functions.value = parsedAbi
-          .filter((fn: any) => fn.type === "function")
-          .map((fn: any) => fn.name);
-      }
-    };
-
-    const selectFunction = async () => {
-      const modal = await modalController.create({
-        component: AbiSelectFunction,
-        componentProps: {
-          functions: functions.value,
-        },
-      });
-
-      modal.present();
-
-      const { data, role } = await modal.onWillDismiss();
-
-      if (role === "confirm") {
-        functionName.value = data;
-        params.value = parsedAbi
-          .find((fn: any) => fn.name === data)
-          .inputs.map((input: any) => {
-            return { value: "", type: input.type, name: input.name };
-          });
-      }
-    };
-
-    const selectSavedAction = async () => {
-      const modal = await modalController.create({
-        component: SavedReadWriteActionList,
-        componentProps: {
-          type: "read",
-        },
-      });
-
-      modal.present();
-      const { data, role } = (await modal.onWillDismiss()) as {
-        data: ContractAction;
-        role: string;
-      };
-
-      if (role === "confirm") {
-        const content = await getAbis(data.abi);
-        if (!content) {
-          alertMsg.value =
-            "Abi not found in storage, be sure Abi with name " + data.abi + " exists.";
-          alertOpen.value = true;
-          return;
-        }
-
-        abiContent.value = content;
-        functionName.value = data.functionName;
-        params.value = Object.values(data.params);
-        contractAddress.value = data.contract;
-        selectedAbi.value = data.abi;
-        parsedAbi = JSON.parse(abiContent.value);
-
-        functions.value = parsedAbi
-          .filter((fn: any) => fn.type === "function")
-          .map((fn: any) => fn.name);
-      }
-    };
-
-    const saveActionInStorage = () => {
-      if (!functionName.value) {
-        alertMsg.value = "Function Name is required";
-        alertOpen.value = true;
-        return;
-      }
-      if (!contractAddress.value) {
-        alertMsg.value = "Contract Address is required";
-        alertOpen.value = true;
-        return;
-      }
-      if (abiContent.value === "") {
-        alertMsg.value = "Abi is required";
-        alertOpen.value = true;
-        return;
-      }
-      saveActionModal.value = true;
-    };
-
-    const executeAction = async () => {
-      if (sandboxLoaded.value === false) {
-        alertMsg.value = "Sandbox for eval not loaded yet, please wait";
-        alertOpen.value = true;
-        return;
-      }
-
-      if (!contractAddress.value) {
-        alertMsg.value = "Contract Address is required";
-        alertOpen.value = true;
-        return;
-      }
-
-      if (!functionName.value) {
-        alertMsg.value = "Function Name is required";
-        alertOpen.value = true;
-        return;
-      }
-
-      if (!parsedAbi) {
-        alertMsg.value = "Abi is required";
-        alertOpen.value = true;
-        return;
-      }
-
-      alertHeader.value = "Error";
-
-      const provider = await getCurrentProvider();
-      const encodeParamsTypes = [];
-
-      let evalParams: any[] = [];
-      try {
-        evalParams = await Promise.all(
-          params.value.map(async (param) => await getEvalValue(param.value))
-        );
-      } catch {
-        alertMsg.value = "Error parsing params, check params types";
-        alertOpen.value = true;
-        return;
-      }
-
-      try {
-        if (functionName.value?.includes("(")) {
-          const paramsTypes = functionName.value
-            .split("(")[1]
-            .split(")")[0]
-            .split(",")
-            .map((param) => param.trim());
-          if (paramsTypes.length !== evalParams.length) {
-            alertMsg.value = "Params count mismatch";
-            alertOpen.value = true;
-            return;
-          }
-          encodeParamsTypes.push(...paramsTypes);
-        }
-      } catch {
-        alertMsg.value =
-          "Function Siganture wrong format (ex: 'functionName(uint256,string)')";
-        alertOpen.value = true;
-        return;
-      }
-
-      const fnName = functionName.value.includes("(")
-        ? functionName.value.split("(")[0]
-        : functionName.value;
-
-      const contract = new ethers.Contract(contractAddress.value, parsedAbi, provider);
-
-      try {
-        const res = await contract[fnName](...evalParams);
-        result.value = res.toString();
-
-        alertMsg.value = "Value from contract fetched check result area!";
-        alertHeader.value = "OK";
-        alertOpen.value = true;
-        return;
-      } catch (e) {
-        alertMsg.value = "Function call failed, check params, contract address and ABI";
-        alertOpen.value = true;
-        return;
-      }
-    };
-
-    const saveAction = async () => {
-      if (!name.value) {
-        alertMsg.value = "Name is required";
-        alertOpen.value = true;
-        return;
-      }
-      const action = {
-        name: name.value,
-        contract: contractAddress.value,
-        functionName: functionName.value,
-        params: params.value,
-        abi: selectedAbi.value,
-      };
-
-      await readCASet(action);
-      saveActionModal.value = false;
-      alertMsg.value = "Action saved successfully";
-      alertHeader.value = "OK";
+  if (role === "confirm") {
+    const content = await getAbis(data.abi);
+    if (!content) {
+      alertMsg.value =
+        "Abi not found in storage, be sure Abi with name " + data.abi + " exists.";
       alertOpen.value = true;
       return;
-    };
+    }
 
-    const messageHandler = (event: any) => {
-      messagePromiseResolve(event?.data?.result);
-    };
+    abiContent.value = content;
+    functionName.value = data.functionName;
+    params.value = Object.values(data.params);
+    contractAddress.value = data.contract;
+    selectedAbi.value = data.abi;
+    parsedAbi = JSON.parse(abiContent.value);
 
-    onMounted(() => {
-      window.addEventListener("message", messageHandler);
-    });
+    functions.value = parsedAbi
+      .filter((fn: any) => fn.type === "function")
+      .map((fn: any) => fn.name);
+  }
+};
 
-    onBeforeUnmount(() => {
-      window.removeEventListener("message", messageHandler);
-    });
+const saveActionInStorage = () => {
+  if (!functionName.value) {
+    alertMsg.value = "Function Name is required";
+    alertOpen.value = true;
+    return;
+  }
+  if (!contractAddress.value) {
+    alertMsg.value = "Contract Address is required";
+    alertOpen.value = true;
+    return;
+  }
+  if (abiContent.value === "") {
+    alertMsg.value = "Abi is required";
+    alertOpen.value = true;
+    return;
+  }
+  saveActionModal.value = true;
+};
 
-    const getEvalValue = (evalString: string) => {
-      return new Promise((resolve) => {
-        if (!evalFrame.value?.contentWindow?.postMessage) {
-          return;
-        }
-        messagePromiseResolve = resolve;
-        evalFrame.value?.contentWindow?.postMessage({ code: evalString }, "*");
-      });
-    };
+const executeAction = async () => {
+  if (sandboxLoaded.value === false) {
+    alertMsg.value = "Sandbox for eval not loaded yet, please wait";
+    alertOpen.value = true;
+    return;
+  }
 
-    // const rpc = ref("");
-    // const symbol = ref("");
-    // const explorer = ref("");
-    // const templateModal = ref(false);
-    // const currentSegment = ref("mainnets");
+  if (!contractAddress.value) {
+    alertMsg.value = "Contract Address is required";
+    alertOpen.value = true;
+    return;
+  }
 
-    // const route = useRoute();
-    // const isEdit = route.path.includes("/edit");
-    // const paramChainId = route.params.chainId ?? "";
-    // let networksProm: Promise<Networks | undefined>;
+  if (!functionName.value) {
+    alertMsg.value = "Function Name is required";
+    alertOpen.value = true;
+    return;
+  }
 
-    // const fillNetworkInputs = (network: Network) => {
-    //   name.value = network.name;
-    //   chainId.value = network.chainId;
-    //   rpc.value = network.rpc;
-    //   symbol.value = network.symbol ?? "";
-    //   explorer.value = network.explorer ?? "";
-    // };
+  if (!parsedAbi) {
+    alertMsg.value = "Abi is required";
+    alertOpen.value = true;
+    return;
+  }
 
-    // onIonViewWillEnter(async () => {
-    //   if (isEdit && paramChainId) {
-    //     networksProm = getNetworks();
-    //     const networks = (await networksProm) as Networks;
-    //     fillNetworkInputs(networks[Number(paramChainId)]);
-    //   }
-    // });
+  alertHeader.value = "Error";
 
-    // const resetFields = () => {
-    //   name.value = "";
-    //   chainId.value = 0;
-    //   rpc.value = "";
-    // };
+  const provider = await getCurrentProvider();
+  const encodeParamsTypes = [];
 
-    // const onAddNetwork = async () => {
-    //   if (Number(chainId.value) < 1) {
-    //     alertMsg.value = "Chain Id must be a valid decimal integer";
-    //     return (alertOpen.value = true);
-    //   }
-    //   if (name.value.length < 2) {
-    //     alertMsg.value = "Name must have at least 2 characters";
-    //     return (alertOpen.value = true);
-    //   }
-    //   if (name.value.length > 99) {
-    //     alertMsg.value = "Name must be less than 100 characters";
-    //     return (alertOpen.value = true);
-    //   }
-    //   if (name.value.length > 99) {
-    //     try {
-    //       new URL(rpc.value);
-    //     } catch {
-    //       alertMsg.value = "RPC must be a valid URL";
-    //       return (alertOpen.value = true);
-    //     }
-    //   }
-    //   let p1 = Promise.resolve();
-    //   if (!networksProm) {
-    //     networksProm = getNetworks();
-    //   }
-    //   const networks = (await networksProm) as Networks;
-    //   const network = {
-    //     name: name.value,
-    //     chainId: chainId.value,
-    //     rpc: rpc.value,
-    //     ...(symbol.value ? { symbol: symbol.value } : {}),
-    //     ...(explorer.value ? { explorer: explorer.value } : {}),
-    //   };
-    //   if ((Object.keys(networks).length ?? 0) < 1) {
-    //     p1 = saveSelectedNetwork(network);
-    //   } else {
-    //     if (chainId.value in networks && !isEdit) {
-    //       alertMsg.value = "Network already exists.";
-    //       return (alertOpen.value = true);
-    //     }
-    //   }
-    //   networks[chainId.value] = network;
-    //   const p2 = replaceNetworks(networks);
-    //   await Promise.all([p1, p2]);
-    //   if (isEdit) {
-    //     router.push("/tabs/networks");
-    //   } else {
-    //     router.push("/tabs/home");
-    //   }
-    //   resetFields();
-    // };
+  let evalParams: any[] = [];
+  try {
+    evalParams = await Promise.all(
+      params.value.map(async (param) => await getEvalValue(param.value))
+    );
+  } catch {
+    alertMsg.value = "Error parsing params, check params types";
+    alertOpen.value = true;
+    return;
+  }
 
-    // const segmentChange = (value: any) => {
-    //   currentSegment.value = value.detail.value;
-    // };
-
-    // const onCancel = () => {
-    //   if (isEdit) {
-    //     router.push("/tabs/networks");
-    //   } else {
-    //     router.push("/tabs/home");
-    //   }
-    // };
-
-    // const fillTemplate = (network: typeof mainNets[1]) => {
-    //   fillNetworkInputs(network);
-    //   modalController?.dismiss(null, "cancel");
-    // };
-
-    //     document.addEventListener('DOMContentLoaded', () => {
-    //   document.getElementById('reset').addEventListener('click', function () {
-    //     counter = 0;
-    //     document.querySelector('#result').innerHTML = '';
-    //   });
-
-    //   document.getElementById('sendMessage').addEventListener('click', function () {
-    //     counter++;
-    //     let message = {
-    //       command: 'render',
-    //       templateName: 'sample-template-' + counter,
-    //       context: { counter: counter }
-    //     };
-    //     document.getElementById('theFrame').contentWindow.postMessage(message, '*');
-    //   });
-
-    //   // on result from sandboxed frame:
-    //   window.addEventListener('message', function () {
-    //     document.querySelector('#result').innerHTML =
-    //       event.data.result || 'invalid result';
-    //   });
-    // });
-
-    const openModalAddContact = async () => {
-      const modal = await modalController.create({
-        component: SelectedContacts,
-        componentProps: {},
-      });
-
-      modal.present();
-
-      const { data, role } = await modal.onWillDismiss();
-      if (role === "confirm") {
-        contractAddress.value = data.address;
+  try {
+    if (functionName.value?.includes("(")) {
+      const paramsTypes = functionName.value
+        .split("(")[1]
+        .split(")")[0]
+        .split(",")
+        .map((param) => param.trim());
+      if (paramsTypes.length !== evalParams.length) {
+        alertMsg.value = "Params count mismatch";
+        alertOpen.value = true;
+        return;
       }
-    };
+      encodeParamsTypes.push(...paramsTypes);
+    }
+  } catch {
+    alertMsg.value =
+      "Function Siganture wrong format (ex: 'functionName(uint256,string)')";
+    alertOpen.value = true;
+    return;
+  }
 
-    const handleFnChange = (event: any) => {
-      functionName.value = event.detail.value;
-    };
+  const fnName = functionName.value.includes("(")
+    ? functionName.value.split("(")[0]
+    : functionName.value;
 
-    return {
-      saveActionModal,
-      handleFnChange,
-      clipboardOutline,
-      evalFrame,
-      alertOpen,
-      alertMsg,
-      alertHeader,
-      functionName,
-      paste,
-      savedModalState,
-      name,
-      contractAddress,
-      params,
-      // addParam,
-      // removeParam,
-      saveActionInStorage,
-      executeAction,
-      result,
-      sandboxLoaded,
-      openAbiListModal,
-      selectedAbi,
-      functions,
-      selectFunction,
-      saveAction,
-      selectSavedAction,
-      openModalAddContact,
-      // onAddNetwork,
-      // rpc,
-      // onCancel,
-      // templateModal,
-      // currentSegment,
-      // mainNets,
-      // testNets,
-      // segmentChange,
-      // getUrl,
-      // fillTemplate,
+  const contract = new ethers.Contract(contractAddress.value, parsedAbi, provider);
 
-      // symbol,
-      // explorer,
-      // isEdit,
-    };
-  },
+  try {
+    const res = await contract[fnName](...evalParams);
+    result.value = res.toString();
+
+    alertMsg.value = "Value from contract fetched check result area!";
+    alertHeader.value = "OK";
+    alertOpen.value = true;
+    return;
+  } catch (e) {
+    alertMsg.value = "Function call failed, check params, contract address and ABI";
+    alertOpen.value = true;
+    return;
+  }
+};
+
+const saveAction = async () => {
+  if (!name.value) {
+    alertMsg.value = "Name is required";
+    alertOpen.value = true;
+    return;
+  }
+  const action = {
+    name: name.value,
+    contract: contractAddress.value,
+    functionName: functionName.value,
+    params: params.value,
+    abi: selectedAbi.value,
+  };
+
+  await readCASet(action);
+  saveActionModal.value = false;
+  alertMsg.value = "Action saved successfully";
+  alertHeader.value = "OK";
+  alertOpen.value = true;
+  return;
+};
+
+const messageHandler = (event: any) => {
+  messagePromiseResolve(event?.data?.result);
+};
+
+onMounted(() => {
+  window.addEventListener("message", messageHandler);
 });
+
+onBeforeUnmount(() => {
+  window.removeEventListener("message", messageHandler);
+});
+
+const getEvalValue = (evalString: string) => {
+  return new Promise((resolve) => {
+    if (!evalFrame.value?.contentWindow?.postMessage) {
+      return;
+    }
+    messagePromiseResolve = resolve;
+    evalFrame.value?.contentWindow?.postMessage({ code: evalString }, "*");
+  });
+};
+
+const openModalAddContact = async () => {
+  const modal = await modalController.create({
+    component: SelectedContacts,
+    componentProps: {},
+  });
+
+  modal.present();
+
+  const { data, role } = await modal.onWillDismiss();
+  if (role === "confirm") {
+    contractAddress.value = data.address;
+  }
+};
+
+const handleFnChange = (event: any) => {
+  functionName.value = event.detail.value;
+};
 </script>
 
 <style>

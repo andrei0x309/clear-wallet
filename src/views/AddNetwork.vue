@@ -140,8 +140,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script lang="ts" setup>
+import { ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -178,163 +178,117 @@ import { useRoute } from "vue-router";
 import { clipboardOutline } from "ionicons/icons";
 import type { Networks, Network } from "@/extension/types";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonButton,
-    IonIcon,
-    IonModal,
-    IonList,
-    IonSegment,
-    IonSegmentButton,
-    IonListHeader,
-    IonButtons,
-    IonAvatar,
-    IonAlert,
-  },
-  setup: () => {
-    const name = ref("");
-    const chainId = ref(0);
-    const rpc = ref("");
-    const symbol = ref("");
-    const explorer = ref("");
-    const templateModal = ref(false);
-    const currentSegment = ref("mainnets");
-    const alertOpen = ref(false);
-    const alertMsg = ref("");
-    const route = useRoute();
-    const isEdit = route.path.includes("/edit");
-    const paramChainId = route.params.chainId ?? "";
+const name = ref("");
+const chainId = ref(0);
+const rpc = ref("");
+const symbol = ref("");
+const explorer = ref("");
+const templateModal = ref(false);
+const currentSegment = ref("mainnets");
+const alertOpen = ref(false);
+const alertMsg = ref("");
+const route = useRoute();
+const isEdit = route.path.includes("/edit");
+const paramChainId = route.params.chainId ?? "";
 
-    const fillNetworkInputs = (network: Network) => {
-      name.value = network.name;
-      chainId.value = network.chainId;
-      rpc.value = network.rpc;
-      symbol.value = network.symbol ?? "";
-      explorer.value = network.explorer ?? "";
-    };
+const fillNetworkInputs = (network: Network) => {
+  name.value = network.name;
+  chainId.value = network.chainId;
+  rpc.value = network.rpc;
+  symbol.value = network.symbol ?? "";
+  explorer.value = network.explorer ?? "";
+};
 
-    onIonViewWillEnter(async () => {
-      if (isEdit && paramChainId) {
-        const networks = (await getNetworks()) as Networks;
-        fillNetworkInputs(networks[Number(paramChainId)]);
-      }
-    });
-
-    const resetFields = () => {
-      name.value = "";
-      chainId.value = 0;
-      rpc.value = "";
-    };
-
-    const onAddNetwork = async () => {
-      if (Number(chainId.value) < 1) {
-        alertMsg.value = "Chain Id must be a valid decimal integer";
-        alertOpen.value = true;
-        return;
-      }
-      if (name.value.length < 2) {
-        alertMsg.value = "Name must have at least 2 characters";
-        alertOpen.value = true;
-        return;
-      }
-      if (name.value.length > 99) {
-        alertMsg.value = "Name must be less than 100 characters";
-        alertOpen.value = true;
-        return;
-      }
-      if (name.value.length > 99) {
-        try {
-          new URL(rpc.value);
-        } catch {
-          alertMsg.value = "RPC must be a valid URL";
-          alertOpen.value = true;
-          return;
-        }
-      }
-      let p1 = Promise.resolve();
-      const networksProm = getNetworks();
-      const selectedNetworkProm = getSelectedNetwork();
-
-      const allNetworks = await Promise.all([networksProm, selectedNetworkProm]);
-      const networks = allNetworks[0] as Networks;
-      const selectedNetwork = allNetworks[1] as Network;
-
-      const network = {
-        name: name.value,
-        chainId: chainId.value,
-        rpc: rpc.value,
-        ...(symbol.value ? { symbol: symbol.value } : {}),
-        ...(explorer.value ? { explorer: explorer.value } : {}),
-      };
-      if (
-        (Object.keys(networks).length ?? 0) < 1 ||
-        selectedNetwork.chainId === chainId.value
-      ) {
-        p1 = saveSelectedNetwork(network);
-      } else {
-        if (chainId.value in networks && !isEdit) {
-          alertMsg.value = "Network already exists.";
-          alertOpen.value = true;
-          return;
-        }
-      }
-      networks[chainId.value] = network;
-      const p2 = replaceNetworks(networks);
-      await Promise.all([p1, p2]);
-      if (isEdit) {
-        router.push("/tabs/networks");
-      } else {
-        router.push("/tabs/home");
-      }
-      resetFields();
-    };
-
-    const segmentChange = (value: any) => {
-      currentSegment.value = value.detail.value;
-    };
-
-    const onCancel = () => {
-      if (isEdit) {
-        router.push("/tabs/networks");
-      } else {
-        router.push("/tabs/home");
-      }
-    };
-
-    const fillTemplate = (network: typeof mainNets[1]) => {
-      fillNetworkInputs(network);
-      modalController?.dismiss(null, "cancel");
-    };
-
-    return {
-      name,
-      chainId,
-      onAddNetwork,
-      rpc,
-      onCancel,
-      paste,
-      clipboardOutline,
-      templateModal,
-      currentSegment,
-      mainNets,
-      testNets,
-      segmentChange,
-      getUrl,
-      fillTemplate,
-      alertOpen,
-      alertMsg,
-      symbol,
-      explorer,
-      isEdit,
-    };
-  },
+onIonViewWillEnter(async () => {
+  if (isEdit && paramChainId) {
+    const networks = (await getNetworks()) as Networks;
+    fillNetworkInputs(networks[Number(paramChainId)]);
+  }
 });
+
+const resetFields = () => {
+  name.value = "";
+  chainId.value = 0;
+  rpc.value = "";
+};
+
+const onAddNetwork = async () => {
+  if (Number(chainId.value) < 1) {
+    alertMsg.value = "Chain Id must be a valid decimal integer";
+    alertOpen.value = true;
+    return;
+  }
+  if (name.value.length < 2) {
+    alertMsg.value = "Name must have at least 2 characters";
+    alertOpen.value = true;
+    return;
+  }
+  if (name.value.length > 99) {
+    alertMsg.value = "Name must be less than 100 characters";
+    alertOpen.value = true;
+    return;
+  }
+  if (name.value.length > 99) {
+    try {
+      new URL(rpc.value);
+    } catch {
+      alertMsg.value = "RPC must be a valid URL";
+      alertOpen.value = true;
+      return;
+    }
+  }
+  let p1 = Promise.resolve();
+  const networksProm = getNetworks();
+  const selectedNetworkProm = getSelectedNetwork();
+
+  const allNetworks = await Promise.all([networksProm, selectedNetworkProm]);
+  const networks = allNetworks[0] as Networks;
+  const selectedNetwork = allNetworks[1] as Network;
+
+  const network = {
+    name: name.value,
+    chainId: chainId.value,
+    rpc: rpc.value,
+    ...(symbol.value ? { symbol: symbol.value } : {}),
+    ...(explorer.value ? { explorer: explorer.value } : {}),
+  };
+  if (
+    (Object.keys(networks).length ?? 0) < 1 ||
+    selectedNetwork.chainId === chainId.value
+  ) {
+    p1 = saveSelectedNetwork(network);
+  } else {
+    if (chainId.value in networks && !isEdit) {
+      alertMsg.value = "Network already exists.";
+      alertOpen.value = true;
+      return;
+    }
+  }
+  networks[chainId.value] = network;
+  const p2 = replaceNetworks(networks);
+  await Promise.all([p1, p2]);
+  if (isEdit) {
+    router.push("/tabs/networks");
+  } else {
+    router.push("/tabs/home");
+  }
+  resetFields();
+};
+
+const segmentChange = (value: any) => {
+  currentSegment.value = value.detail.value;
+};
+
+const onCancel = () => {
+  if (isEdit) {
+    router.push("/tabs/networks");
+  } else {
+    router.push("/tabs/home");
+  }
+};
+
+const fillTemplate = (network: typeof mainNets[1]) => {
+  fillNetworkInputs(network);
+  modalController?.dismiss(null, "cancel");
+};
 </script>

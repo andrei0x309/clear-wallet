@@ -44,9 +44,9 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, Ref } from "vue";
-import { getNetworks, copyText, getUrl, replaceNetworks } from "@/utils/platform";
+<script lang="ts" setup>
+import { ref, Ref } from "vue";
+import { getNetworks, getUrl, replaceNetworks } from "@/utils/platform";
 import {
   IonContent,
   IonHeader,
@@ -68,70 +68,33 @@ import { addCircleOutline, copyOutline } from "ionicons/icons";
 import router from "@/router/index";
 import type { Networks } from "@/extension/types";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonIcon,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonChip,
-    IonButtons,
-    IonButton,
-    IonAvatar,
-  },
-  setup() {
-    const networks = ref({}) as Ref<Networks>;
-    const loading = ref(true);
-    const toastState = ref(false);
+const networks = ref({}) as Ref<Networks>;
+const loading = ref(true);
 
-    const getToastRef = () => toastState;
+const loadData = () => {
+  const pAccounts = getNetworks();
+  Promise.all([pAccounts]).then((res) => {
+    networks.value = res[0];
+    loading.value = false;
+  });
+};
 
-    const loadData = () => {
-      const pAccounts = getNetworks();
-      Promise.all([pAccounts]).then((res) => {
-        networks.value = res[0];
-        loading.value = false;
-      });
-    };
+const deleteNetwork = async (chainId: number) => {
+  loading.value = true;
+  delete networks.value[chainId];
+  await replaceNetworks(networks.value);
+  loading.value = false;
+};
 
-    const deleteNetwork = async (chainId: number) => {
-      loading.value = true;
-      delete networks.value[chainId];
-      await replaceNetworks(networks.value);
-      loading.value = false;
-    };
+const editNetwork = (chainId: number) => {
+  router.push(`add-network/edit/${chainId}`);
+};
 
-    const editNetwork = (chainId: number) => {
-      router.push(`add-network/edit/${chainId}`);
-    };
+const goToAddNetwork = () => {
+  router.push("/tabs/add-network");
+};
 
-    const goToAddNetwork = () => {
-      router.push("/tabs/add-network");
-    };
-
-    onIonViewWillEnter(() => {
-      loadData();
-    });
-
-    return {
-      networks,
-      addCircleOutline,
-      copyOutline,
-      toastState,
-      copyText,
-      getToastRef,
-      getUrl,
-      allTemplateNets,
-      deleteNetwork,
-      editNetwork,
-      loading,
-      goToAddNetwork,
-    };
-  },
+onIonViewWillEnter(() => {
+  loadData();
 });
 </script>

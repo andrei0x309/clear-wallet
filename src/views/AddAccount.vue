@@ -99,8 +99,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script lang="ts" setup>
+import { ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -137,242 +137,209 @@ import { encrypt, getCryptoParams } from "@/utils/webCrypto";
 
 import { clipboardOutline } from "ionicons/icons";
 import { getFromMnemonic, getRandomPk } from "@/utils/wallet";
+import { setUnlockModalState } from "@/utils/unlockStore";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonButton,
-    IonAlert,
-    IonIcon,
-    IonModal,
-    IonButtons,
-    IonTextarea,
-  },
-  setup: () => {
-    const name = ref("");
-    const pk = ref("");
-    const alertOpen = ref(false);
-    const alertMsg = ref("");
-    const route = useRoute();
-    const isEdit = route.path.includes("/edit");
-    const paramAddress = route.params.address ?? "";
-    const mnemonicModal = ref(false);
-    const mnemonic = ref("");
-    const mnemonicIndex = ref(0);
+const name = ref("");
+const pk = ref("");
+const alertOpen = ref(false);
+const alertMsg = ref("");
+const route = useRoute();
+const isEdit = route.path.includes("/edit");
+const paramAddress = route.params.address ?? "";
+const mnemonicModal = ref(false);
+const mnemonic = ref("");
+const mnemonicIndex = ref(0);
 
-    let accountsProm: Promise<Account[] | undefined>;
-    let settingsProm: Promise<Settings | undefined>;
+let accountsProm: Promise<Account[] | undefined>;
+let settingsProm: Promise<Settings | undefined>;
 
-    const resetFields = () => {
-      name.value = "";
-      pk.value = "";
-    };
+const resetFields = () => {
+  name.value = "";
+  pk.value = "";
+};
 
-    const openModal = async () => {
-      const modal = await modalController.create({
-        component: UnlockModal,
-        componentProps: {
-          unlockType: "addAccount",
-        },
-      });
-      modal.present();
-      const { role, data } = await modal.onWillDismiss();
-      if (role === "confirm") return data;
-      return false;
-    };
+const openModal = async () => {
+  const modal = await modalController.create({
+    component: UnlockModal,
+    animated: true,
+    focusTrap: false,
+    backdropDismiss: false,
+    componentProps: {
+      unlockType: "addAccount",
+    },
+  });
+  await modal.present();
+  setUnlockModalState(true);
+  const { role, data } = await modal.onWillDismiss();
+  if (role === "confirm") return data;
+  setUnlockModalState(false);
+  return false;
+};
 
-    onIonViewWillEnter(async () => {
-      if (isEdit && paramAddress) {
-        accountsProm = getAccounts();
-        settingsProm = getSettings();
-        const accounts = (await accountsProm) as Account[];
-        const acc = accounts.find((account) => account.address === paramAddress);
-        if (acc) {
-          name.value = acc.name;
-        }
-      }
-    });
-
-    const deleteAccount = async (address: string, accounts: Account[]) => {
-      const findIndex = accounts.findIndex((a) => a.address === address);
-      const pArr: Array<Promise<void>> = [];
-      if (findIndex !== -1) {
-        accounts.splice(findIndex, 1);
-        pArr.push(replaceAccounts([...accounts]));
-      }
-      await Promise.all(pArr);
-    };
-
-    const onEditAccount = async () => {
-      if (name.value.length < 1) {
-        alertMsg.value = "Name cannot be empty.";
-        alertOpen.value = true;
-        return;
-      }
-      const accounts = (await accountsProm) as Account[];
-      const account = accounts.find((acc) => acc.address === paramAddress);
-      if (!account) {
-        alertMsg.value = "Account not found.";
-        alertOpen.value = true;
-        return;
-      }
-      const savedAcc = {
-        address: account.address,
-        name: name.value,
-        pk: account.pk,
-        encPk: account.encPk,
-      };
-      await deleteAccount(account.address, accounts);
-
-      await saveAccount(savedAcc);
-      router.push("/tabs/accounts");
-    };
-
-    const onAddAccount = async () => {
-      let p1 = Promise.resolve();
-      if (name.value.length < 1) {
-        alertMsg.value = "Name cannot be empty.";
-        alertOpen.value = true;
-        return;
-      }
-      if (pk.value.length === 64) {
-        pk.value = `0x${pk.value.trim()}`;
-      }
-      if (pk.value.length !== 66) {
-        alertMsg.value = "Provided private key is invalid.";
-        alertOpen.value = true;
-        return;
-      }
-
-      const wallet = new ethers.Wallet(pk.value);
-      if (!accountsProm) {
-        accountsProm = getAccounts();
-      }
-      if (!settingsProm) {
-        settingsProm = getSettings();
-      }
-      const accounts = (await accountsProm) as Account[];
-      const settings = (await settingsProm) as Settings;
-      if (settings.enableStorageEnctyption) {
-        const pass = await openModal();
-        if (!pass) {
-          alertMsg.value = "Cannot add account without encryption password.";
-          alertOpen.value = true;
-          return;
-        }
-        const cryptoParams = await getCryptoParams(pass);
-        if ((accounts.length ?? 0) < 1) {
-          p1 = saveSelectedAccount({
-            address: wallet.address,
-            name: name.value,
-            pk: pk.value,
-            encPk: await encrypt(pk.value, cryptoParams),
-          });
-        } else {
-          if (accounts.find((account) => account.address === wallet.address)) {
-            alertMsg.value = "Account already exists.";
-            alertOpen.value = true;
-            return;
-          }
-        }
-        const p2 = saveAccount({
-          address: wallet.address,
-          name: name.value,
-          pk: pk.value,
-          encPk: await encrypt(pk.value, cryptoParams),
-        });
-        await Promise.all([p1, p2]);
-      } else {
-        if ((accounts.length ?? 0) < 1) {
-          p1 = saveSelectedAccount({
-            address: wallet.address,
-            name: name.value,
-            pk: pk.value,
-            encPk: "",
-          });
-        } else {
-          if (accounts.find((account) => account.address === wallet.address)) {
-            alertMsg.value = "Account already exists.";
-            alertOpen.value = true;
-            return;
-          }
-        }
-        const p2 = saveAccount({
-          address: wallet.address,
-          name: name.value,
-          pk: pk.value,
-          encPk: "",
-        });
-        await Promise.all([p1, p2]);
-      }
-      if (isEdit) {
-        router.push("/tabs/accounts");
-      } else {
-        router.push("/tabs/home");
-      }
-      resetFields();
-    };
-
-    const generateRandomPk = () => {
-      pk.value = getRandomPk();
-    };
-
-    const getRandomName = () => {
-      name.value = smallRandomString();
-    };
-
-    const onCancel = () => {
-      if (isEdit) {
-        router.push("/tabs/accounts");
-      } else {
-        router.push("/tabs/home");
-      }
-    };
-
-    const extractMnemonic = () => {
-      mnemonic.value = mnemonic.value.trim().replace(/\s+/g, " ");
-      mnemonicIndex.value = Number(mnemonicIndex.value);
-      const wordCount = mnemonic.value.trim().split(" ").length;
-
-      if (wordCount !== 12 && wordCount !== 24) {
-        alertMsg.value = "Invalid mnemonic.";
-        alertOpen.value = true;
-        return;
-      }
-      if (mnemonicIndex.value < 0) {
-        alertMsg.value = "Invalid index.";
-        alertOpen.value = true;
-        return;
-      }
-      pk.value = getFromMnemonic(mnemonic.value, mnemonicIndex.value);
-      mnemonicModal.value = false;
-    };
-
-    return {
-      name,
-      pk,
-      onAddAccount,
-      onCancel,
-      alertOpen,
-      alertMsg,
-      generateRandomPk,
-      getRandomName,
-      clipboardOutline,
-      paste,
-      isEdit,
-      mnemonicModal,
-      mnemonic,
-      mnemonicIndex,
-      extractMnemonic,
-      onEditAccount,
-    };
-  },
+onIonViewWillEnter(async () => {
+  if (isEdit && paramAddress) {
+    accountsProm = getAccounts();
+    settingsProm = getSettings();
+    const accounts = (await accountsProm) as Account[];
+    const acc = accounts.find((account) => account.address === paramAddress);
+    if (acc) {
+      name.value = acc.name;
+    }
+  }
 });
+
+const deleteAccount = async (address: string, accounts: Account[]) => {
+  const findIndex = accounts.findIndex((a) => a.address === address);
+  const pArr: Array<Promise<void>> = [];
+  if (findIndex !== -1) {
+    accounts.splice(findIndex, 1);
+    pArr.push(replaceAccounts([...accounts]));
+  }
+  await Promise.all(pArr);
+};
+
+const onEditAccount = async () => {
+  if (name.value.length < 1) {
+    alertMsg.value = "Name cannot be empty.";
+    alertOpen.value = true;
+    return;
+  }
+  const accounts = (await accountsProm) as Account[];
+  const account = accounts.find((acc) => acc.address === paramAddress);
+  if (!account) {
+    alertMsg.value = "Account not found.";
+    alertOpen.value = true;
+    return;
+  }
+  const savedAcc = {
+    address: account.address,
+    name: name.value,
+    pk: account.pk,
+    encPk: account.encPk,
+  };
+  await deleteAccount(account.address, accounts);
+
+  await saveAccount(savedAcc);
+  router.push("/tabs/accounts");
+};
+
+const onAddAccount = async () => {
+  let p1 = Promise.resolve();
+  if (name.value.length < 1) {
+    alertMsg.value = "Name cannot be empty.";
+    alertOpen.value = true;
+    return;
+  }
+  if (pk.value.length === 64) {
+    pk.value = `0x${pk.value.trim()}`;
+  }
+  if (pk.value.length !== 66) {
+    alertMsg.value = "Provided private key is invalid.";
+    alertOpen.value = true;
+    return;
+  }
+
+  const wallet = new ethers.Wallet(pk.value);
+  if (!accountsProm) {
+    accountsProm = getAccounts();
+  }
+  if (!settingsProm) {
+    settingsProm = getSettings();
+  }
+  const accounts = (await accountsProm) as Account[];
+  const settings = (await settingsProm) as Settings;
+  if (settings.enableStorageEnctyption) {
+    const pass = await openModal();
+    if (!pass) {
+      alertMsg.value = "Cannot add account without encryption password.";
+      alertOpen.value = true;
+      return;
+    }
+    const cryptoParams = await getCryptoParams(pass);
+    if ((accounts.length ?? 0) < 1) {
+      p1 = saveSelectedAccount({
+        address: wallet.address,
+        name: name.value,
+        pk: pk.value,
+        encPk: await encrypt(pk.value, cryptoParams),
+      });
+    } else {
+      if (accounts.find((account) => account.address === wallet.address)) {
+        alertMsg.value = "Account already exists.";
+        alertOpen.value = true;
+        return;
+      }
+    }
+    const p2 = saveAccount({
+      address: wallet.address,
+      name: name.value,
+      pk: pk.value,
+      encPk: await encrypt(pk.value, cryptoParams),
+    });
+    await Promise.all([p1, p2]);
+  } else {
+    if ((accounts.length ?? 0) < 1) {
+      p1 = saveSelectedAccount({
+        address: wallet.address,
+        name: name.value,
+        pk: pk.value,
+        encPk: "",
+      });
+    } else {
+      if (accounts.find((account) => account.address === wallet.address)) {
+        alertMsg.value = "Account already exists.";
+        alertOpen.value = true;
+        return;
+      }
+    }
+    const p2 = saveAccount({
+      address: wallet.address,
+      name: name.value,
+      pk: pk.value,
+      encPk: "",
+    });
+    await Promise.all([p1, p2]);
+  }
+  if (isEdit) {
+    router.push("/tabs/accounts");
+  } else {
+    router.push("/tabs/home");
+  }
+  resetFields();
+};
+
+const generateRandomPk = () => {
+  pk.value = getRandomPk();
+};
+
+const getRandomName = () => {
+  name.value = smallRandomString();
+};
+
+const onCancel = () => {
+  if (isEdit) {
+    router.push("/tabs/accounts");
+  } else {
+    router.push("/tabs/home");
+  }
+};
+
+const extractMnemonic = () => {
+  mnemonic.value = mnemonic.value.trim().replace(/\s+/g, " ");
+  mnemonicIndex.value = Number(mnemonicIndex.value);
+  const wordCount = mnemonic.value.trim().split(" ").length;
+
+  if (wordCount !== 12 && wordCount !== 24) {
+    alertMsg.value = "Invalid mnemonic.";
+    alertOpen.value = true;
+    return;
+  }
+  if (mnemonicIndex.value < 0) {
+    alertMsg.value = "Invalid index.";
+    alertOpen.value = true;
+    return;
+  }
+  pk.value = getFromMnemonic(mnemonic.value, mnemonicIndex.value);
+  mnemonicModal.value = false;
+};
 </script>
