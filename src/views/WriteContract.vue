@@ -155,8 +155,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { Ref, defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
+<script lang="ts" setup>
+import { Ref, ref, onMounted, onBeforeUnmount } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -186,326 +186,272 @@ import SavedReadWriteActionList from "./SavedReadWriteActionList.vue";
 import { walletPromptSendTx } from "@/extension/userRequest";
 import SelectedContacts from "./ContactsSelect.vue";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonButton,
-    IonIcon,
-    IonList,
-    IonAlert,
-    IonLoading,
-    IonButtons,
-    IonModal,
-  },
-  setup: () => {
-    const savedModalState = ref(false);
-    const saveActionModal = ref(false);
-    const alertOpen = ref(false);
-    const alertMsg = ref("");
-    const name = ref("");
-    const loadingSend = ref(false);
-    const contractAddress = ref("");
-    const functionName = ref("");
-    const params = ref([]) as Ref<{ value: string; type: string; name: string }[]>;
-    const evalFrame = ref() as Ref<HTMLIFrameElement>;
-    let messagePromiseResolve: (v: unknown) => void = () => {};
-    const sandboxLoaded = ref(false);
-    const abiContent = ref("");
-    const selectedAbi = ref("");
-    const alertHeader = ref("");
-    let parsedAbi: any;
-    const functions = ref([]) as Ref<string[]>;
-    const loading = ref(false);
+const saveActionModal = ref(false);
+const alertOpen = ref(false);
+const alertMsg = ref("");
+const name = ref("");
+const loadingSend = ref(false);
+const contractAddress = ref("");
+const functionName = ref("");
+const params = ref([]) as Ref<{ value: string; type: string; name: string }[]>;
+const evalFrame = ref() as Ref<HTMLIFrameElement>;
+let messagePromiseResolve: (v: unknown) => void = () => {};
+const sandboxLoaded = ref(false);
+const abiContent = ref("");
+const selectedAbi = ref("");
+const alertHeader = ref("");
+let parsedAbi: any;
+const functions = ref([]) as Ref<string[]>;
+const loading = ref(false);
 
-    const openAbiListModal = async () => {
-      const modal = await modalController.create({
-        component: AbiList,
+const openAbiListModal = async () => {
+  const modal = await modalController.create({
+    component: AbiList,
+  });
+
+  modal.present();
+
+  const { data, role } = await modal.onWillDismiss();
+
+  if (role === "confirm") {
+    abiContent.value = data.content;
+    selectedAbi.value = data.name;
+    parsedAbi = JSON.parse(abiContent.value);
+    functions.value = parsedAbi
+      .filter((fn: any) => fn.type === "function")
+      .map((fn: any) => fn.name);
+  }
+};
+
+const selectFunction = async () => {
+  const modal = await modalController.create({
+    component: AbiSelectFunction,
+    componentProps: {
+      functions: functions.value,
+    },
+  });
+
+  modal.present();
+
+  const { data, role } = await modal.onWillDismiss();
+
+  if (role === "confirm") {
+    functionName.value = data;
+    params.value = parsedAbi
+      .find((fn: any) => fn.name === data)
+      .inputs.map((input: any) => {
+        return { value: "", type: input.type, name: input.name };
       });
+  }
+};
 
-      modal.present();
+const selectSavedAction = async () => {
+  const modal = await modalController.create({
+    component: SavedReadWriteActionList,
+    componentProps: {
+      type: "write",
+    },
+  });
 
-      const { data, role } = await modal.onWillDismiss();
+  modal.present();
+  const { data, role } = (await modal.onWillDismiss()) as {
+    data: ContractAction;
+    role: string;
+  };
 
-      if (role === "confirm") {
-        abiContent.value = data.content;
-        selectedAbi.value = data.name;
-        parsedAbi = JSON.parse(abiContent.value);
-        functions.value = parsedAbi
-          .filter((fn: any) => fn.type === "function")
-          .map((fn: any) => fn.name);
-      }
-    };
-
-    const selectFunction = async () => {
-      const modal = await modalController.create({
-        component: AbiSelectFunction,
-        componentProps: {
-          functions: functions.value,
-        },
-      });
-
-      modal.present();
-
-      const { data, role } = await modal.onWillDismiss();
-
-      if (role === "confirm") {
-        functionName.value = data;
-        params.value = parsedAbi
-          .find((fn: any) => fn.name === data)
-          .inputs.map((input: any) => {
-            return { value: "", type: input.type, name: input.name };
-          });
-      }
-    };
-
-    const selectSavedAction = async () => {
-      const modal = await modalController.create({
-        component: SavedReadWriteActionList,
-        componentProps: {
-          type: "write",
-        },
-      });
-
-      modal.present();
-      const { data, role } = (await modal.onWillDismiss()) as {
-        data: ContractAction;
-        role: string;
-      };
-
-      if (role === "confirm") {
-        const content = await getAbis(data.abi);
-        if (!content) {
-          alertMsg.value =
-            "Abi not found in storage, be sure Abi with name " + data.abi + " exists.";
-          alertOpen.value = true;
-          return;
-        }
-
-        abiContent.value = content;
-        functionName.value = data.functionName;
-        params.value = Object.values(data.params);
-        contractAddress.value = data.contract;
-        selectedAbi.value = data.abi;
-        parsedAbi = JSON.parse(abiContent.value);
-        functions.value = parsedAbi
-          .filter((fn: any) => fn.type === "function")
-          .map((fn: any) => fn.name);
-      }
-    };
-
-    const saveActionInStorage = () => {
-      if (!functionName.value) {
-        alertMsg.value = "Function Name is required";
-        alertOpen.value = true;
-        return;
-      }
-      if (!contractAddress.value) {
-        alertMsg.value = "Contract Address is required";
-        alertOpen.value = true;
-        return;
-      }
-      if (abiContent.value === "") {
-        alertMsg.value = "Abi is required";
-        alertOpen.value = true;
-        return;
-      }
-      saveActionModal.value = true;
-    };
-
-    const executeAction = async () => {
-      if (sandboxLoaded.value === false) {
-        alertMsg.value = "Sandbox for eval not loaded yet, please wait";
-        alertOpen.value = true;
-        return;
-      }
-
-      if (!contractAddress.value) {
-        alertMsg.value = "Contract Address is required";
-        alertOpen.value = true;
-        return;
-      }
-
-      if (!functionName.value) {
-        alertMsg.value = "Function Name is required";
-        alertOpen.value = true;
-        return;
-      }
-
-      if (!parsedAbi) {
-        alertMsg.value = "Abi is required";
-        alertOpen.value = true;
-        return;
-      }
-
-      alertHeader.value = "Error";
-
-      // const provider = await getCurrentProvider();
-      const encodeParamsTypes = [];
-      const evalParams = await Promise.all(
-        params.value.map(async (param) => await getEvalValue(param.value))
-      );
-
-      try {
-        if (functionName.value?.includes("(")) {
-          const paramsTypes = functionName.value
-            .split("(")[1]
-            .split(")")[0]
-            .split(",")
-            .map((param) => param.trim());
-          if (paramsTypes.length !== evalParams.length) {
-            alertMsg.value = "Params count mismatch";
-            alertOpen.value = true;
-            return;
-          }
-          encodeParamsTypes.push(...paramsTypes);
-        }
-      } catch {
-        alertMsg.value =
-          "Function Siganture wrong format (ex: 'functionName(uint256,string)')";
-        alertOpen.value = true;
-        return;
-      }
-
-      const fnName = functionName.value.includes("(")
-        ? functionName.value.split("(")[0]
-        : functionName.value;
-
-      const iface = new ethers.Interface(parsedAbi);
-
-      try {
-        loadingSend.value = true;
-        loading.value = true;
-        const data = iface.encodeFunctionData(fnName, evalParams);
-
-        const tx = {
-          from: [await getSelectedAddress()][0],
-          to: contractAddress.value,
-          data,
-          gasLimit: "0x0",
-          gasPrice: "0x0",
-        };
-
-        const result = (await walletPromptSendTx(tx)) as {
-          error?: string;
-        };
-        if (result?.error) {
-          console.error(result);
-          alertOpen.value = true;
-          alertMsg.value = "Error sending transaction to chain";
-          loading.value = false;
-          return;
-        } else {
-          alertHeader.value = "OK";
-          alertMsg.value = "Transaction sent successfully";
-          alertOpen.value = true;
-        }
-      } catch (e) {
-        console.error(e);
-        alertMsg.value = "Function call failed, check params, contract address and ABI";
-        loadingSend.value = false;
-        loading.value = false;
-        alertOpen.value = true;
-        return;
-      }
-      loadingSend.value = false;
-      loading.value = false;
-    };
-
-    const saveAction = async () => {
-      if (!name.value) {
-        alertMsg.value = "Name is required";
-        alertOpen.value = true;
-        return;
-      }
-      const action = {
-        name: name.value,
-        contract: contractAddress.value,
-        functionName: functionName.value,
-        params: params.value,
-        abi: selectedAbi.value,
-      };
-
-      await writeCASet(action);
-      saveActionModal.value = false;
-      alertMsg.value = "Action saved successfully";
-      alertHeader.value = "OK";
+  if (role === "confirm") {
+    const content = await getAbis(data.abi);
+    if (!content) {
+      alertMsg.value =
+        "Abi not found in storage, be sure Abi with name " + data.abi + " exists.";
       alertOpen.value = true;
-    };
+      return;
+    }
 
-    const messageHandler = (event: any) => {
-      messagePromiseResolve(event?.data?.result);
-    };
+    abiContent.value = content;
+    functionName.value = data.functionName;
+    params.value = Object.values(data.params);
+    contractAddress.value = data.contract;
+    selectedAbi.value = data.abi;
+    parsedAbi = JSON.parse(abiContent.value);
+    functions.value = parsedAbi
+      .filter((fn: any) => fn.type === "function")
+      .map((fn: any) => fn.name);
+  }
+};
 
-    onMounted(() => {
-      window.addEventListener("message", messageHandler);
-    });
+const saveActionInStorage = () => {
+  if (!functionName.value) {
+    alertMsg.value = "Function Name is required";
+    alertOpen.value = true;
+    return;
+  }
+  if (!contractAddress.value) {
+    alertMsg.value = "Contract Address is required";
+    alertOpen.value = true;
+    return;
+  }
+  if (abiContent.value === "") {
+    alertMsg.value = "Abi is required";
+    alertOpen.value = true;
+    return;
+  }
+  saveActionModal.value = true;
+};
 
-    onBeforeUnmount(() => {
-      window.removeEventListener("message", messageHandler);
-    });
+const executeAction = async () => {
+  if (sandboxLoaded.value === false) {
+    alertMsg.value = "Sandbox for eval not loaded yet, please wait";
+    alertOpen.value = true;
+    return;
+  }
 
-    const getEvalValue = (evalString: string) => {
-      return new Promise((resolve) => {
-        if (!evalFrame.value?.contentWindow?.postMessage) {
-          return;
-        }
-        messagePromiseResolve = resolve;
-        evalFrame.value?.contentWindow?.postMessage({ code: evalString }, "*");
-      });
-    };
+  if (!contractAddress.value) {
+    alertMsg.value = "Contract Address is required";
+    alertOpen.value = true;
+    return;
+  }
 
-    const handleFnChange = (event: any) => {
-      functionName.value = event.detail.value;
-    };
+  if (!functionName.value) {
+    alertMsg.value = "Function Name is required";
+    alertOpen.value = true;
+    return;
+  }
 
-    const openModalAddContact = async () => {
-      const modal = await modalController.create({
-        component: SelectedContacts,
-        componentProps: {},
-      });
+  if (!parsedAbi) {
+    alertMsg.value = "Abi is required";
+    alertOpen.value = true;
+    return;
+  }
 
-      modal.present();
+  alertHeader.value = "Error";
 
-      const { data, role } = await modal.onWillDismiss();
-      if (role === "confirm") {
-        contractAddress.value = data.address;
+  // const provider = await getCurrentProvider();
+  const encodeParamsTypes = [];
+  const evalParams = await Promise.all(
+    params.value.map(async (param) => await getEvalValue(param.value))
+  );
+
+  try {
+    if (functionName.value?.includes("(")) {
+      const paramsTypes = functionName.value
+        .split("(")[1]
+        .split(")")[0]
+        .split(",")
+        .map((param) => param.trim());
+      if (paramsTypes.length !== evalParams.length) {
+        alertMsg.value = "Params count mismatch";
+        alertOpen.value = true;
+        return;
       }
+      encodeParamsTypes.push(...paramsTypes);
+    }
+  } catch {
+    alertMsg.value =
+      "Function Siganture wrong format (ex: 'functionName(uint256,string)')";
+    alertOpen.value = true;
+    return;
+  }
+
+  const fnName = functionName.value.includes("(")
+    ? functionName.value.split("(")[0]
+    : functionName.value;
+
+  const iface = new ethers.Interface(parsedAbi);
+
+  try {
+    loadingSend.value = true;
+    loading.value = true;
+    const data = iface.encodeFunctionData(fnName, evalParams);
+
+    const tx = {
+      from: [await getSelectedAddress()][0],
+      to: contractAddress.value,
+      data,
+      gasLimit: "0x0",
+      gasPrice: "0x0",
     };
 
-    return {
-      saveActionModal,
-      handleFnChange,
-      clipboardOutline,
-      evalFrame,
-      alertOpen,
-      alertMsg,
-      alertHeader,
-      functionName,
-      paste,
-      savedModalState,
-      name,
-      contractAddress,
-      params,
-      saveActionInStorage,
-      executeAction,
-      sandboxLoaded,
-      openAbiListModal,
-      selectedAbi,
-      functions,
-      selectFunction,
-      saveAction,
-      selectSavedAction,
-      loading,
-      loadingSend,
-      openModalAddContact,
+    const result = (await walletPromptSendTx(tx)) as {
+      error?: string;
     };
-  },
+    if (result?.error) {
+      console.error(result);
+      alertOpen.value = true;
+      alertMsg.value = "Error sending transaction to chain";
+      loading.value = false;
+      return;
+    } else {
+      alertHeader.value = "OK";
+      alertMsg.value = "Transaction sent successfully";
+      alertOpen.value = true;
+    }
+  } catch (e) {
+    console.error(e);
+    alertMsg.value = "Function call failed, check params, contract address and ABI";
+    loadingSend.value = false;
+    loading.value = false;
+    alertOpen.value = true;
+    return;
+  }
+  loadingSend.value = false;
+  loading.value = false;
+};
+
+const saveAction = async () => {
+  if (!name.value) {
+    alertMsg.value = "Name is required";
+    alertOpen.value = true;
+    return;
+  }
+  const action = {
+    name: name.value,
+    contract: contractAddress.value,
+    functionName: functionName.value,
+    params: params.value,
+    abi: selectedAbi.value,
+  };
+
+  await writeCASet(action);
+  saveActionModal.value = false;
+  alertMsg.value = "Action saved successfully";
+  alertHeader.value = "OK";
+  alertOpen.value = true;
+};
+
+const messageHandler = (event: any) => {
+  messagePromiseResolve(event?.data?.result);
+};
+
+onMounted(() => {
+  window.addEventListener("message", messageHandler);
 });
+
+onBeforeUnmount(() => {
+  window.removeEventListener("message", messageHandler);
+});
+
+const getEvalValue = (evalString: string) => {
+  return new Promise((resolve) => {
+    if (!evalFrame.value?.contentWindow?.postMessage) {
+      return;
+    }
+    messagePromiseResolve = resolve;
+    evalFrame.value?.contentWindow?.postMessage({ code: evalString }, "*");
+  });
+};
+
+const openModalAddContact = async () => {
+  const modal = await modalController.create({
+    component: SelectedContacts,
+    componentProps: {},
+  });
+
+  modal.present();
+
+  const { data, role } = await modal.onWillDismiss();
+  if (role === "confirm") {
+    contractAddress.value = data.address;
+  }
+};
 </script>

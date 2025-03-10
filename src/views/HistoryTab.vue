@@ -72,8 +72,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, Ref, ref } from "vue";
+<script lang="ts" setup>
+import { Ref, ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -93,50 +93,23 @@ import type { HistoryItem } from "@/extension/types";
 
 import { copyOutline } from "ionicons/icons";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonList,
-    IonToast,
-    IonLoading,
-    IonButton,
-    IonIcon,
-  },
-  setup: () => {
-    const history = ref([]) as Ref<HistoryItem[]>;
-    const loading = ref(false);
-    const toastState = ref(false);
-    const getToastRef = () => toastState;
+const history = ref([]) as Ref<HistoryItem[]>;
+const loading = ref(false);
+const toastState = ref(false);
+const getToastRef = () => toastState;
 
-    const loadData = async () => {
-      loading.value = true;
-      history.value = await getHistory();
-      loading.value = false;
-    };
+const loadData = async () => {
+  loading.value = true;
+  history.value = await getHistory();
+  loading.value = false;
+};
 
-    const onWipeHistory = async () => {
-      await wipeHistory();
-      loadData();
-    };
+const onWipeHistory = async () => {
+  await wipeHistory();
+  loadData();
+};
 
-    onIonViewWillEnter(async () => {
-      loadData();
-    });
-    return {
-      history,
-      loading,
-      copyText,
-      getToastRef,
-      toastState,
-      copyOutline,
-      onWipeHistory,
-      openTab,
-    };
-  },
+onIonViewWillEnter(async () => {
+  loadData();
 });
 </script>

@@ -2,7 +2,7 @@
   <ion-page>
     <ion-content>
       <ion-tabs @ionTabsWillChange="beforeTabChange" @ionTabsDidChange="afterTabChange">
-        <ion-router-outlet />
+        <ion-router-outlet :aria-hidden="false" />
         <ion-tab-bar
           slot="bottom"
           style="display: flex; flex-direction: column; height: 116px"
@@ -61,8 +61,7 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script lang="ts" setup>
 import {
   IonPage,
   IonContent,
@@ -85,39 +84,10 @@ import {
   pushOutline,
 } from "ionicons/icons";
 
-export default defineComponent({
-  components: {
-    IonPage,
-    IonContent,
-    IonRouterOutlet,
-    IonTabs,
-    IonTabBar,
-    IonTabButton,
-    IonLabel,
-    IonIcon,
-  },
-  name: "AppTabs",
-  setup() {
-    const beforeTabChange = () => {
-      // do something before tab change
-    };
-    const afterTabChange = () => {
-      // do something after tab change
-    };
-
-    return {
-      walletOutline,
-      personCircle,
-      diamondOutline,
-      cogOutline,
-      receiptOutline,
-      gitNetworkOutline,
-      sendOutline,
-      beforeTabChange,
-      afterTabChange,
-      glassesOutline,
-      pushOutline,
-    };
-  },
-});
+const beforeTabChange = () => {
+  // do something before tab change
+};
+const afterTabChange = () => {
+  // do something after tab change
+};
 </script>

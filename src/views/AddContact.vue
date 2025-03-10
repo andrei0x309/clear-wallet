@@ -46,8 +46,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script lang="ts" setup>
+import { ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -66,92 +66,55 @@ import { paste, saveContact } from "@/utils/platform";
 
 import { clipboardOutline } from "ionicons/icons";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonInput,
-    IonButton,
-    IonAlert,
-    IonIcon,
-  },
+const props = defineProps<{
+  name: string;
+  address: string;
+  isEdit: boolean;
+}>();
 
-  props: {
-    address: {
-      type: String,
-      default: "",
+const localName = ref(props.name);
+const localAddress = ref(props.address);
+const localIsEdit = ref(props.isEdit);
+const alertOpen = ref(false);
+const alertMsg = ref("");
+
+const resetFields = () => {
+  localName.value = "";
+  localAddress.value = "";
+};
+
+onIonViewWillEnter(async () => {});
+
+const onAddContact = async () => {
+  if (!localName.value) {
+    alertMsg.value = "Name is required.";
+    alertOpen.value = true;
+    return;
+  }
+  if (!localAddress.value) {
+    alertMsg.value = "Address is required.";
+    alertOpen.value = true;
+    return;
+  }
+  await saveContact({
+    name: localName.value,
+    address: localAddress.value,
+  });
+  resetFields();
+  modalController.dismiss(
+    {
+      name: localName.value,
+      address: localAddress.value,
     },
-    name: {
-      type: String,
-      default: "",
-    },
-    isEdit: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  setup: (props) => {
-    const localName = ref(props.name);
-    const localAddress = ref(props.address);
-    const localIsEdit = ref(props.isEdit);
-    const alertOpen = ref(false);
-    const alertMsg = ref("");
+    "confirm"
+  );
+};
 
-    const resetFields = () => {
-      localName.value = "";
-      localAddress.value = "";
-    };
-
-    onIonViewWillEnter(async () => {});
-
-    const onAddContact = async () => {
-      if (!localName.value) {
-        alertMsg.value = "Name is required.";
-        alertOpen.value = true;
-        return;
-      }
-      if (!localAddress.value) {
-        alertMsg.value = "Address is required.";
-        alertOpen.value = true;
-        return;
-      }
-      await saveContact({
-        name: localName.value,
-        address: localAddress.value,
-      });
-      resetFields();
-      modalController.dismiss(
-        {
-          name: localName.value,
-          address: localAddress.value,
-        },
-        "confirm"
-      );
-    };
-
-    const close = () => {
-      try {
-        modalController.dismiss(null, "cancel");
-      } catch {
-        // ignore
-      }
-    };
-
-    return {
-      localName,
-      localAddress,
-      onAddContact,
-      close,
-      alertOpen,
-      alertMsg,
-      clipboardOutline,
-      paste,
-      localIsEdit,
-    };
-  },
-});
+const close = () => {
+  try {
+    modalController.dismiss(null, "cancel");
+  } catch {
+    // ignore
+  }
+};
 </script>

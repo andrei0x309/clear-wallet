@@ -54,8 +54,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, PropType } from "vue";
+<script lang="ts" setup>
+import { ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -63,116 +63,72 @@ import {
   IonTitle,
   IonToolbar,
   IonItem,
-  //   IonLabel,
   IonInput,
   IonButton,
   IonAlert,
-  //   IonIcon,
   onIonViewWillEnter,
-  //   modalController,
-  //   IonModal,
   IonButtons,
   IonLoading,
   IonTextarea,
   modalController,
 } from "@ionic/vue";
-// import { ethers } from "ethers";
-import { paste, setAbi } from "@/utils/platform";
-// import { useRoute } from "vue-router";
+import { setAbi } from "@/utils/platform";
 
-import { clipboardOutline } from "ionicons/icons";
+const props = defineProps<{
+  abi: { [key: string]: string } | null;
+}>();
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    // IonLabel,
-    IonInput,
-    IonButton,
-    IonAlert,
-    // IonIcon,
-    // IonModal,
-    IonButtons,
-    IonTextarea,
-    IonLoading,
-  },
-  props: {
-    abi: {
-      type: Object as PropType<{ [key: string]: string } | null>,
-      default: null,
+const isEdit = ref(props.abi !== null);
+const name = ref(props.abi?.name ?? "");
+const content = ref(props.abi?.content ?? "");
+const alertOpen = ref(false);
+
+const alertMsg = ref("");
+const loading = ref(false);
+
+onIonViewWillEnter(async () => {});
+
+const onAddAbi = async () => {
+  if (!name.value) {
+    alertMsg.value = "Please input name.";
+    alertOpen.value = true;
+    return;
+  }
+  if (!content.value) {
+    alertMsg.value = "Please input content.";
+    alertOpen.value = true;
+    return;
+  }
+
+  try {
+    JSON.parse(content.value);
+  } catch (e) {
+    alertMsg.value = "Invalid content, must be json format.";
+    alertOpen.value = true;
+    return;
+  }
+  loading.value = true;
+  await setAbi({
+    name: name.value,
+    content: content.value,
+  });
+
+  modalController.dismiss(
+    {
+      name: name.value,
+      content: content.value,
     },
-  },
-  setup: (props) => {
-    const isEdit = ref(props.abi !== null);
-    const name = ref(props.abi?.name ?? "");
-    const content = ref(props.abi?.content ?? "");
-    const alertOpen = ref(false);
+    "confirm"
+  );
 
-    const alertMsg = ref("");
-    const loading = ref(false);
+  loading.value = false;
+};
 
-    onIonViewWillEnter(async () => {});
-
-    const onAddAbi = async () => {
-      if (!name.value) {
-        alertMsg.value = "Please input name.";
-        alertOpen.value = true;
-        return;
-      }
-      if (!content.value) {
-        alertMsg.value = "Please input content.";
-        alertOpen.value = true;
-        return;
-      }
-
-      try {
-        JSON.parse(content.value);
-      } catch (e) {
-        alertMsg.value = "Invalid content, must be json format.";
-        alertOpen.value = true;
-        return;
-      }
-      loading.value = true;
-      await setAbi({
-        name: name.value,
-        content: content.value,
-      });
-
-      modalController.dismiss(
-        {
-          name: name.value,
-          content: content.value,
-        },
-        "confirm"
-      );
-
-      loading.value = false;
-    };
-
-    const onCancel = () => {
-      try {
-        modalController.dismiss(null, "cancel");
-      } catch {
-        // ignore
-      }
-    };
-
-    return {
-      name,
-      content,
-      onAddAbi,
-      onCancel,
-      alertOpen,
-      alertMsg,
-      clipboardOutline,
-      paste,
-      isEdit,
-      loading,
-    };
-  },
-});
+const onCancel = () => {
+  try {
+    modalController.dismiss(null, "cancel");
+  } catch {
+    // ignore
+  }
+};
 </script>

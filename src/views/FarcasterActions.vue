@@ -66,13 +66,7 @@
         :header="alertHeader"
         :message="alertMsg"
         :buttons="['OK']"
-        @didDismiss="
-          () => {
-            alertOpen = false;
-            alertHeader = 'Error';
-            exitWallet && (window as any)?.close();
-          }
-        "
+        @didDismiss="dismissAlert"
       ></ion-alert>
 
       <ion-modal :is-open="accountsModal">
@@ -92,7 +86,6 @@
                   placeholder="search..."
                   autocomplete="off"
                   autocorrect="off"
-                  :autofocus="true"
                   :clear-input="false"
                   :clear-on-edit="false"
                   :spellcheck="false"
@@ -221,8 +214,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, Ref } from "vue";
+<script lang="ts" setup>
+import { ref, Ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -263,352 +256,308 @@ import {
 } from "@/utils/farcaster";
 import { getAccounts, getSelectedAccount, unBlockLockout } from "@/utils/platform";
 import { addWarpAuthToken, generateApiToken } from "@/utils/warpcast-auth";
+import { setUnlockModalState } from "@/utils/unlockStore";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonButton,
-    IonAlert,
-    IonIcon,
-    IonModal,
-    IonButtons,
-    IonTextarea,
-    IonList,
-    IonListHeader,
-    IonRadioGroup,
-    IonLoading,
-    IonText,
-    IonRadio,
-  },
-  setup: () => {
-    const name = ref("");
-    const pk = ref("");
-    const alertOpen = ref(false);
-    const alertMsg = ref("");
-    const swiwModal = ref(false);
-    const deepLink = ref("");
-    const swloading = ref(false);
-    const warpcastLoading = ref(false);
-    const exitWallet = ref(false);
-    const alertHeader = ref("Error");
+const alertOpen = ref(false);
+const alertMsg = ref("");
+const swiwModal = ref(false);
+const deepLink = ref("");
+const swloading = ref(false);
+const warpcastLoading = ref(false);
+const exitWallet = ref(false);
+const alertHeader = ref("Error");
 
-    const loading = ref(false);
-    const accounts = ref([]) as Ref<Account[]>;
-    const filtredAccounts = ref([]) as Ref<Account[]>;
-    const accountsModal = ref(false) as Ref<boolean>;
-    const selectedAccount = (ref(null) as unknown) as Ref<Account>;
-    const toastState = ref(false);
+const loading = ref(false);
+const accounts = ref([]) as Ref<Account[]>;
+const filtredAccounts = ref([]) as Ref<Account[]>;
+const accountsModal = ref(false) as Ref<boolean>;
+const selectedAccount = (ref(null) as unknown) as Ref<Account>;
+const toastState = ref(false);
 
-    const loadData = () => {
+const loadData = () => {
+  loading.value = true;
+  const pAccounts = getAccounts();
+  const pSelectedAccount = getSelectedAccount();
+  Promise.all([pAccounts, pSelectedAccount]).then((res) => {
+    accounts.value = res[0];
+    filtredAccounts.value = res[0];
+    selectedAccount.value = res[1];
+    loading.value = false;
+  });
+};
+
+onIonViewWillEnter(() => {
+  loadData();
+});
+
+const onCancel = () => {
+  router.push("/tabs/home");
+};
+
+const changeSelectedAccount = async (address: string) => {
+  loading.value = true;
+  const findIndex = accounts.value.findIndex((a) => a.address == address);
+  if (findIndex > -1) {
+    selectedAccount.value = accounts.value[findIndex];
+    accounts.value = accounts.value.filter((a) => a.address !== address);
+    accounts.value.unshift(selectedAccount.value);
+    const newAccounts = [...accounts.value];
+    await Promise.all([
+      saveSelectedAccount(selectedAccount.value),
+      replaceAccounts(newAccounts),
+    ]);
+    triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
+  }
+  accountsModal.value = false;
+  loading.value = false;
+};
+
+const farcasterSWIWAuthorize = async () => {
+  exitWallet.value = false;
+  if (!deepLink.value) {
+    alertMsg.value = "Please enter the deep link";
+    alertOpen.value = true;
+    return;
+  }
+  const linkData = validateLinkData(deepLink.value);
+  if (!linkData) {
+    alertMsg.value = "Invalid link pasted it does not contain a valid channel token";
+    alertOpen.value = true;
+    return;
+  }
+
+  if ((selectedAccount.value.pk ?? "").length !== 66) {
+    const modalResult = await openModal();
+    if (modalResult) {
+      unBlockLockout();
       loading.value = true;
-      const pAccounts = getAccounts();
-      const pSelectedAccount = getSelectedAccount();
-      Promise.all([pAccounts, pSelectedAccount]).then((res) => {
-        accounts.value = res[0];
-        filtredAccounts.value = res[0];
-        selectedAccount.value = res[1];
-        loading.value = false;
-      });
-    };
-
-    onIonViewWillEnter(() => {
-      loadData();
+    } else {
+      onCancel();
+    }
+  } else {
+    unBlockLockout();
+  }
+  swloading.value = true;
+  try {
+    const result = await doSignInWithFarcaster({
+      link: deepLink.value,
     });
 
-    const onCancel = () => {
-      router.push("/tabs/home");
-    };
+    if (result === -1) {
+      alertMsg.value =
+        "Selected account does not own a FID please select an account that owns a FID";
+      alertOpen.value = true;
+      swloading.value = false;
+      return;
+    } else if (result === -2) {
+      alertMsg.value = "Auth token generation failed";
+      alertOpen.value = true;
+      swloading.value = false;
+      return;
+    } else if (result === -3) {
+      alertMsg.value =
+        "Error could read chanel token from data, make sure you have copied the correct link";
+      alertOpen.value = true;
+      swloading.value = false;
+      return;
+    } else {
+      alertHeader.value = "OK";
+      alertMsg.value =
+        "Request sent successfully, if QR is still open, you will be signed in";
+      alertOpen.value = true;
+      swloading.value = false;
+      exitWallet.value = true;
+    }
+  } catch (e) {
+    alertMsg.value = String(e);
+    alertOpen.value = true;
+  }
+  swloading.value = false;
+};
 
-    const changeSelectedAccount = async (address: string) => {
+const farcasterSWIWQRAuthorize = async () => {
+  exitWallet.value = false;
+  if ((selectedAccount.value.pk ?? "").length !== 66) {
+    const modalResult = await openModal();
+    if (modalResult) {
+      unBlockLockout();
       loading.value = true;
-      const findIndex = accounts.value.findIndex((a) => a.address == address);
-      if (findIndex > -1) {
-        selectedAccount.value = accounts.value[findIndex];
-        accounts.value = accounts.value.filter((a) => a.address !== address);
-        accounts.value.unshift(selectedAccount.value);
-        const newAccounts = [...accounts.value];
-        await Promise.all([
-          saveSelectedAccount(selectedAccount.value),
-          replaceAccounts(newAccounts),
-        ]);
-        triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
-      }
-      accountsModal.value = false;
-      loading.value = false;
-    };
+    } else {
+      onCancel();
+    }
+  } else {
+    unBlockLockout();
+  }
+  swloading.value = true;
+  try {
+    const result = await doSignInWithFarcasterQR();
 
-    const farcasterSWIWAuthorize = async () => {
-      exitWallet.value = false;
-      if (!deepLink.value) {
-        alertMsg.value = "Please enter the deep link";
-        alertOpen.value = true;
-        return;
-      }
-      const linkData = validateLinkData(deepLink.value);
-      if (!linkData) {
-        alertMsg.value = "Invalid link pasted it does not contain a valid channel token";
-        alertOpen.value = true;
-        return;
-      }
-
-      if ((selectedAccount.value.pk ?? "").length !== 66) {
-        const modalResult = await openModal();
-        if (modalResult) {
-          unBlockLockout();
-          loading.value = true;
-        } else {
-          onCancel();
-        }
-      } else {
-        unBlockLockout();
-      }
-      swloading.value = true;
-      try {
-        const result = await doSignInWithFarcaster({
-          link: deepLink.value,
-        });
-
-        if (result === -1) {
-          alertMsg.value =
-            "Selected account does not own a FID please select an account that owns a FID";
-          alertOpen.value = true;
-          swloading.value = false;
-          return;
-        } else if (result === -2) {
-          alertMsg.value = "Auth token generation failed";
-          alertOpen.value = true;
-          swloading.value = false;
-          return;
-        } else if (result === -3) {
-          alertMsg.value =
-            "Error could read chanel token from data, make sure you have copied the correct link";
-          alertOpen.value = true;
-          swloading.value = false;
-          return;
-        } else {
-          alertHeader.value = "OK";
-          alertMsg.value =
-            "Request sent successfully, if QR is still open, you will be signed in";
-          alertOpen.value = true;
-          swloading.value = false;
-          exitWallet.value = true;
-        }
-      } catch (e) {
-        alertMsg.value = String(e);
-        alertOpen.value = true;
-      }
+    if (result === -1) {
+      alertMsg.value =
+        "Selected account does not own a FID please select an account that owns a FID";
+      alertOpen.value = true;
       swloading.value = false;
-    };
-
-    const farcasterSWIWQRAuthorize = async () => {
-      exitWallet.value = false;
-      if ((selectedAccount.value.pk ?? "").length !== 66) {
-        const modalResult = await openModal();
-        if (modalResult) {
-          unBlockLockout();
-          loading.value = true;
-        } else {
-          onCancel();
-        }
-      } else {
-        unBlockLockout();
-      }
-      swloading.value = true;
-      try {
-        const result = await doSignInWithFarcasterQR();
-
-        if (result === -1) {
-          alertMsg.value =
-            "Selected account does not own a FID please select an account that owns a FID";
-          alertOpen.value = true;
-          swloading.value = false;
-          return;
-        } else if (result === -2) {
-          alertMsg.value =
-            "Failed to read QR data, be sure QR is visible on, if is not working try using link";
-          alertOpen.value = true;
-          swloading.value = false;
-          return;
-        } else if (result === -3) {
-          alertMsg.value =
-            "QR does not contain a valid channel token, make sure you are scanning a sign in with farcaster QR";
-          alertOpen.value = true;
-          swloading.value = false;
-          return;
-        } else if (result === -4) {
-          alertMsg.value = "Failed to extract sign params from QR";
-          alertOpen.value = true;
-          swloading.value = false;
-          return;
-        } else if (result === -5) {
-          alertMsg.value = "Auth token generation failed";
-          alertOpen.value = true;
-          swloading.value = false;
-          return;
-        } else {
-          alertHeader.value = "OK";
-          alertMsg.value =
-            "Request sent successfully, if QR is still open, you will be signed in";
-          alertOpen.value = true;
-          swloading.value = false;
-          exitWallet.value = true;
-        }
-      } catch (e) {
-        alertMsg.value = String(e);
-        alertOpen.value = true;
-      }
+      return;
+    } else if (result === -2) {
+      alertMsg.value =
+        "Failed to read QR data, be sure QR is visible on, if is not working try using link";
+      alertOpen.value = true;
       swloading.value = false;
-    };
+      return;
+    } else if (result === -3) {
+      alertMsg.value =
+        "QR does not contain a valid channel token, make sure you are scanning a sign in with farcaster QR";
+      alertOpen.value = true;
+      swloading.value = false;
+      return;
+    } else if (result === -4) {
+      alertMsg.value = "Failed to extract sign params from QR";
+      alertOpen.value = true;
+      swloading.value = false;
+      return;
+    } else if (result === -5) {
+      alertMsg.value = "Auth token generation failed";
+      alertOpen.value = true;
+      swloading.value = false;
+      return;
+    } else {
+      alertHeader.value = "OK";
+      alertMsg.value =
+        "Request sent successfully, if QR is still open, you will be signed in";
+      alertOpen.value = true;
+      swloading.value = false;
+      exitWallet.value = true;
+    }
+  } catch (e) {
+    alertMsg.value = String(e);
+    alertOpen.value = true;
+  }
+  swloading.value = false;
+};
 
-    const promptForSignIn = async () => {
-      exitWallet.value = false;
-      const targetUrl = "warpcast.com";
-      chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
-        const lastTab = tabs[0];
+const promptForSignIn = async () => {
+  exitWallet.value = false;
+  const targetUrl = "warpcast.com";
+  chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
+    const lastTab = tabs[0];
 
-        if (!lastTab) {
-          alertMsg.value = "No active tab found";
-          alertOpen.value = true;
-          return;
-        }
+    if (!lastTab) {
+      alertMsg.value = "No active tab found";
+      alertOpen.value = true;
+      return;
+    }
 
-        if (!lastTab?.url?.includes(targetUrl)) {
-          alertOpen.value = true;
-          alertMsg.value = "You are not on warpcast.com page";
-          return;
-        }
-        if (!lastTab.id) {
-          alertMsg.value = "No active tab found";
-          alertOpen.value = true;
-          return;
-        }
+    if (!lastTab?.url?.includes(targetUrl)) {
+      alertOpen.value = true;
+      alertMsg.value = "You are not on warpcast.com page";
+      return;
+    }
+    if (!lastTab.id) {
+      alertMsg.value = "No active tab found";
+      alertOpen.value = true;
+      return;
+    }
 
-        if ((selectedAccount.value.pk ?? "").length !== 66) {
-          const modalResult = await openModal();
-          if (modalResult) {
-            unBlockLockout();
-            loading.value = true;
-          } else {
-            onCancel();
-          }
-        } else {
-          unBlockLockout();
-        }
+    if ((selectedAccount.value.pk ?? "").length !== 66) {
+      const modalResult = await openModal();
+      if (modalResult) {
+        unBlockLockout();
+        loading.value = true;
+      } else {
+        onCancel();
+      }
+    } else {
+      unBlockLockout();
+    }
 
-        warpcastLoading.value = true;
+    warpcastLoading.value = true;
 
-        let hasFid = 0 as number | null;
+    let hasFid = 0 as number | null;
 
-        try {
-          hasFid = await getFidFromAddress(selectedAccount.value.address);
-        } catch (e) {
-          alertMsg.value = String(e);
-          alertOpen.value = true;
-          warpcastLoading.value = false;
-          return;
-        }
+    try {
+      hasFid = await getFidFromAddress(selectedAccount.value.address);
+    } catch (e) {
+      alertMsg.value = String(e);
+      alertOpen.value = true;
+      warpcastLoading.value = false;
+      return;
+    }
 
-        if (!hasFid) {
-          alertMsg.value =
-            "Selected account does not own a FID please select an account that owns a FID";
-          alertOpen.value = true;
-          warpcastLoading.value = false;
-          return;
-        }
+    if (!hasFid) {
+      alertMsg.value =
+        "Selected account does not own a FID please select an account that owns a FID";
+      alertOpen.value = true;
+      warpcastLoading.value = false;
+      return;
+    }
 
-        let token = "";
+    let token = "";
 
-        try {
-          const data = await generateApiToken();
-          if (data.success) {
-            token = data.data;
-          } else {
-            alertMsg.value = `Error in generating Auth token: ${data.data}`;
-            alertOpen.value = true;
-            warpcastLoading.value = false;
-            return;
-          }
-        } catch (e) {
-          alertMsg.value = String(e);
-          alertOpen.value = true;
-          warpcastLoading.value = false;
-          return;
-        }
-
-        const arg = { secret: token, expiresAt: 1777046287381 };
-
-        await chrome.scripting.executeScript({
-          target: { tabId: lastTab.id },
-          func: addWarpAuthToken,
-          args: [arg],
-        });
+    try {
+      const data = await generateApiToken();
+      if (data.success) {
+        token = data.data;
+      } else {
+        alertMsg.value = `Error in generating Auth token: ${data.data}`;
+        alertOpen.value = true;
         warpcastLoading.value = false;
-        window.close();
-      });
-    };
-
-    const openModal = async () => {
-      const modal = await modalController.create({
-        component: UnlockModal,
-        componentProps: {
-          unlockType: "transaction",
-        },
-      });
-      modal.present();
-      const { role } = await modal.onWillDismiss();
-      if (role === "confirm") return true;
-      return false;
-    };
-
-    const searchAccount = (e: any) => {
-      const text = e.target.value;
-      if (text) {
-        filtredAccounts.value = accounts.value.filter(
-          (item) =>
-            item.name.toLowerCase().includes(text.toLowerCase()) ||
-            item.address.toLowerCase().includes(text.toLowerCase())
-        );
-      } else {
-        filtredAccounts.value = accounts.value;
+        return;
       }
-    };
+    } catch (e) {
+      alertMsg.value = String(e);
+      alertOpen.value = true;
+      warpcastLoading.value = false;
+      return;
+    }
 
-    return {
-      name,
-      pk,
-      onCancel,
-      alertOpen,
-      alertMsg,
-      clipboardOutline,
-      paste,
-      accountsModal,
-      changeSelectedAccount,
-      selectedAccount,
-      accounts,
-      copyOutline,
-      toastState,
-      deepLink,
-      swiwModal,
-      farcasterSWIWAuthorize,
-      swloading,
-      promptForSignIn,
-      warpcastLoading,
-      window,
-      exitWallet,
-      alertHeader,
-      farcasterSWIWQRAuthorize,
-      searchAccount,
-      filtredAccounts,
-    };
-  },
-});
+    const arg = { secret: token, expiresAt: 1777046287381 };
+
+    await chrome.scripting.executeScript({
+      target: { tabId: lastTab.id },
+      func: addWarpAuthToken,
+      args: [arg],
+    });
+    warpcastLoading.value = false;
+    window.close();
+  });
+};
+
+const openModal = async () => {
+  const modal = await modalController.create({
+    component: UnlockModal,
+    animated: true,
+    focusTrap: false,
+    backdropDismiss: false,
+    componentProps: {
+      unlockType: "farcaster",
+    },
+  });
+  await modal.present();
+  setUnlockModalState(true);
+  const { role } = await modal.onWillDismiss();
+  if (role === "confirm") return true;
+  setUnlockModalState(false);
+  return false;
+};
+
+const searchAccount = (e: any) => {
+  const text = e.target.value;
+  if (text) {
+    filtredAccounts.value = accounts.value.filter(
+      (item) =>
+        item.name.toLowerCase().includes(text.toLowerCase()) ||
+        item.address.toLowerCase().includes(text.toLowerCase())
+    );
+  } else {
+    filtredAccounts.value = accounts.value;
+  }
+};
+
+const dismissAlert = () => {
+  alertOpen.value = false;
+  alertHeader.value = "Error";
+  exitWallet.value && window?.close();
+};
 </script>
 
 <style scoped>

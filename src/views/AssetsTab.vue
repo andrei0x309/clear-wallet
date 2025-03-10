@@ -119,8 +119,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, Ref, ref, reactive } from "vue";
+<script lang="ts" setup>
+import { Ref, ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -145,146 +145,106 @@ import ArrowUp from "@/components/icons/ArrowUp.vue";
 import { copyOutline } from "ionicons/icons";
 import BridgeIcon from "@/components/icons/Bridge.vue";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonAvatar,
-    IonList,
-    IonButton,
-    IonToast,
-    IonLoading,
-    IonIcon,
-    ArrowDown,
-    ArrowUp,
-    BridgeIcon,
-  },
-  setup: () => {
-    const selectedAccount = ref({}) as Ref<Account>;
-    const loading = ref(true);
-    const isError = ref(false);
-    const noAssets = ref(false);
-    const toastState = ref(false);
-    const getToastRef = () => toastState;
-    const alltokens = ref({}) as Ref<
-      UniSwapPortfolioResponse["data"]["portfolios"][0]["tokenBalances"]
-    >;
-    const shownTokens = ref([]) as Ref<
-      UniSwapPortfolioResponse["data"]["portfolios"][0]["tokenBalances"]
-    >;
+const selectedAccount = ref({}) as Ref<Account>;
+const loading = ref(true);
+const isError = ref(false);
+const noAssets = ref(false);
+const toastState = ref(false);
+const getToastRef = () => toastState;
+const alltokens = ref({}) as Ref<
+  UniSwapPortfolioResponse["data"]["portfolios"][0]["tokenBalances"]
+>;
+const shownTokens = ref([]) as Ref<
+  UniSwapPortfolioResponse["data"]["portfolios"][0]["tokenBalances"]
+>;
 
-    const assetsValue = ref({}) as Ref<
-      UniSwapPortfolioResponse["data"]["portfolios"][0]["tokensTotalDenominatedValue"]
-    >;
+const assetsValue = ref({}) as Ref<
+  UniSwapPortfolioResponse["data"]["portfolios"][0]["tokensTotalDenominatedValue"]
+>;
 
-    const assetsChange = ref({}) as Ref<
-      UniSwapPortfolioResponse["data"]["portfolios"][0]["tokensTotalDenominatedValueChange"]
-    >;
+const assetsChange = ref({}) as Ref<
+  UniSwapPortfolioResponse["data"]["portfolios"][0]["tokensTotalDenominatedValueChange"]
+>;
 
-    const UNISWAP_API_ENDPOINT = "https://interface.gateway.uniswap.org/v1/graphql";
+const UNISWAP_API_ENDPOINT = "https://interface.gateway.uniswap.org/v1/graphql";
 
-    const getUniwapAssets = async (ownerAddress: string) => {
-      const headers = {
-        "user-agent": "Desktop",
-        accept: "*/*",
-        "accept-encoding": "gzip, deflate, br",
-        "accept-language": "en-US,en;q=0.9",
-        "content-type": "application/json",
-        dnt: "1",
-        "Content-Type": "application/json",
-        origin: "https://app.uniswap.org",
-        referer: "https://app.uniswap.org/",
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site",
-        "sec-gpc": "1",
-      };
+const getUniwapAssets = async (ownerAddress: string) => {
+  const headers = {
+    "user-agent": "Desktop",
+    accept: "*/*",
+    "accept-encoding": "gzip, deflate, br",
+    "accept-language": "en-US,en;q=0.9",
+    "content-type": "application/json",
+    dnt: "1",
+    "Content-Type": "application/json",
+    origin: "https://app.uniswap.org",
+    referer: "https://app.uniswap.org/",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-site",
+    "sec-gpc": "1",
+  };
 
-      const query = {
-        operationName: "PortfolioBalancesWeb",
-        variables: {
-          includeSmallBalances: false,
-          includeSpamTokens: false,
-          ownerAddress,
-          chains: [
-            "ETHEREUM",
-            "OPTIMISM",
-            "BNB",
-            "POLYGON",
-            "ZKSYNC",
-            "BASE",
-            "ARBITRUM",
-            "CELO",
-            "AVALANCHE",
-            "BLAST",
-            "ZORA",
-          ],
-        },
-        query:
-          "query PortfolioBalancesWeb($ownerAddress: String!, $chains: [Chain!]!, $includeSmallBalances: Boolean = false, $includeSpamTokens: Boolean = false) {\n  portfolios(\n    ownerAddresses: [$ownerAddress]\n    chains: $chains\n    valueModifiers: [{ownerAddress: $ownerAddress, includeSpamTokens: $includeSpamTokens, includeSmallBalances: $includeSmallBalances}]\n  ) {\n    id\n    tokensTotalDenominatedValue {\n      id\n      value\n      __typename\n    }\n    tokensTotalDenominatedValueChange(duration: DAY) {\n      absolute {\n        id\n        value\n        __typename\n      }\n      percentage {\n        id\n        value\n        __typename\n      }\n      __typename\n    }\n    tokenBalances {\n      ...PortfolioTokenBalanceParts\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment PortfolioTokenBalanceParts on TokenBalance {\n  id\n  quantity\n  denominatedValue {\n    id\n    currency\n    value\n    __typename\n  }\n  token {\n    ...SimpleTokenDetails\n    id\n    address\n    chain\n    symbol\n    name\n    decimals\n    standard\n    project {\n      id\n      name\n      logo {\n        id\n        url\n        __typename\n      }\n      safetyLevel\n      logoUrl\n      isSpam\n      __typename\n    }\n    __typename\n  }\n  tokenProjectMarket {\n    id\n    pricePercentChange(duration: DAY) {\n      id\n      value\n      __typename\n    }\n    tokenProject {\n      id\n      logoUrl\n      isSpam\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment SimpleTokenDetails on Token {\n  id\n  address\n  chain\n  symbol\n  name\n  decimals\n  standard\n  project {\n    id\n    name\n    logo {\n      id\n      url\n      __typename\n    }\n    safetyLevel\n    logoUrl\n    isSpam\n    __typename\n  }\n  __typename\n}",
-      };
+  const query = {
+    operationName: "PortfolioBalancesWeb",
+    variables: {
+      includeSmallBalances: false,
+      includeSpamTokens: false,
+      ownerAddress,
+      chains: [
+        "ETHEREUM",
+        "OPTIMISM",
+        "BNB",
+        "POLYGON",
+        "ZKSYNC",
+        "BASE",
+        "ARBITRUM",
+        "CELO",
+        "AVALANCHE",
+        "BLAST",
+        "ZORA",
+      ],
+    },
+    query:
+      "query PortfolioBalancesWeb($ownerAddress: String!, $chains: [Chain!]!, $includeSmallBalances: Boolean = false, $includeSpamTokens: Boolean = false) {\n  portfolios(\n    ownerAddresses: [$ownerAddress]\n    chains: $chains\n    valueModifiers: [{ownerAddress: $ownerAddress, includeSpamTokens: $includeSpamTokens, includeSmallBalances: $includeSmallBalances}]\n  ) {\n    id\n    tokensTotalDenominatedValue {\n      id\n      value\n      __typename\n    }\n    tokensTotalDenominatedValueChange(duration: DAY) {\n      absolute {\n        id\n        value\n        __typename\n      }\n      percentage {\n        id\n        value\n        __typename\n      }\n      __typename\n    }\n    tokenBalances {\n      ...PortfolioTokenBalanceParts\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment PortfolioTokenBalanceParts on TokenBalance {\n  id\n  quantity\n  denominatedValue {\n    id\n    currency\n    value\n    __typename\n  }\n  token {\n    ...SimpleTokenDetails\n    id\n    address\n    chain\n    symbol\n    name\n    decimals\n    standard\n    project {\n      id\n      name\n      logo {\n        id\n        url\n        __typename\n      }\n      safetyLevel\n      logoUrl\n      isSpam\n      __typename\n    }\n    __typename\n  }\n  tokenProjectMarket {\n    id\n    pricePercentChange(duration: DAY) {\n      id\n      value\n      __typename\n    }\n    tokenProject {\n      id\n      logoUrl\n      isSpam\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment SimpleTokenDetails on Token {\n  id\n  address\n  chain\n  symbol\n  name\n  decimals\n  standard\n  project {\n    id\n    name\n    logo {\n      id\n      url\n      __typename\n    }\n    safetyLevel\n    logoUrl\n    isSpam\n    __typename\n  }\n  __typename\n}",
+  };
 
-      const req = await fetch(UNISWAP_API_ENDPOINT, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(query),
-      });
+  const req = await fetch(UNISWAP_API_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(query),
+  });
 
-      if (!req.ok) {
-        return null;
-      }
+  if (!req.ok) {
+    return null;
+  }
 
-      const res = await req.json();
-      return res as UniSwapPortfolioResponse;
-    };
+  const res = await req.json();
+  return res as UniSwapPortfolioResponse;
+};
 
-    onIonViewWillEnter(async () => {
-      selectedAccount.value = await getSelectedAccount();
-      const result = await getUniwapAssets(selectedAccount.value.address);
+onIonViewWillEnter(async () => {
+  selectedAccount.value = await getSelectedAccount();
+  const result = await getUniwapAssets(selectedAccount.value.address);
 
-      if (!result) {
-        isError.value = true;
-        loading.value = false;
-        return;
-      }
+  if (!result) {
+    isError.value = true;
+    loading.value = false;
+    return;
+  }
 
-      if (result?.data?.portfolios?.length) {
-        alltokens.value = result.data.portfolios[0].tokenBalances.filter(
-          (token) => token.denominatedValue && !token.token.project.isSpam
-        );
-        shownTokens.value = alltokens.value.slice(0, 10);
-        assetsValue.value = result.data.portfolios[0].tokensTotalDenominatedValue;
-        assetsChange.value = result.data.portfolios[0].tokensTotalDenominatedValueChange;
-      } else {
-        noAssets.value = true;
-      }
+  if (result?.data?.portfolios?.length) {
+    alltokens.value = result.data.portfolios[0].tokenBalances.filter(
+      (token) => token.denominatedValue && !token.token.project.isSpam
+    );
+    shownTokens.value = alltokens.value.slice(0, 10);
+    assetsValue.value = result.data.portfolios[0].tokensTotalDenominatedValue;
+    assetsChange.value = result.data.portfolios[0].tokensTotalDenominatedValueChange;
+  } else {
+    noAssets.value = true;
+  }
 
-      loading.value = false;
-    });
-
-    return {
-      selectedAccount,
-      loading,
-      isError,
-      noAssets,
-      getToastRef,
-      copyText,
-      copyOutline,
-      toastState,
-      getUrl,
-      openTab,
-      alltokens,
-      shownTokens,
-      assetsValue,
-      assetsChange,
-      formatNumber,
-    };
-  },
+  loading.value = false;
 });
 </script>
 

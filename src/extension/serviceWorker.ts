@@ -696,7 +696,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
 
                         if (!account || !('address' in account)) {
                             await chrome.windows.create({
-                                height: 450,
+                                height: 470,
                                 width: 400,
                                 url: chrome.runtime.getURL(`index.html?route=wallet-error&param=${strToHex('No account is selected you need to have an account selected before trying sign a message')}&rid=${String(message?.resId ?? '')}`),
                                 type: 'popup'

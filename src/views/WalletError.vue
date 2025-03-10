@@ -38,8 +38,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script lang="ts" setup>
+import { ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -56,38 +56,16 @@ import {
 import { useRoute } from "vue-router";
 import { hexTostr } from "@/utils/platform";
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonButton,
-    IonTextarea,
-    IonLoading,
-  },
-  setup: () => {
-    const route = useRoute();
-    const error = hexTostr((route.params?.param as string) ?? "");
-    const loading = ref(true);
+const route = useRoute();
+const error = hexTostr((route.params?.param as string) ?? "");
+const loading = ref(true);
 
-    const onCancel = () => {
-      window.close();
-    };
+const onCancel = () => {
+  window.close();
+};
 
-    onIonViewWillEnter(async () => {
-      (window as any)?.resizeTo?.(700, 600);
-      loading.value = false;
-    });
-
-    return {
-      onCancel,
-      loading,
-      error,
-    };
-  },
+onIonViewWillEnter(async () => {
+  (window as any)?.resizeTo?.(700, 600);
+  loading.value = false;
 });
 </script>

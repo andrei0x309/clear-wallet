@@ -49,15 +49,7 @@
 
             {{ selectedAccount?.name }}</ion-label
           >
-          <ion-button
-            @click="
-              () => {
-                accountsModal = true;
-                toastState = false;
-              }
-            "
-            >Select</ion-button
-          >
+          <ion-button @click="openAccountsModal">Select</ion-button>
         </ion-item>
         <ion-item
           button
@@ -187,7 +179,7 @@
       ></ion-toast>
     </ion-content>
 
-    <ion-modal :is-open="accountsModal">
+    <ion-modal :is-open="accountsModal" @ionModalDidPresent="accountModalPresented">
       <ion-header>
         <ion-toolbar>
           <ion-buttons slot="start">
@@ -201,10 +193,10 @@
           <ion-radio-group :value="selectedAccount?.address ?? ''">
             <ion-list-header>
               <ion-searchbar
+                ref="accountSearchBar"
                 placeholder="search..."
                 autocomplete="off"
                 autocorrect="off"
-                :autofocus="true"
                 :clear-input="false"
                 :clear-on-edit="false"
                 :spellcheck="false"
@@ -250,7 +242,7 @@
         </ion-list>
       </ion-content>
     </ion-modal>
-    <ion-modal :is-open="networksModal">
+    <ion-modal :is-open="networksModal" @ionModalDidPresent="networkModalPresented">
       <ion-header>
         <ion-toolbar>
           <ion-buttons slot="start">
@@ -264,9 +256,9 @@
           <ion-radio-group :value="selectedNetwork.chainId">
             <ion-list-header>
               <ion-searchbar
+                ref="networkSearchBar"
                 autocomplete="off"
                 autocorrect="off"
-                :autofocus="true"
                 :clear-input="false"
                 :clear-on-edit="false"
                 :spellcheck="false"
@@ -335,8 +327,9 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted, Ref } from "vue";
+<script lang="ts" setup>
+import { ref, Ref } from "vue";
+import LightModal from "@/components/misc/LightModal.vue";
 import {
   IonContent,
   IonHeader,
@@ -385,195 +378,148 @@ import GitHub from "@/components/icons/GitHub.vue";
 
 const version = getVersion();
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonLoading,
-    IonItem,
-    IonLabel,
-    IonButton,
-    IonModal,
-    IonRadioGroup,
-    IonRadio,
-    IonButtons,
-    IonList,
-    IonListHeader,
-    IonText,
-    IonToast,
-    IonIcon,
-    IonAvatar,
-    GitHub,
-    IonSearchbar,
-  },
-  setup: () => {
-    const loading = ref(false);
-    const filtredAccounts = ref([]) as Ref<Account[]>;
-    const filtredNetworks = ref({}) as Ref<Networks>;
-    const accounts = ref([]) as Ref<Account[]>;
-    const networks = ref({}) as Ref<Networks>;
-    const accountsModal = ref(false) as Ref<boolean>;
-    const networksModal = ref(false) as Ref<boolean>;
-    const selectedAccount = (ref(null) as unknown) as Ref<Account>;
-    const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
-    const toastState = ref(false);
-    const settings = ref({}) as Ref<Awaited<ReturnType<typeof getSettings>>>;
+const loading = ref(false);
+const filtredAccounts = ref([]) as Ref<Account[]>;
+const filtredNetworks = ref({}) as Ref<Networks>;
+const accounts = ref([]) as Ref<Account[]>;
+const networks = ref({}) as Ref<Networks>;
+const accountsModal = ref(false) as Ref<boolean>;
+const networksModal = ref(false) as Ref<boolean>;
+const selectedAccount = (ref(null) as unknown) as Ref<Account>;
+const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
+const toastState = ref(false);
+const settings = ref({}) as Ref<Awaited<ReturnType<typeof getSettings>>>;
 
-    const getToastRef = () => toastState;
+const accountSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
+const networkSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
 
-    const loadData = () => {
-      loading.value = true;
-      const pAccounts = getAccounts();
-      const pNetworks = getNetworks();
-      const pSelectedAccount = getSelectedAccount();
-      const pSelectedNetwork = getSelectedNetwork();
-      const pSettings = getSettings();
-      Promise.all([
-        pAccounts,
-        pNetworks,
-        pSelectedAccount,
-        pSelectedNetwork,
-        pSettings,
-      ]).then((res) => {
-        accounts.value = res[0];
-        networks.value = res[1];
-        filtredAccounts.value = res[0];
-        filtredNetworks.value = res[1];
-        selectedAccount.value = res[2];
-        selectedNetwork.value = res[3];
-        settings.value = res[4];
-        loading.value = false;
-      });
-    };
+const getToastRef = () => toastState;
 
-    onIonViewWillEnter(() => {
-      loadData();
-    });
-
-    onMounted(() => {
-      // nothing
-    });
-
-    const goToAddAccount = () => {
-      router.push("/tabs/add-account");
-    };
-
-    const goToAddNetwork = () => {
-      router.push("/tabs/add-network");
-    };
-
-    const goToFarcasterActions = () => {
-      router.push("/farcaster-actions");
-    };
-
-    const goToPersonalSign = () => {
-      router.push("/personal-sign");
-    };
-
-    const changeSelectedAccount = async (address: string) => {
-      loading.value = true;
-      const findIndex = accounts.value.findIndex((a) => a.address == address);
-      if (findIndex > -1) {
-        selectedAccount.value = accounts.value[findIndex];
-        accounts.value = accounts.value.filter((a) => a.address !== address);
-        accounts.value.unshift(selectedAccount.value);
-        const newAccounts = [...accounts.value];
-        await Promise.all([
-          saveSelectedAccount(selectedAccount.value),
-          replaceAccounts(newAccounts),
-        ]);
-        triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
-      }
-      accountsModal.value = false;
+const loadData = () => {
+  loading.value = true;
+  const pAccounts = getAccounts();
+  const pNetworks = getNetworks();
+  const pSelectedAccount = getSelectedAccount();
+  const pSelectedNetwork = getSelectedNetwork();
+  const pSettings = getSettings();
+  Promise.all([pAccounts, pNetworks, pSelectedAccount, pSelectedNetwork, pSettings]).then(
+    (res) => {
+      accounts.value = res[0];
+      networks.value = res[1];
+      filtredAccounts.value = res[0];
+      filtredNetworks.value = res[1];
+      selectedAccount.value = res[2];
+      selectedNetwork.value = res[3];
+      settings.value = res[4];
       loading.value = false;
-    };
+    }
+  );
 
-    const changeSelectedNetwork = async (chainId: number) => {
-      loading.value = true;
-      if (chainId in networks.value) {
-        await saveSelectedNetwork(networks.value[chainId]);
-        await replaceNetworks(
-          Object.assign({ [chainId]: networks.value[chainId] }, networks.value)
-        );
-        selectedNetwork.value = networks.value[chainId];
-        triggerListner("chainChanged", numToHexStr(chainId));
-      }
-      networksModal.value = false;
-      loading.value = false;
-    };
+  loading.value = false;
+};
 
-    const searchAccount = (e: any) => {
-      const text = e.target.value;
-      if (text) {
-        filtredAccounts.value = accounts.value.filter(
-          (item) =>
-            item.name.toLowerCase().includes(text.toLowerCase()) ||
-            item.address.toLowerCase().includes(text.toLowerCase())
-        );
-      } else {
-        filtredAccounts.value = accounts.value;
-      }
-    };
-
-    const searchNetwork = (e: any) => {
-      const text = e.target.value;
-      if (text) {
-        const filtred = Object.keys(networks.value).reduce(
-          (acc: Networks, key: string) => {
-            if (
-              networks.value[Number(key)].name
-                .toLowerCase()
-                .includes(text.toLowerCase()) ||
-              networks.value[Number(key)].rpc
-                .toLowerCase()
-                .includes(text.toLowerCase()) ||
-              networks.value[Number(key)].chainId.toString().includes(text)
-            ) {
-              acc[Number(key)] = networks.value[Number(key)];
-            }
-            return acc;
-          },
-          {} as Networks
-        );
-        filtredNetworks.value = filtred;
-      } else {
-        filtredNetworks.value = networks.value;
-      }
-    };
-
-    return {
-      loading,
-      accounts,
-      networks,
-      accountsModal,
-      goToAddAccount,
-      goToAddNetwork,
-      selectedAccount,
-      selectedNetwork,
-      changeSelectedAccount,
-      changeSelectedNetwork,
-      copyText,
-      copyOutline,
-      toastState,
-      getToastRef,
-      networksModal,
-      allTemplateNets,
-      getUrl,
-      openTab,
-      settings,
-      version,
-      goToFarcasterActions,
-      goToPersonalSign,
-      filtredAccounts,
-      filtredNetworks,
-      searchAccount,
-      searchNetwork,
-    };
-  },
+onIonViewWillEnter(() => {
+  loadData();
 });
+
+const goToAddAccount = () => {
+  router.push("/tabs/add-account");
+};
+
+const goToAddNetwork = () => {
+  router.push("/tabs/add-network");
+};
+
+const goToFarcasterActions = () => {
+  router.push("/farcaster-actions");
+};
+
+const goToPersonalSign = () => {
+  router.push("/personal-sign");
+};
+
+const changeSelectedAccount = async (address: string) => {
+  loading.value = true;
+  const findIndex = accounts.value.findIndex((a) => a.address == address);
+  if (findIndex > -1) {
+    selectedAccount.value = accounts.value[findIndex];
+    accounts.value = accounts.value.filter((a) => a.address !== address);
+    accounts.value.unshift(selectedAccount.value);
+    const newAccounts = [...accounts.value];
+    await Promise.all([
+      saveSelectedAccount(selectedAccount.value),
+      replaceAccounts(newAccounts),
+    ]);
+    triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
+  }
+  accountsModal.value = false;
+  loading.value = false;
+};
+
+const changeSelectedNetwork = async (chainId: number) => {
+  loading.value = true;
+  if (chainId in networks.value) {
+    await saveSelectedNetwork(networks.value[chainId]);
+    await replaceNetworks(
+      Object.assign({ [chainId]: networks.value[chainId] }, networks.value)
+    );
+    selectedNetwork.value = networks.value[chainId];
+    triggerListner("chainChanged", numToHexStr(chainId));
+  }
+  networksModal.value = false;
+  loading.value = false;
+};
+
+const searchAccount = (e: any) => {
+  const text = e.target.value;
+  console.log("searchAccount", text);
+  if (text) {
+    filtredAccounts.value = accounts.value.filter(
+      (item) =>
+        item.name.toLowerCase().includes(text.toLowerCase()) ||
+        item.address.toLowerCase().includes(text.toLowerCase())
+    );
+  } else {
+    filtredAccounts.value = accounts.value;
+  }
+  console.log("filtredAccounts", filtredAccounts.value);
+};
+
+const searchNetwork = (e: any) => {
+  const text = e.target.value;
+  if (text) {
+    const filtred = Object.keys(networks.value).reduce((acc: Networks, key: string) => {
+      if (
+        networks.value[Number(key)].name.toLowerCase().includes(text.toLowerCase()) ||
+        networks.value[Number(key)].rpc.toLowerCase().includes(text.toLowerCase()) ||
+        networks.value[Number(key)].chainId.toString().includes(text)
+      ) {
+        acc[Number(key)] = networks.value[Number(key)];
+      }
+      return acc;
+    }, {} as Networks);
+    filtredNetworks.value = filtred;
+  } else {
+    filtredNetworks.value = networks.value;
+  }
+};
+
+const openAccountsModal = () => {
+  accountsModal.value = true;
+  toastState.value = false;
+};
+
+const accountModalPresented = () => {
+  if (accountSearchBar.value) {
+    accountSearchBar?.value?.$el?.setFocus?.();
+  }
+};
+
+const networkModalPresented = () => {
+  if (networkSearchBar.value) {
+    networkSearchBar?.value?.$el?.setFocus?.();
+  }
+};
 </script>
 
 <style scoped>

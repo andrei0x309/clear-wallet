@@ -263,14 +263,24 @@ export const clearPk = async (): Promise<void> => {
 }
 
 export const hexTostr = (hexStr: string) => {
-    if (hexStr.substring(0, 2) === '0x') {
-        hexStr = hexStr.substring(2);
+    if (hexStr.substring(0, 2) !== '0x') {
+       return hexStr
     }
-
+    hexStr = hexStr.substring(2);
     const match = hexStr.match(/../g);
     const bytes = new Uint8Array(match ? match.map(h => parseInt(h, 16)) : []);
-    const decoder = new TextDecoder('utf-8');
+    try {
+    const decoder = new TextDecoder('utf-8', { fatal: true });
     return decoder.decode(bytes);
+    } catch {
+        const chunks = [];
+        for (let i = 0, charsLength = hexStr.length; i < charsLength; i += 2) {
+            chunks.push(hexStr.substring(i, i + 2));
+        }
+       return chunks.reduce(
+       (pv, cv) => `${pv}${String.fromCharCode(parseInt(cv, 16))}`,
+               '')
+       }
 };
 
 export const strToHex = (str: string) =>  `0x${str.split('').map( s => s.charCodeAt(0).toString(16)).join('')}`

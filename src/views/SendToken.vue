@@ -217,8 +217,8 @@
   </ion-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, Ref } from "vue";
+<script lang="ts" setup>
+import { ref, Ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -236,25 +236,14 @@ import {
   modalController,
   IonSegmentButton,
   IonSegment,
-  // IonModal,
-  // IonButtons,
-  // IonTextarea,
 } from "@ionic/vue";
-// import { ethers } from "ethers";
+
 import {
-  // saveSelectedAccount,
-  // getAccounts,
-  // saveAccount,
-  // getRandomPk,
-  // smallRandomString,
   paste,
   getSelectedNetwork,
   getSelectedAccount,
   // getSettings,
 } from "@/utils/platform";
-// import router from "@/router";
-// import UnlockModal from "@/views/UnlockModal.vue";
-// import { encrypt, getCryptoParams } from "@/utils/webCrypto";
 
 import { clipboardOutline } from "ionicons/icons";
 import type { Network, Account } from "@/extension/types";
@@ -272,298 +261,220 @@ import SelectedContacts from "./ContactsSelect.vue";
 import { ERC20_PARTIAL_ABI } from "@/utils/abis";
 import { wait } from "@/utils/misc";
 
-// import { getFromMnemonic } from "@/utils/wallet";
+const sendTo = ref("");
+const alertOpen = ref(false);
+const alertMsg = ref("");
+const alertTitle = ref("Error");
+const loading = ref(true);
+const amount = ref(0);
+const erc20Amount = ref(0);
+const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
+const selectedAccount = (ref(null) as unknown) as Ref<Account>;
+const currentBalance = ref(0);
+const currentBalanceERC20 = ref(null) as Ref<number | null>;
+const loadingSend = ref(false);
+const currentSegment = ref("native");
+const erc20 = ref("");
 
-export default defineComponent({
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonButton,
-    IonAlert,
-    IonIcon,
-    IonLoading,
-    IonSegmentButton,
-    IonSegment,
-    // IonModal,
-    // IonButtons,
-    // IonTextarea,
-  },
-  setup: () => {
-    // const supportedNetworksIds = [1, 3, 4, 5, 42, 56, 97, 137, 80001];
+const segmentChange = (e: CustomEvent) => {
+  currentSegment.value = e.detail.value;
+};
 
-    const name = ref("");
-    const sendTo = ref("");
-    const alertOpen = ref(false);
-    const alertMsg = ref("");
-    const alertTitle = ref("Error");
-    const loading = ref(true);
-    const amount = ref(0);
-    const erc20Amount = ref(0);
-    const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
-    const selectedAccount = (ref(null) as unknown) as Ref<Account>;
-    const currentBalance = ref(0);
-    const currentBalanceERC20 = ref(null) as Ref<number | null>;
-    const loadingSend = ref(false);
-    const currentSegment = ref("native");
-    const erc20 = ref("");
-
-    // let accountsProm: Promise<Account[] | undefined>;
-    // let settingsProm: Promise<Settings | undefined>;
-
-    // const resetFields = () => {
-    //   name.value = "";
-    //   pk.value = "";
-    // };
-
-    // const openModal = async () => {
-    //   const modal = await modalController.create({
-    //     component: UnlockModal,
-    //     componentProps: {
-    //       unlockType: "addAccount",
-    //     },
-    //   });
-    //   modal.present();
-    //   const { role, data } = await modal.onWillDismiss();
-    //   if (role === "confirm") return data;
-    //   return false;
-    // };
-
-    const segmentChange = (e: CustomEvent) => {
-      currentSegment.value = e.detail.value;
-    };
-
-    onIonViewWillEnter(async () => {
-      try {
-        selectedNetwork.value = await getSelectedNetwork();
-        selectedAccount.value = await getSelectedAccount();
-        currentBalance.value = Number(formatEther((await getBalance()).toString()));
-      } catch (e) {
-        alertOpen.value = true;
-        alertMsg.value =
-          "Error getting network & balance Internet or RPC or blockchain may be down";
-      }
-      loading.value = false;
-    });
-
-    const balanceOfERC20 = async () => {
-      try {
-        loading.value = true;
-        const provider = (await getCurrentProvider()).provider;
-        const erc20Contract = new Contract(erc20.value, ERC20_PARTIAL_ABI, provider);
-        const decimals = await erc20Contract.decimals();
-        const balance = await erc20Contract.balanceOf(selectedAccount.value.address);
-        currentBalanceERC20.value = Number(formatUnits(balance, decimals));
-        return currentBalanceERC20.value;
-      } catch (e) {
-        // ignore
-        currentBalanceERC20.value = null;
-        return null;
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    const promptTransaction = async () => {
-      alertTitle.value = "Error";
-      if (
-        sendTo.value?.toLocaleLowerCase() ===
-        selectedAccount.value.address?.toLocaleLowerCase()
-      ) {
-        alertOpen.value = true;
-        alertMsg.value = "Cannot send to self";
-        return;
-      }
-
-      if (!isAddress(sendTo.value)) {
-        alertOpen.value = true;
-        alertMsg.value = "Invalid send address";
-        return;
-      }
-
-      if (amount.value <= 0) {
-        alertOpen.value = true;
-        alertMsg.value = "Amount must be greater than 0";
-        return;
-      }
-
-      const value = parseEther(amount.value.toString()).toString();
-
-      if (Number(value) >= Number(parseEther(currentBalance.value.toString()))) {
-        alertOpen.value = true;
-        alertMsg.value = "Insufficient balance";
-        return;
-      }
-
-      const nonce = (await getTxCount(selectedAccount.value.address)) + 1;
-
-      loading.value = true;
-      loadingSend.value = true;
-
-      const tx = {
-        from: selectedAccount.value.address,
-        to: sendTo.value,
-        value,
-        nonce,
-        gasLimit: "0x0",
-        gasPrice: "0x0",
-      };
-      const result = (await walletPromptSendTx(tx)) as {
-        error?: string;
-      };
-      if (result?.error) {
-        alertOpen.value = true;
-        alertMsg.value = "Error sending transaction to chain";
-        loading.value = false;
-        return;
-      } else {
-        alertTitle.value = "OK";
-        alertOpen.value = true;
-        alertMsg.value = "Transaction sent successfully";
-      }
-
-      loadingSend.value = false;
-      loading.value = false;
-    };
-
-    const promptTransactionERC20 = async () => {
-      alertTitle.value = "Error";
-      if (
-        sendTo.value?.toLocaleLowerCase() ===
-        selectedAccount.value.address?.toLocaleLowerCase()
-      ) {
-        alertOpen.value = true;
-        alertMsg.value = "Cannot send to self";
-        return;
-      }
-
-      if (!isAddress(sendTo.value)) {
-        alertOpen.value = true;
-        alertMsg.value = "Invalid send address";
-        return;
-      }
-
-      if (!isAddress(erc20.value)) {
-        alertOpen.value = true;
-        alertMsg.value = "Invalid ERC20 address";
-        return;
-      }
-
-      if (erc20Amount.value <= 0) {
-        alertOpen.value = true;
-        alertMsg.value = "Amount must be greater than 0";
-        return;
-      }
-
-      // get current erc 20 balance
-      try {
-        const balance = await balanceOfERC20();
-        if (balance === null) {
-          throw new Error("Invalid ERC20 address or balance");
-        }
-      } catch (e) {
-        alertOpen.value = true;
-        alertMsg.value = "Invalid ERC20 address or balance";
-      }
-
-      if (Number(amount.value) >= Number(currentBalanceERC20.value)) {
-        alertOpen.value = true;
-        alertMsg.value = "Insufficient balance";
-        return;
-      }
-
-      loading.value = true;
-      let tx;
-      try {
-        const provider = (await getCurrentProvider()).provider;
-        const erc20Contract = new Contract(erc20.value, ERC20_PARTIAL_ABI, provider);
-        const decimals = await erc20Contract.decimals();
-        const value = parseUnits(erc20Amount.value.toString(), decimals).toString();
-        tx = {
-          from: selectedAccount.value.address,
-          to: erc20.value,
-          gasLimit: "0x0",
-          gasPrice: "0x0",
-          data: erc20Contract.interface.encodeFunctionData("transfer", [
-            sendTo.value,
-            value,
-          ]),
-        };
-      } catch (e) {
-        alertOpen.value = true;
-        alertMsg.value = "Error populating transaction";
-        loading.value = false;
-        return;
-      }
-
-      const result = (await walletPromptSendTx(tx)) as {
-        error?: string;
-      };
-      if (result?.error) {
-        alertOpen.value = true;
-        alertMsg.value = "Error sending transaction to chain";
-        loading.value = false;
-        return;
-      } else {
-        alertTitle.value = "OK";
-        alertOpen.value = true;
-        alertMsg.value = "Transaction sent successfully";
-        currentBalanceERC20.value =
-          Number(currentBalanceERC20.value) - Number(erc20Amount.value);
-      }
-
-      loadingSend.value = false;
-      loading.value = false;
-    };
-
-    const openModalAddContact = async (isErc20 = false) => {
-      const modal = await modalController.create({
-        component: SelectedContacts,
-        componentProps: {},
-      });
-
-      modal.present();
-
-      const { data, role } = await modal.onWillDismiss();
-      if (role === "confirm") {
-        if (isErc20) {
-          erc20.value = data.address;
-        } else {
-          sendTo.value = data.address;
-        }
-      }
-    };
-
-    return {
-      name,
-      sendTo,
-      alertOpen,
-      alertMsg,
-      alertTitle,
-      clipboardOutline,
-      loadingSend,
-      paste,
-      loading,
-      amount,
-      promptTransaction,
-      currentBalance,
-      selectedAccount,
-      selectedNetwork,
-      openModalAddContact,
-      segmentChange,
-      currentSegment,
-      erc20,
-      promptTransactionERC20,
-      balanceOfERC20,
-      currentBalanceERC20,
-      wait,
-      erc20Amount,
-    };
-  },
+onIonViewWillEnter(async () => {
+  try {
+    selectedNetwork.value = await getSelectedNetwork();
+    selectedAccount.value = await getSelectedAccount();
+    currentBalance.value = Number(formatEther((await getBalance()).toString()));
+  } catch (e) {
+    alertOpen.value = true;
+    alertMsg.value =
+      "Error getting network & balance Internet or RPC or blockchain may be down";
+  }
+  loading.value = false;
 });
+
+const balanceOfERC20 = async () => {
+  try {
+    loading.value = true;
+    const provider = (await getCurrentProvider()).provider;
+    const erc20Contract = new Contract(erc20.value, ERC20_PARTIAL_ABI, provider);
+    const decimals = await erc20Contract.decimals();
+    const balance = await erc20Contract.balanceOf(selectedAccount.value.address);
+    currentBalanceERC20.value = Number(formatUnits(balance, decimals));
+    return currentBalanceERC20.value;
+  } catch (e) {
+    // ignore
+    currentBalanceERC20.value = null;
+    return null;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const promptTransaction = async () => {
+  alertTitle.value = "Error";
+  if (
+    sendTo.value?.toLocaleLowerCase() ===
+    selectedAccount.value.address?.toLocaleLowerCase()
+  ) {
+    alertOpen.value = true;
+    alertMsg.value = "Cannot send to self";
+    return;
+  }
+
+  if (!isAddress(sendTo.value)) {
+    alertOpen.value = true;
+    alertMsg.value = "Invalid send address";
+    return;
+  }
+
+  if (amount.value <= 0) {
+    alertOpen.value = true;
+    alertMsg.value = "Amount must be greater than 0";
+    return;
+  }
+
+  const value = parseEther(amount.value.toString()).toString();
+
+  if (Number(value) >= Number(parseEther(currentBalance.value.toString()))) {
+    alertOpen.value = true;
+    alertMsg.value = "Insufficient balance";
+    return;
+  }
+
+  const nonce = (await getTxCount(selectedAccount.value.address)) + 1;
+
+  loading.value = true;
+  loadingSend.value = true;
+
+  const tx = {
+    from: selectedAccount.value.address,
+    to: sendTo.value,
+    value,
+    nonce,
+    gasLimit: "0x0",
+    gasPrice: "0x0",
+  };
+  const result = (await walletPromptSendTx(tx)) as {
+    error?: string;
+  };
+  if (result?.error) {
+    alertOpen.value = true;
+    alertMsg.value = "Error sending transaction to chain";
+    loading.value = false;
+    return;
+  } else {
+    alertTitle.value = "OK";
+    alertOpen.value = true;
+    alertMsg.value = "Transaction sent successfully";
+  }
+
+  loadingSend.value = false;
+  loading.value = false;
+};
+
+const promptTransactionERC20 = async () => {
+  alertTitle.value = "Error";
+  if (
+    sendTo.value?.toLocaleLowerCase() ===
+    selectedAccount.value.address?.toLocaleLowerCase()
+  ) {
+    alertOpen.value = true;
+    alertMsg.value = "Cannot send to self";
+    return;
+  }
+
+  if (!isAddress(sendTo.value)) {
+    alertOpen.value = true;
+    alertMsg.value = "Invalid send address";
+    return;
+  }
+
+  if (!isAddress(erc20.value)) {
+    alertOpen.value = true;
+    alertMsg.value = "Invalid ERC20 address";
+    return;
+  }
+
+  if (erc20Amount.value <= 0) {
+    alertOpen.value = true;
+    alertMsg.value = "Amount must be greater than 0";
+    return;
+  }
+
+  // get current erc 20 balance
+  try {
+    const balance = await balanceOfERC20();
+    if (balance === null) {
+      throw new Error("Invalid ERC20 address or balance");
+    }
+  } catch (e) {
+    alertOpen.value = true;
+    alertMsg.value = "Invalid ERC20 address or balance";
+  }
+
+  if (Number(amount.value) >= Number(currentBalanceERC20.value)) {
+    alertOpen.value = true;
+    alertMsg.value = "Insufficient balance";
+    return;
+  }
+
+  loading.value = true;
+  let tx;
+  try {
+    const provider = (await getCurrentProvider()).provider;
+    const erc20Contract = new Contract(erc20.value, ERC20_PARTIAL_ABI, provider);
+    const decimals = await erc20Contract.decimals();
+    const value = parseUnits(erc20Amount.value.toString(), decimals).toString();
+    tx = {
+      from: selectedAccount.value.address,
+      to: erc20.value,
+      gasLimit: "0x0",
+      gasPrice: "0x0",
+      data: erc20Contract.interface.encodeFunctionData("transfer", [sendTo.value, value]),
+    };
+  } catch (e) {
+    alertOpen.value = true;
+    alertMsg.value = "Error populating transaction";
+    loading.value = false;
+    return;
+  }
+
+  const result = (await walletPromptSendTx(tx)) as {
+    error?: string;
+  };
+  if (result?.error) {
+    alertOpen.value = true;
+    alertMsg.value = "Error sending transaction to chain";
+    loading.value = false;
+    return;
+  } else {
+    alertTitle.value = "OK";
+    alertOpen.value = true;
+    alertMsg.value = "Transaction sent successfully";
+    currentBalanceERC20.value =
+      Number(currentBalanceERC20.value) - Number(erc20Amount.value);
+  }
+
+  loadingSend.value = false;
+  loading.value = false;
+};
+
+const openModalAddContact = async (isErc20 = false) => {
+  const modal = await modalController.create({
+    component: SelectedContacts,
+    componentProps: {},
+  });
+
+  modal.present();
+
+  const { data, role } = await modal.onWillDismiss();
+  if (role === "confirm") {
+    if (isErc20) {
+      erc20.value = data.address;
+    } else {
+      sendTo.value = data.address;
+    }
+  }
+};
 </script>

@@ -1,8 +1,21 @@
 # Changelog
 
+## Manifest Version 1.4.16
+
+- bumped all dependencies to the latest versions
+- used bun to transpile some JS instead of tsc
+- downgrade Ionic `8.4.3` to `8.4.2` to fix a bug with events not being emitted(fix in Ionic `8.4.4` but not yet released)
+- removed node version of workflow
+- removed `tsx` since repo uses only bun to transpile and execute code
+- migrated all components away from `defineComponent` to setup script macro
+- fixed an issue with unlockModal input that lost focus after 4 seconds
+- added new animation to unlock modal
+- added a simple global store to activate focus on unlock modal input after render
+- compacted sendtx view to show better on smaller screens
+
 ## Manifest Version 1.4.15
 
-- Chnages to Personal message signing UI
+- changes to Personal message signing UI
 - changed hexToStr to support UTF-8
 - bumped all dependencies to the latest versions
 
