@@ -155,20 +155,4 @@ unlockModalStateSubscribe((state) => {
     passinputref.value?.$el?.setFocus?.();
   }
 });
-
-// onIonViewDidEnter(async () => {
-//   await new Promise((resolve) => setTimeout(resolve, 150));
-//   const passInput = document.querySelector("#pass-input input") as HTMLInputElement;
-//   console.log("onMounted", passInput);
-//   if (passInput) {
-//     passInput.addEventListener("keyup", (e: any) => {
-//       if (e.key === "Enter") {
-//         unlock();
-//       }
-//     });
-//     passInput.addEventListener("blur", () => {
-//       debugger;
-//     });
-//   }
-// });
 </script>

@@ -472,7 +472,6 @@ const changeSelectedNetwork = async (chainId: number) => {
 
 const searchAccount = (e: any) => {
   const text = e.target.value;
-  console.log("searchAccount", text);
   if (text) {
     filtredAccounts.value = accounts.value.filter(
       (item) =>
@@ -482,7 +481,6 @@ const searchAccount = (e: any) => {
   } else {
     filtredAccounts.value = accounts.value;
   }
-  console.log("filtredAccounts", filtredAccounts.value);
 };
 
 const searchNetwork = (e: any) => {
