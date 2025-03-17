@@ -28,6 +28,13 @@ For more info you can check [docs website](https://clear-wallet.flashsoft.eu)
 
 https://github.com/user-attachments/assets/4f7d267a-7410-43cf-b3bd-0256f1ccc954
 
+### LINKS
+
+[LICENSE.md](LICENSE.md)
+
+[PRIVACY_POLICY.md](PRIVACY_POLICY.md)
+
+
 ### FAQ
 
 Q: Why use Ionic?
@@ -57,7 +64,3 @@ Q: Will this project be heavily maintained?
 
 A: Planing not to add too many features, so I will update it as long as I'll use it, and not plan to ditch it anytime soon.
 
-## LINKS
-
-[LICENSE.md](LICENSE.md)
-[PRIVACY_POLICY.md](PRIVACY_POLICY.md)

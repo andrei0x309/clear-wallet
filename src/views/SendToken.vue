@@ -257,7 +257,7 @@ import {
   parseUnits,
 } from "ethers";
 import { getTxCount, getBalance, getCurrentProvider } from "@/utils/wallet";
-import SelectedContacts from "./ContactsSelect.vue";
+import ContactsSelect from "./ContactsSelect.vue";
 import { ERC20_PARTIAL_ABI } from "@/utils/abis";
 import { wait } from "@/utils/misc";
 
@@ -462,7 +462,7 @@ const promptTransactionERC20 = async () => {
 
 const openModalAddContact = async (isErc20 = false) => {
   const modal = await modalController.create({
-    component: SelectedContacts,
+    component: ContactsSelect,
     componentProps: {},
   });
 

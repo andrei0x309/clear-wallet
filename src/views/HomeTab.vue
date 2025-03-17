@@ -4,11 +4,17 @@
       <ion-toolbar>
         <ion-title>
           <ion-avatar
+            @click="openTab('https://clear-wallet.flashsoft.eu/docs/')"
+            class="link-docs"
             style="margin: 0.3rem; width: 1.6rem; height: 1.6rem; display: inline-flex"
           >
             <img alt="clw" :src="getUrl('assets/extension-icon/wallet_32.png')" />
           </ion-avatar>
-          <span style="position: absolute; top: 0.35rem; margin-left: 0.3rem">
+          <span
+            @click="openTab('https://clear-wallet.flashsoft.eu/docs/')"
+            class="link-docs"
+            style="position: absolute; top: 0.35rem; margin-left: 0.3rem"
+          >
             <span style="font-size: 0.9rem; font-weight: bold; color: #aca3bb">
               Clear
             </span>
@@ -16,6 +22,9 @@
           </span>
           <span
             v-if="version"
+            @click="
+              openTab('https://clear-wallet.flashsoft.eu/docs/automated-changelog/')
+            "
             style="
               position: absolute;
               right: 1.1rem;
@@ -25,6 +34,7 @@
               font-size: 0.65rem;
               top: -1px;
             "
+            class="link-docs"
             >Version: {{ version }}</span
           >
           <span
@@ -547,6 +557,16 @@ const networkModalPresented = () => {
 }
 
 .github-icon:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+  transform: scale(1.05);
+}
+
+.link-docs {
+  cursor: pointer;
+}
+
+.link-docs:hover {
   opacity: 0.8;
   transition: opacity 0.2s ease-in-out;
   transform: scale(1.05);

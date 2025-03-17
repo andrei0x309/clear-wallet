@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.4.17
+
+- changed QR dependency to a better library that is able to use native browser QR scanner, and has better results
+- changed home page to link to docs(if you click the wallet name) and changelog(if you click the version)
+- improved ContactsSelect UI search and selection
+
 ## Manifest Version 1.4.16
 
 - bumped all dependencies to the latest versions
