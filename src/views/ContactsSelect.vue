@@ -96,7 +96,10 @@
           </ion-list>
           <ion-list v-if="!!!walletAddresses.length">
             <ion-item class="ion-padding">
-              <ion-label>No addresses found in wallet, please add at least one</ion-label>
+              <ion-label v-if="searchValue === ''"
+                >No addresses found in wallet, please add at least one</ion-label
+              >
+              <ion-label v-else> No matching addresses found </ion-label>
             </ion-item>
           </ion-list>
         </template>
@@ -106,7 +109,6 @@
         :is-open="loading"
         cssClass="my-custom-class"
         message="Please wait..."
-        :duration="4000"
         :key="`k${loading}`"
         @didDismiss="loading = false"
       >
@@ -141,21 +143,35 @@ import type { Contact } from "@/extension/types";
 
 const loading = ref(false);
 let intialContacts = [] as Contact[];
+let intialWalletAddresses = [] as Contact[];
 const contacts = ref([]) as Ref<Contact[]>;
 const walletAddresses = ref([]) as Ref<Contact[]>;
 const selectedContact = ref(null) as Ref<Contact | null>;
 const currentSegment = ref("contacts");
+const searchValue = ref("");
 
 const onSearch = (e: any) => {
-  const text = e.target.value;
-  if (text) {
-    contacts.value = contacts.value.filter(
-      (item) =>
-        item.name.toLowerCase().includes(text.toLowerCase()) ||
-        item.address.toLowerCase().includes(text.toLowerCase())
-    );
+  searchValue.value = e.target.value;
+  if (currentSegment.value === "contacts") {
+    if (searchValue.value) {
+      contacts.value = contacts.value.filter(
+        (item) =>
+          item.name.toLowerCase().includes(searchValue.value.toLowerCase()) ||
+          item.address.toLowerCase().includes(searchValue.value.toLowerCase())
+      );
+    } else {
+      contacts.value = intialContacts;
+    }
   } else {
-    contacts.value = intialContacts;
+    if (searchValue.value) {
+      walletAddresses.value = walletAddresses.value.filter(
+        (item) =>
+          item.name.toLowerCase().includes(searchValue.value.toLowerCase()) ||
+          item.address.toLowerCase().includes(searchValue.value.toLowerCase())
+      );
+    } else {
+      walletAddresses.value = intialWalletAddresses;
+    }
   }
 };
 
@@ -176,6 +192,7 @@ const loadContacts = async () => {
   intialContacts = await getContacts();
   contacts.value = intialContacts;
   await convertAccountsToContacts();
+  intialWalletAddresses = walletAddresses.value;
   loading.value = false;
 };
 
@@ -220,8 +237,13 @@ const deleteContact = async (address: string) => {
 };
 
 const changeSelected = (address: string) => {
-  const contact = contacts.value.find((item) => item.address === address);
-  modalController.dismiss(contact, "confirm");
+  if (currentSegment.value === "contacts") {
+    const contact = contacts.value.find((item) => item.address === address);
+    modalController.dismiss(contact, "confirm");
+  } else {
+    const contact = walletAddresses.value.find((item) => item.address === address);
+    modalController.dismiss(contact, "confirm");
+  }
 };
 
 const close = () => {

@@ -1,26 +1,37 @@
-import QrScanner from 'qr-scanner';
+import { BrowserQRCodeReader } from '@zxing/browser';
 
-function base64ImageToBlob(str: string) {
-    const pos = str.indexOf(";base64,");
-    const type = str.substring(5, pos);
-    const b64 = str.substr(pos + 8);
-    const imageContent = atob(b64);
-    const buffer = new ArrayBuffer(imageContent.length);
-    const view = new Uint8Array(buffer);
-    for(var n = 0; n < imageContent.length; n++) {
-      view[n] = imageContent.charCodeAt(n);
+async function base64ImageToCanvas(imageBase64: string): Promise<HTMLCanvasElement> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas);
+            } else {
+                reject('Canvas context not available.');
+            }
+        };
+        img.onerror = () => {
+            reject('Image load error.');
+        };
+        img.src = imageBase64;
+    });
+}
+
+export async function getQRCode(imageBase64: string): Promise<string | null> {
+    try {
+        const canvas = await base64ImageToCanvas(imageBase64);
+
+        const reader = new BrowserQRCodeReader();
+        const result = await reader.decodeFromCanvas(canvas);
+
+        return result.getText();
+    } catch (error) {
+        console.error('Error decoding QR code:', error);
+        return null;
     }
-    const blob = new Blob([buffer], { type: type });
-    return blob;
-  }
-  
-export async function getQRCode(imageBase64: string) { 
-    try { 
-    const imageBlob = base64ImageToBlob(imageBase64);
-        
-    return await QrScanner.scanImage(imageBlob)
-    } catch (e) {
-    console.error(e);
-    return null;
-    }
-  }
+}

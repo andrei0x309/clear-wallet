@@ -20,9 +20,9 @@
   "dependencies": {
     "@ionic/vue": "8.4.2",
     "@ionic/vue-router": "8.4.2",
+    "@zxing/browser": "^0.1.5",
     "core-js": "^3.41.0",
     "ethers": "^6.13.5",
-    "qr-scanner": "^1.4.2",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
