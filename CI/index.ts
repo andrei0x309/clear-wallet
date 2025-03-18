@@ -1,4 +1,3 @@
-import { YupAPI } from 'yup-api-interact'
 import { FCHubUtils } from 'farcaster-hub-utils'
 
 const args = Bun.argv.slice(2);
@@ -56,7 +55,7 @@ const main = async () => {
         console.error('Error parsing data', e)
     }
 
-    const yupAPI = new YupAPI({ PK: YUP_PK });
+    // const yupAPI = new YupAPI({ PK: YUP_PK });
     const fchubUtils = new FCHubUtils(FC_SIGNER, USER_FID);
 
     if (action === 'update') {
@@ -68,10 +67,10 @@ const main = async () => {
 - Submited by @andrei0x309 \n`
         if (ENABLED) {
             if (!FCONLY) {
-                await yupAPI.sendPost({
-                    content: message,
-                    platforms: ['twitter', 'threads', 'bsky', 'lens']
-                })
+                // await yupAPI.sendPost({
+                //     content: message,
+                //     platforms: ['twitter', 'threads', 'bsky', 'lens']
+                // })
             }
             const fcPostHash = await fchubUtils.createFarcasterPost({
                 content: message,
@@ -103,10 +102,10 @@ const main = async () => {
 ${commiter ? `- Commiter: @${commiter}` : ''}
             `;
 
-            await yupAPI.sendPost({
-                content: message,
-                platforms: ['twitter', 'threads', 'bsky', 'lens', 'mastodon']
-            })
+            // await yupAPI.sendPost({
+            //     content: message,
+            //     platforms: ['twitter', 'threads', 'bsky', 'lens', 'mastodon']
+            // })
 
             await fchubUtils.createFarcasterPost({
                 content: message,
