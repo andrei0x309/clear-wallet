@@ -60,7 +60,18 @@
       <ion-item>
         <button @click="promptForSignIn" class="buttonFc">Login on Warpcast.com</button>
       </ion-item>
-
+      <ion-item>
+        <ion-label style="opacity: 0.9; font-size: 0.85rem"
+          >Used to be able to associate a FID you own with a domain you own, for
+          framesV2</ion-label
+        >
+        >
+      </ion-item>
+      <ion-item>
+        <button @click="jfsModal = true" class="buttonFc" style="font-size: 0.8rem">
+          Generate JFS(JSON Farcaster Signature)
+        </button>
+      </ion-item>
       <ion-alert
         :is-open="alertOpen"
         :header="alertHeader"
@@ -138,42 +149,98 @@
             <ion-buttons slot="start">
               <ion-button @click="swiwModal = false">Close</ion-button>
             </ion-buttons>
-            <ion-title>Authorize</ion-title>
+            <ion-title>Authorize SIWF</ion-title>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content class="ion-padding">
+          <ion-segment
+            style="width: auto; padding: 0.5rem; margin: 0.5rem"
+            :value="currentSegment"
+            mode="ios"
+            @ion-change="segmentChange"
+          >
+            <ion-segment-button value="QR">
+              <ion-label>Using QR</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="link">
+              <ion-label>Using Link</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+          <template v-if="currentSegment === 'QR'">
+            <ion-item>
+              <ion-label
+                ><h2>Try to scan QR</h2>
+                <p style="font-size: 0.8rem">
+                  (must be visible on current page, might fail if QR is small or too
+                  complex)
+                </p></ion-label
+              >
+            </ion-item>
+            <ion-item>
+              <ion-button @click="swiwModal = false" color="light">Cancel</ion-button>
+              <ion-button @click="farcasterSWIWQRAuthorize"
+                >Authorize using QR</ion-button
+              >
+            </ion-item>
+          </template>
+          <template v-else>
+            <ion-item>
+              <ion-label
+                ><h2>Alternative: paste link from QR</h2>
+                <p style="font-size: 0.7rem; opacity: 0.9">
+                  Privy has copy link, if you see `I am on mobile` you can also right
+                  click to copy. Link is similar to:
+                  https://warpcast.com/~/siwf?channelToken=AXXXXXXX
+                </p></ion-label
+              >
+            </ion-item>
+
+            <ion-item>
+              <ion-label>
+                <p style="font-size: 0.7rem; opacity: 0.9">
+                  Account needs to own a fid, WC API has become slow you might need to try
+                  multiple, times if you don't get signed in
+                </p>
+              </ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-textarea
+                style="overflow-y: scroll; width: 100%"
+                aria-label="Enter deep link from Sign in with farcaste QR"
+                :rows="4"
+                :cols="8"
+                v-model="deepLink"
+              ></ion-textarea>
+            </ion-item>
+            <ion-item>
+              <ion-button @click="swiwModal = false" color="light">Cancel</ion-button>
+              <ion-button @click="farcasterSWIWAuthorize"
+                >Authorize using link</ion-button
+              >
+            </ion-item>
+          </template>
+        </ion-content>
+      </ion-modal>
+
+      <ion-modal
+        :is-open="jfsModal"
+        @didDismiss="
+          jfsJSON = '';
+          jfsResultJson = '';
+          jfsResultCompact = '';
+        "
+      >
+        <ion-header>
+          <ion-toolbar>
+            <ion-buttons slot="start">
+              <ion-button @click="jfsModal = false">Close</ion-button>
+            </ion-buttons>
+            <ion-title>Authorize JFS</ion-title>
           </ion-toolbar>
         </ion-header>
         <ion-content class="ion-padding">
           <ion-item>
-            <ion-label
-              ><h2>Try to scan QR</h2>
-              <p style="font-size: 0.8rem">
-                (must be visible on current page, might fail if QR is small or too
-                complex)
-              </p></ion-label
-            >
-          </ion-item>
-          <ion-item>
-            <ion-button @click="swiwModal = false" color="light">Cancel</ion-button>
-            <ion-button @click="farcasterSWIWQRAuthorize">Authorize using QR</ion-button>
-          </ion-item>
-
-          <ion-item>
-            <ion-label
-              ><h2>Alternative: paste link from QR</h2>
-              <p style="font-size: 0.7rem; opacity: 0.9">
-                Privy has copy link, if you see `I am on mobile` you can also right click
-                to copy. Link is similar to:
-                https://warpcast.com/~/siwf?channelToken=AXXXXXXX
-              </p></ion-label
-            >
-          </ion-item>
-
-          <ion-item>
-            <ion-label>
-              <p style="font-size: 0.7rem; opacity: 0.9">
-                Account needs to own a fid, WC API has become slow you might need to try
-                multiple, times if you don't get signed in
-              </p>
-            </ion-label>
+            <ion-label><h2>Paste JSON You Want to Sign</h2></ion-label>
           </ion-item>
           <ion-item>
             <ion-textarea
@@ -181,35 +248,77 @@
               aria-label="Enter deep link from Sign in with farcaste QR"
               :rows="4"
               :cols="8"
-              v-model="deepLink"
+              v-model="jfsJSON"
             ></ion-textarea>
           </ion-item>
+
+          <template v-if="jfsJSON && jfsFid && jfsResultJson">
+            <ion-item>
+              <ion-label><h2>Result</h2></ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-label>
+                FID: <strong>{{ jfsFid }}</strong>
+              </ion-label>
+            </ion-item>
+            <ion-item
+              @click="copyText(jfsResultJson, getToastRef())"
+              style="cursor: pointer"
+            >
+              JSON format (click to copy):
+              <ion-icon class="copy-icon" :icon="copyOutline"></ion-icon>
+            </ion-item>
+            <ion-item>
+              <ion-textarea
+                style="width: 100%"
+                aria-label="JFS result"
+                :rows="3"
+                :cols="10"
+                :readonly="true"
+                v-model="jfsResultJson"
+              ></ion-textarea>
+            </ion-item>
+            <ion-item
+              @click="copyText(jfsResultCompact, getToastRef())"
+              style="cursor: pointer"
+            >
+              Compact format (click to copy):
+              <ion-icon class="copy-icon" :icon="copyOutline"></ion-icon>
+            </ion-item>
+            <ion-item>
+              <ion-textarea
+                style="width: 100%"
+                aria-label="JFS result"
+                :rows="3"
+                :cols="10"
+                :readonly="true"
+                v-model="jfsResultCompact"
+              ></ion-textarea>
+            </ion-item>
+          </template>
           <ion-item>
-            <ion-button @click="swiwModal = false" color="light">Cancel</ion-button>
-            <ion-button @click="farcasterSWIWAuthorize">Authorize using link</ion-button>
+            <ion-button @click="jfsModal = false" color="light">Cancel</ion-button>
+            <ion-button @click="doJFS">Generate JFS</ion-button>
           </ion-item>
         </ion-content>
-
-        <ion-loading
-          :is-open="swloading"
-          cssClass="my-custom-class"
-          message="Please wait..."
-          :duration="4000"
-          :key="`k${swloading}`"
-          @didDismiss="swloading = false"
-        >
-        </ion-loading>
-
-        <ion-loading
-          :is-open="warpcastLoading"
-          cssClass="my-custom-class"
-          message="Please wait..."
-          :duration="4000"
-          :key="`k${warpcastLoading}`"
-          @didDismiss="warpcastLoading = false"
-        >
-        </ion-loading>
       </ion-modal>
+
+      <ion-loading
+        :is-open="loading"
+        cssClass="my-custom-class"
+        message="Please wait..."
+        :key="`k${loading}`"
+        @didDismiss="loading = false"
+      >
+      </ion-loading>
+
+      <ion-toast
+        position="top"
+        :is-open="toastState"
+        @didDismiss="toastState = false"
+        message="Copied to clipboard"
+        :duration="1500"
+      ></ion-toast>
     </ion-content>
   </ion-page>
 </template>
@@ -224,10 +333,10 @@ import {
   IonToolbar,
   IonItem,
   IonLabel,
-  IonInput,
+  IonSegmentButton,
   IonButton,
   IonAlert,
-  IonIcon,
+  IonSegment,
   onIonViewWillEnter,
   modalController,
   IonModal,
@@ -239,8 +348,10 @@ import {
   IonLoading,
   IonText,
   IonRadio,
+  IonIcon,
+  IonToast,
 } from "@ionic/vue";
-import { saveSelectedAccount, paste, replaceAccounts } from "@/utils/platform";
+import { saveSelectedAccount, copyText, replaceAccounts } from "@/utils/platform";
 import router from "@/router";
 import type { Account } from "@/extension/types";
 import UnlockModal from "@/views/UnlockModal.vue";
@@ -254,6 +365,8 @@ import {
   getFidFromAddress,
   doSignInWithFarcasterQR,
 } from "@/utils/farcaster";
+import { createJFS, validateCreateJFS } from "@/utils/farcaster-JFS";
+
 import { getAccounts, getSelectedAccount, unBlockLockout } from "@/utils/platform";
 import { addWarpAuthToken, generateApiToken } from "@/utils/warpcast-auth";
 import { setUnlockModalState } from "@/utils/unlockStore";
@@ -261,18 +374,24 @@ import { setUnlockModalState } from "@/utils/unlockStore";
 const alertOpen = ref(false);
 const alertMsg = ref("");
 const swiwModal = ref(false);
+const jfsModal = ref(false);
 const deepLink = ref("");
-const swloading = ref(false);
-const warpcastLoading = ref(false);
+const loading = ref(false);
 const exitWallet = ref(false);
 const alertHeader = ref("Error");
+const currentSegment = ref("QR");
+const jfsResultJson = ref("");
+const jfsResultCompact = ref("");
+const jfsJSON = ref("");
+const jfsFid = ref("");
 
-const loading = ref(false);
 const accounts = ref([]) as Ref<Account[]>;
 const filtredAccounts = ref([]) as Ref<Account[]>;
 const accountsModal = ref(false) as Ref<boolean>;
 const selectedAccount = (ref(null) as unknown) as Ref<Account>;
 const toastState = ref(false);
+
+const getToastRef = () => toastState;
 
 const loadData = () => {
   loading.value = true;
@@ -337,7 +456,7 @@ const farcasterSWIWAuthorize = async () => {
   } else {
     unBlockLockout();
   }
-  swloading.value = true;
+  loading.value = true;
   try {
     const result = await doSignInWithFarcaster({
       link: deepLink.value,
@@ -347,32 +466,32 @@ const farcasterSWIWAuthorize = async () => {
       alertMsg.value =
         "Selected account does not own a FID please select an account that owns a FID";
       alertOpen.value = true;
-      swloading.value = false;
+      loading.value = false;
       return;
     } else if (result === -2) {
       alertMsg.value = "Auth token generation failed";
       alertOpen.value = true;
-      swloading.value = false;
+      loading.value = false;
       return;
     } else if (result === -3) {
       alertMsg.value =
         "Error could read chanel token from data, make sure you have copied the correct link";
       alertOpen.value = true;
-      swloading.value = false;
+      loading.value = false;
       return;
     } else {
       alertHeader.value = "OK";
       alertMsg.value =
         "Request sent successfully, if QR is still open, you will be signed in";
       alertOpen.value = true;
-      swloading.value = false;
+      loading.value = false;
       exitWallet.value = true;
     }
   } catch (e) {
     alertMsg.value = String(e);
     alertOpen.value = true;
   }
-  swloading.value = false;
+  loading.value = false;
 };
 
 const farcasterSWIWQRAuthorize = async () => {
@@ -388,7 +507,7 @@ const farcasterSWIWQRAuthorize = async () => {
   } else {
     unBlockLockout();
   }
-  swloading.value = true;
+  loading.value = true;
   try {
     const result = await doSignInWithFarcasterQR();
 
@@ -396,43 +515,43 @@ const farcasterSWIWQRAuthorize = async () => {
       alertMsg.value =
         "Selected account does not own a FID please select an account that owns a FID";
       alertOpen.value = true;
-      swloading.value = false;
+      loading.value = false;
       return;
     } else if (result === -2) {
       alertMsg.value =
         "Failed to read QR data, be sure QR is visible on, if is not working try using link";
       alertOpen.value = true;
-      swloading.value = false;
+      loading.value = false;
       return;
     } else if (result === -3) {
       alertMsg.value =
         "QR does not contain a valid channel token, make sure you are scanning a sign in with farcaster QR";
       alertOpen.value = true;
-      swloading.value = false;
+      loading.value = false;
       return;
     } else if (result === -4) {
       alertMsg.value = "Failed to extract sign params from QR";
       alertOpen.value = true;
-      swloading.value = false;
+      loading.value = false;
       return;
     } else if (result === -5) {
       alertMsg.value = "Auth token generation failed";
       alertOpen.value = true;
-      swloading.value = false;
+      loading.value = false;
       return;
     } else {
       alertHeader.value = "OK";
       alertMsg.value =
         "Request sent successfully, if QR is still open, you will be signed in";
       alertOpen.value = true;
-      swloading.value = false;
+      loading.value = false;
       exitWallet.value = true;
     }
   } catch (e) {
     alertMsg.value = String(e);
     alertOpen.value = true;
   }
-  swloading.value = false;
+  loading.value = false;
 };
 
 const promptForSignIn = async () => {
@@ -470,7 +589,7 @@ const promptForSignIn = async () => {
       unBlockLockout();
     }
 
-    warpcastLoading.value = true;
+    loading.value = true;
 
     let hasFid = 0 as number | null;
 
@@ -479,7 +598,7 @@ const promptForSignIn = async () => {
     } catch (e) {
       alertMsg.value = String(e);
       alertOpen.value = true;
-      warpcastLoading.value = false;
+      loading.value = false;
       return;
     }
 
@@ -487,7 +606,7 @@ const promptForSignIn = async () => {
       alertMsg.value =
         "Selected account does not own a FID please select an account that owns a FID";
       alertOpen.value = true;
-      warpcastLoading.value = false;
+      loading.value = false;
       return;
     }
 
@@ -500,13 +619,13 @@ const promptForSignIn = async () => {
       } else {
         alertMsg.value = `Error in generating Auth token: ${data.data}`;
         alertOpen.value = true;
-        warpcastLoading.value = false;
+        loading.value = false;
         return;
       }
     } catch (e) {
       alertMsg.value = String(e);
       alertOpen.value = true;
-      warpcastLoading.value = false;
+      loading.value = false;
       return;
     }
 
@@ -517,9 +636,52 @@ const promptForSignIn = async () => {
       func: addWarpAuthToken,
       args: [arg],
     });
-    warpcastLoading.value = false;
+    loading.value = false;
     window.close();
   });
+};
+
+const doJFS = async () => {
+  if (!jfsJSON.value) {
+    alertMsg.value = "Please enter the JSON you want to sign";
+    alertOpen.value = true;
+    return;
+  }
+  if (loading.value) {
+    return;
+  }
+  const { error, fid, custodyAddress } = await validateCreateJFS(jfsJSON.value);
+
+  if (error) {
+    alertMsg.value = error;
+    alertOpen.value = true;
+    loading.value = false;
+    return;
+  }
+
+  if ((selectedAccount.value.pk ?? "").length !== 66) {
+    const modalResult = await openModal();
+    if (modalResult) {
+      unBlockLockout();
+      loading.value = true;
+    } else {
+      onCancel();
+    }
+  } else {
+    unBlockLockout();
+  }
+  loading.value = true;
+
+  const { compactJfs, jsonJfs } = await createJFS(
+    jfsJSON.value,
+    fid,
+    custodyAddress as string
+  );
+
+  jfsFid.value = fid;
+  jfsResultJson.value = JSON.stringify(jsonJfs, null, 2);
+  jfsResultCompact.value = compactJfs;
+  loading.value = false;
 };
 
 const openModal = async () => {
@@ -551,6 +713,10 @@ const searchAccount = (e: any) => {
   } else {
     filtredAccounts.value = accounts.value;
   }
+};
+
+const segmentChange = (e: CustomEvent) => {
+  currentSegment.value = e.detail.value;
 };
 
 const dismissAlert = () => {
