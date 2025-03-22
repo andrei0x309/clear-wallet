@@ -64,3 +64,10 @@ export const cyrb64Hash =  (str: string, seed = 0) => {
   const [h2, h1] = cyrb64(str, seed);
   return h2.toString(36).padStart(7, '0') + h1.toString(36).padStart(7, '0');
 }
+
+export const base64ToBase64Url = (base64:string) => {
+  return base64
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
