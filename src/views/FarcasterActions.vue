@@ -65,7 +65,6 @@
           >Used to be able to associate a FID you own with a domain you own, for
           framesV2</ion-label
         >
-        >
       </ion-item>
       <ion-item>
         <button @click="jfsModal = true" class="buttonFc" style="font-size: 0.8rem">
@@ -80,68 +79,7 @@
         @didDismiss="dismissAlert"
       ></ion-alert>
 
-      <ion-modal :is-open="accountsModal">
-        <ion-header>
-          <ion-toolbar>
-            <ion-buttons slot="start">
-              <ion-button @click="accountsModal = false">Close</ion-button>
-            </ion-buttons>
-            <ion-title>Select Account</ion-title>
-          </ion-toolbar>
-        </ion-header>
-        <ion-content class="ion-padding">
-          <ion-list style="margin-bottom: 4rem">
-            <ion-radio-group :value="selectedAccount?.address ?? ''">
-              <ion-list-header>
-                <ion-searchbar
-                  placeholder="search..."
-                  autocomplete="off"
-                  autocorrect="off"
-                  :clear-input="false"
-                  :clear-on-edit="false"
-                  :spellcheck="false"
-                  :tabindex="0"
-                  @ionInput="searchAccount"
-                ></ion-searchbar>
-              </ion-list-header>
-
-              <ion-list
-                @click="changeSelectedAccount(account.address)"
-                class="ion-padding"
-                v-for="account of filtredAccounts"
-                :key="account.address"
-                button
-              >
-                <ion-item>
-                  <ion-radio
-                    :aria-label="account.name"
-                    :value="account.address"
-                    slot="end"
-                    labelPlacement="end"
-                    mode="ios"
-                    justify="start"
-                    color="warning"
-                    style="margin-left: 0.1rem"
-                  >
-                    <div style="margin-left: 0.5rem">{{ account.name }}</div>
-                    <div style="margin-top: 0.1rem">
-                      <ion-text style="font-size: 0.65rem; color: coral">{{
-                        account.address.slice(0, 6)
-                      }}</ion-text>
-                      <ion-text style="font-size: 0.65rem">{{
-                        account.address.slice(6, -4)
-                      }}</ion-text>
-                      <ion-text style="font-size: 0.65rem; color: coral">{{
-                        account.address.slice(-4)
-                      }}</ion-text>
-                    </div>
-                  </ion-radio>
-                </ion-item>
-              </ion-list>
-            </ion-radio-group>
-          </ion-list>
-        </ion-content>
-      </ion-modal>
+      <SelectedAccountModal :refs="() => getRefs()" />
 
       <ion-modal :is-open="swiwModal" @didDismiss="deepLink = ''">
         <ion-header>
@@ -342,12 +280,8 @@ import {
   IonModal,
   IonButtons,
   IonTextarea,
-  IonList,
-  IonListHeader,
-  IonRadioGroup,
   IonLoading,
-  IonText,
-  IonRadio,
+  IonSearchbar,
   IonIcon,
   IonToast,
 } from "@ionic/vue";
@@ -358,7 +292,6 @@ import UnlockModal from "@/views/UnlockModal.vue";
 import { triggerListner } from "@/extension/listners";
 import { copyOutline } from "ionicons/icons";
 
-import { clipboardOutline } from "ionicons/icons";
 import {
   doSignInWithFarcaster,
   validateLinkData,
@@ -370,6 +303,7 @@ import { createJFS, validateCreateJFS } from "@/utils/farcaster-JFS";
 import { getAccounts, getSelectedAccount, unBlockLockout } from "@/utils/platform";
 import { addWarpAuthToken, generateApiToken } from "@/utils/warpcast-auth";
 import { setUnlockModalState } from "@/utils/unlockStore";
+import SelectedAccountModal from "@/views/modals/SelectAccountModal.vue";
 
 const alertOpen = ref(false);
 const alertMsg = ref("");
@@ -390,6 +324,7 @@ const filtredAccounts = ref([]) as Ref<Account[]>;
 const accountsModal = ref(false) as Ref<boolean>;
 const selectedAccount = (ref(null) as unknown) as Ref<Account>;
 const toastState = ref(false);
+const accountSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
 
 const getToastRef = () => toastState;
 
@@ -411,24 +346,6 @@ onIonViewWillEnter(() => {
 
 const onCancel = () => {
   router.push("/tabs/home");
-};
-
-const changeSelectedAccount = async (address: string) => {
-  loading.value = true;
-  const findIndex = accounts.value.findIndex((a) => a.address == address);
-  if (findIndex > -1) {
-    selectedAccount.value = accounts.value[findIndex];
-    accounts.value = accounts.value.filter((a) => a.address !== address);
-    accounts.value.unshift(selectedAccount.value);
-    const newAccounts = [...accounts.value];
-    await Promise.all([
-      saveSelectedAccount(selectedAccount.value),
-      replaceAccounts(newAccounts),
-    ]);
-    triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
-  }
-  accountsModal.value = false;
-  loading.value = false;
 };
 
 const farcasterSWIWAuthorize = async () => {
@@ -702,6 +619,16 @@ const openModal = async () => {
   return false;
 };
 
+const segmentChange = (e: CustomEvent) => {
+  currentSegment.value = e.detail.value;
+};
+
+const dismissAlert = () => {
+  alertOpen.value = false;
+  alertHeader.value = "Error";
+  exitWallet.value && window?.close();
+};
+
 const searchAccount = (e: any) => {
   const text = e.target.value;
   if (text) {
@@ -715,14 +642,39 @@ const searchAccount = (e: any) => {
   }
 };
 
-const segmentChange = (e: CustomEvent) => {
-  currentSegment.value = e.detail.value;
+const accountModalPresented = () => {
+  if (accountSearchBar.value) {
+    accountSearchBar?.value?.$el?.setFocus?.();
+  }
 };
 
-const dismissAlert = () => {
-  alertOpen.value = false;
-  alertHeader.value = "Error";
-  exitWallet.value && window?.close();
+const changeSelectedAccount = async (address: string) => {
+  loading.value = true;
+  const findIndex = accounts.value.findIndex((a) => a.address == address);
+  if (findIndex > -1) {
+    selectedAccount.value = accounts.value[findIndex];
+    accounts.value = accounts.value.filter((a) => a.address !== address);
+    accounts.value.unshift(selectedAccount.value);
+    const newAccounts = [...accounts.value];
+    await Promise.all([
+      saveSelectedAccount(selectedAccount.value),
+      replaceAccounts(newAccounts),
+    ]);
+    triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
+  }
+  accountsModal.value = false;
+  loading.value = false;
+};
+
+const getRefs = () => {
+  return {
+    accountsModal,
+    accountModalPresented,
+    selectedAccount,
+    changeSelectedAccount,
+    filtredAccounts,
+    searchAccount,
+  };
 };
 </script>
 

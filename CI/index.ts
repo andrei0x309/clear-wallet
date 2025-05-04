@@ -37,6 +37,7 @@ type TGithubEvent = {
     }
 }
 
+
 const main = async () => {
     const ENABLED = true;
     let YUP_PK = '';

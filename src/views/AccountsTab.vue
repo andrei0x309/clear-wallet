@@ -142,7 +142,7 @@ const deleteAccount = async (address: string) => {
     pArr.push(replaceAccounts([...accounts.value]));
   }
   if (selectedAccount.address === address) {
-    pArr.push(saveSelectedAccount({ name: "", pk: "", encPk: "", address: "" }));
+    pArr.push(saveSelectedAccount(accounts.value[0]));
   }
   await Promise.all(pArr);
   loading.value = false;

@@ -1,5 +1,12 @@
 # Changelog
 
+## Manifest Version 1.4.18
+
+- made reusable Accounts selection modal component to be used in a few places
+- removed unused Light Modal(was used in a prior Ionic version due to a bug in Ionic)
+- renamed `Expermiental Farcaster Wallet Action` to `Farcaster Wallet Action`
+- addded account selection in Personal sign message
+
 ## Manifest Version 1.4.17
 
 - changed QR dependency to a better library that is able to use native browser QR scanner, and has better results
