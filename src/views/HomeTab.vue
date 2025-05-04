@@ -144,7 +144,7 @@
           @click="goToFarcasterActions"
           expand="block"
           style="margin: auto; width: 98%; font-size: 0.8rem; padding: 0.6rem"
-          >Experimental Farcaster Wallet Actions</ion-button
+          >Farcaster Wallet Actions</ion-button
         >
       </ion-item>
 
@@ -188,70 +188,7 @@
         :duration="1500"
       ></ion-toast>
     </ion-content>
-
-    <ion-modal :is-open="accountsModal" @ionModalDidPresent="accountModalPresented">
-      <ion-header>
-        <ion-toolbar>
-          <ion-buttons slot="start">
-            <ion-button @click="accountsModal = false">Close</ion-button>
-          </ion-buttons>
-          <ion-title>Select Account</ion-title>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content class="ion-padding">
-        <ion-list style="margin-bottom: 4rem">
-          <ion-radio-group :value="selectedAccount?.address ?? ''">
-            <ion-list-header>
-              <ion-searchbar
-                ref="accountSearchBar"
-                placeholder="search..."
-                autocomplete="off"
-                autocorrect="off"
-                :clear-input="false"
-                :clear-on-edit="false"
-                :spellcheck="false"
-                :tabindex="0"
-                @ionInput="searchAccount"
-              ></ion-searchbar>
-            </ion-list-header>
-
-            <ion-list
-              @click="changeSelectedAccount(account.address)"
-              class="ion-padding"
-              v-for="account of filtredAccounts"
-              :key="account.address"
-              button
-            >
-              <ion-item>
-                <ion-radio
-                  :aria-label="account.name"
-                  :value="account.address"
-                  slot="end"
-                  labelPlacement="end"
-                  mode="ios"
-                  justify="start"
-                  color="warning"
-                  style="margin-left: 0.1rem"
-                >
-                  <div style="margin-left: 0.5rem">{{ account.name }}</div>
-                  <div style="margin-top: 0.1rem">
-                    <ion-text style="font-size: 0.65rem; color: coral">{{
-                      account.address.slice(0, 6)
-                    }}</ion-text>
-                    <ion-text style="font-size: 0.65rem">{{
-                      account.address.slice(6, -4)
-                    }}</ion-text>
-                    <ion-text style="font-size: 0.65rem; color: coral">{{
-                      account.address.slice(-4)
-                    }}</ion-text>
-                  </div>
-                </ion-radio>
-              </ion-item>
-            </ion-list>
-          </ion-radio-group>
-        </ion-list>
-      </ion-content>
-    </ion-modal>
+    <SelectedAccountModal :refs="() => getRefs()" />
     <ion-modal :is-open="networksModal" @ionModalDidPresent="networkModalPresented">
       <ion-header>
         <ion-toolbar>
@@ -339,7 +276,6 @@
 
 <script lang="ts" setup>
 import { ref, Ref } from "vue";
-import LightModal from "@/components/misc/LightModal.vue";
 import {
   IonContent,
   IonHeader,
@@ -385,6 +321,7 @@ import router from "@/router";
 import { triggerListner } from "@/extension/listners";
 import { copyOutline } from "ionicons/icons";
 import GitHub from "@/components/icons/GitHub.vue";
+import SelectedAccountModal from "@/views/modals/SelectAccountModal.vue";
 
 const version = getVersion();
 
@@ -404,6 +341,17 @@ const accountSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
 const networkSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
 
 const getToastRef = () => toastState;
+
+const getRefs = () => {
+  return {
+    accountsModal,
+    accountModalPresented,
+    selectedAccount,
+    changeSelectedAccount,
+    filtredAccounts,
+    searchAccount,
+  };
+};
 
 const loadData = () => {
   loading.value = true;
