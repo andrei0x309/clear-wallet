@@ -11,6 +11,7 @@ const defaultSettings = {
     lockOutBlocked: false,
     theme: 'system',
     lastLock: Date.now(),
+    lastRPCNotification: Date.now(),
     copyLowerCaseAddress: false
 }
 

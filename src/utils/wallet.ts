@@ -93,6 +93,22 @@ export const getBlockNumber = async () => {
     return await provider.getBlockNumber()
 }
 
+export const getRpcPerformance = async (): Promise<{performance: number}> => {
+    const time = performance.now()
+    const timeoutPromise = new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(1300)
+        }, 1300)
+    }) as Promise<number>
+    const performancePromise = new Promise(async (resolve) => {
+        await getBlockNumber()
+        resolve(performance.now() - time)
+    }) as Promise<number>
+    return {
+        performance: await Promise.race([performancePromise, timeoutPromise])
+    }
+}
+
 export const getBlockByNumber = async (blockNum: number) => {
     const { provider } = await getCurrentProvider()
     return await provider.getBlock(blockNum)

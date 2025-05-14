@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "inject": "bun build src/extension/inject.ts --outdir ./src/extension/",
-    "content": "bun build src/extension/content.ts --outdir ./src/extension/",
+    "inject": "bun build src/extension/inject.ts --target=browser --outdir ./src/extension/",
+    "content": "bun build src/extension/content.ts --target=browser --outdir ./src/extension/",
     "post-build": "bun run ./release-scripts/post-build.ts",
     "build": "bun run inject && bun run content && vue-tsc --noEmit && vite build && bun run post-build",
     "rebuild": "bun run build && bun run ./release-scripts/create-release.ts rebuild",
@@ -23,15 +23,16 @@
     "@zxing/browser": "^0.1.5",
     "core-js": "^3.41.0",
     "ethers": "^6.13.5",
+    "p-queue": "^8.1.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "2.0.0-beta.30",
+    "@types/bun": "^1.2.13",
     "@types/archiver": "^6.0.3",
     "@types/chrome": "^0.0.308",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.13.9",
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.26.0",
     "@vitejs/plugin-vue": "^5.2.1",
