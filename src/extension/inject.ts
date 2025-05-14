@@ -477,12 +477,12 @@ const listner =  function(event: any) {
     try {
         const promise = promResolvers?.get(resId)
         if(promise) {
-        if(result?.error){
-            promise.reject(result);
-        }else {
-            promise.resolve(result), 2000
-        }
-        // promResolvers.delete(resId)
+            if(result?.error) {
+                promise.reject(result);
+            } else {
+                promise.resolve(result);
+            }
+        promResolvers.delete(resId)
     }
     } catch (e) {
         console.error('Failed to connect resolve msg', e)

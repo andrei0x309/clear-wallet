@@ -206,7 +206,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
             clearPk()
         }
         if((settings.lastRPCNotification + 600 * 1000) < Date.now() && alarm.name === 'checkCurrentRpc') {
-            (async () => { const currentRPCPerformance = await getRpcPerformance()
+            (async () => { const currentRPCPerformance = await getRpcPerformance(true)
                 if(currentRPCPerformance.performance > 5000) {
                     settings.lastRPCNotification = Date.now()
                     await setSettings(settings)
