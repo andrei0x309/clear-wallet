@@ -143,15 +143,15 @@
         style="font-size: 0.85rem; text-align: center"
         v-if="rpcPerformance.performance > 0"
       >
-        <p v-if="rpcPerformance.performance <= rpcPerformanceLevels.fast && false">
+        <p v-if="rpcPerformance.performance <= rpcPerformanceLevels.fast">
           RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
           <span style="color: green">fast</span>
         </p>
-        <p v-else-if="rpcPerformance.performance <= rpcPerformanceLevels.ok && false">
+        <p v-else-if="rpcPerformance.performance <= rpcPerformanceLevels.ok">
           RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
           <span style="color: darkkhaki">okish</span>
         </p>
-        <p v-else-if="rpcPerformance.performance <= rpcPerformanceLevels.slow && false">
+        <p v-else-if="rpcPerformance.performance <= rpcPerformanceLevels.slow">
           RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
           <span style="color: orange">slow</span>
         </p>
