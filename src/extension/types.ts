@@ -58,6 +58,7 @@ export interface Settings {
     lastLock: number
     lockOutBlocked: boolean
     copyLowerCaseAddress?: boolean
+    lastRPCNotification: number
 }
 
 export type listnerType = 'accountsChanged' | 'connect' | 'disconnect' | 'chainChanged'

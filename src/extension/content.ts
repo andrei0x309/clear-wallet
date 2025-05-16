@@ -65,8 +65,16 @@ window.addEventListener("message", (event) => {
               id,
               method: event?.data?.data?.data?.method ?? '',
               params: event?.data?.data?.data?.params ?? [],
+              listener: undefined
             },
           }
+
+          if(res?.type === "CLWALLET_PAGE_LISTENER") {
+            data.type = "CLWALLET_PAGE_LISTENER"
+            data.data.listener = res?.data?.listener
+            data.data.data.result = res?.data?.data
+          }
+
           if (event?.data?.data?.data?.method !== 'eth_chainId') {
             // console.info('data out', data)
           }

@@ -12,6 +12,7 @@ import {
     strToHex,
     numToHexStr,
     enableRightClickPasteAddr,
+    setSettings
 } from '@/utils/platform';
 import {
     userApprove,
@@ -33,7 +34,8 @@ import {
     signTypedData,
     getCode,
     getTxCount,
-    getSelectedAddress
+    getSelectedAddress,
+    getRpcPerformance
 } from '@/utils/wallet'
 import type { RequestArguments } from '@/extension/types'
 import { rpcError } from '@/extension/rpcConstants'
@@ -47,6 +49,56 @@ let notificationUrl: string
 
 const chainIdThrottle: { [key: string]: number } = {}
 const cache = new Map<string, { [key: string]: any }>()
+
+const dappNotConnectedResponse = (sendResponse: (a: any) => any) => {
+      sendResponse({
+        "jsonrpc": "2.0",
+        "method": "wallet_requestPermissions",
+        "params": [
+          {
+            "eth_accounts": {}
+          }
+        ],
+        "id": 0
+      })
+}
+
+const dapConnectedResponse = async (message: RequestArguments, sender: any, sendResponse: (a: any) => any) => {
+    const wallectConect = await walletConnect()
+    const response = [{
+        id: smallRandomString(21),
+        parentCapability: 'eth_accounts',
+        invoker: message?.website?.split('/').slice(0, 3).join('/') ?? '',
+        caveats: [{
+            type: 'restrictReturnedAccounts',
+            value: wallectConect.address
+        }],
+        date: Date.now(),
+    }]
+    const { data } = wallectConect
+    data.data.data = response as any
+    sendResponse(data)
+}
+
+const walletConnect = async (dataToSend: any = undefined) => {
+    const pNetwork = getSelectedNetwork()
+    const pAccount = getSelectedAccount()
+    const [network, account] = await Promise.all([pNetwork, pAccount])
+    const address = account?.address ? [account?.address] : []
+    const chainId = `0x${(network?.chainId ?? 0).toString(16)}`
+    const data = {
+        type: "CLWALLET_PAGE_LISTENER", 
+        data: {
+            listener: 'connect',
+            data: dataToSend ? dataToSend : {
+                chainId
+            },
+            address
+        }
+    }
+    return { data, chainId, address }
+}
+
 
 const reInjectContentScripts = async () => {
     const cts = chrome.runtime.getManifest().content_scripts ?? []
@@ -136,6 +188,10 @@ chrome.alarms.create('updatePrices', {
     periodInMinutes: 1
 })
 
+chrome.alarms.create('checkCurrentRpc', {
+    periodInMinutes: 5
+})
+
 chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === 'updatePrices') {
         updatePrices().then(() => {
@@ -149,6 +205,25 @@ chrome.alarms.onAlarm.addListener((alarm) => {
             settings.lastLock = Date.now()
             clearPk()
         }
+        if((settings.lastRPCNotification + 600 * 1000) < Date.now() && alarm.name === 'checkCurrentRpc') {
+            (async () => { const currentRPCPerformance = await getRpcPerformance(true)
+                if(currentRPCPerformance.performance > 5000) {
+                    settings.lastRPCNotification = Date.now()
+                    await setSettings(settings)
+                    const currentNetwork = await getSelectedNetwork()
+                    const warrningMessage = `Your current RPC URL for ${currentNetwork.name} ID ${currentNetwork.chainId} seems unresponsive. Please check your internet connection or try to use another RPC if your internet connection is fine.`
+
+                    chrome.notifications.create('rpc_notification', {
+                        type: 'basic',
+                        iconUrl: 'images/logo.png',
+                        title: 'RPC Warning',
+                        message: warrningMessage,
+                        priority: 0
+                    })
+                }
+            })()
+        }
+
     })
 })
 
@@ -169,7 +244,7 @@ chrome.windows.onRemoved.addListener(async (winId) => {
     }
 })
 
-const viewTxListner = async (id: string) => {
+const viewTxListener = async (id: string) => {
     try {
         const url = new URL(notificationUrl)
         openTab(url.href)
@@ -179,8 +254,8 @@ const viewTxListner = async (id: string) => {
     }
 }
 
-if (!chrome.notifications.onButtonClicked.hasListener(viewTxListner)) {
-    chrome.notifications.onButtonClicked.addListener(viewTxListner)
+if (!chrome.notifications.onButtonClicked.hasListener(viewTxListener)) {
+    chrome.notifications.onButtonClicked.addListener(viewTxListener)
 }
 
 const chainIdThrottleFn = async (website: string) => {
@@ -206,7 +281,7 @@ const chainIdThrottleFn = async (website: string) => {
     return urlKey
 }
 
-const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: any) => any) => {
+const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: any) => any) => {
     if (chrome.runtime.lastError) {
         console.info("Error receiving message:", chrome.runtime.lastError);
     }
@@ -554,6 +629,8 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                     }
                 case 'eth_sendTransaction': {
                     try {
+                        console.info('eth_sendTransaction', message)
+
                         const params = message?.params?.[0] as any
                         if (!params) {
                             sendResponse({
@@ -771,27 +848,31 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                     break
                 }
                 case 'web3_clientVersion': {
-                    sendResponse("MetaMask/v12.3.0")
+                    sendResponse("MetaMask/v12.17.0")
                     break
                 }
-                case 'wallet_getPermissions':
+                case 'wallet_getPermissions': {
+                    const isConnected = message.params?.[0]?.isConnected ?? false;
+                    if(isConnected) {
+                        await dapConnectedResponse(message, sender, sendResponse)
+                    } else {
+                        await dappNotConnectedResponse(sendResponse)
+                    }
+
+                    break
+                }
                 case 'wallet_requestPermissions': {
-                    const account = await getSelectedAccount()
-                    const address = account?.address ? [account?.address] : []
-                    sendResponse([{
-                        id: smallRandomString(21),
-                        parentCapability: 'eth_accounts',
-                        invoker: message?.website?.split('/').slice(0, 3).join('/') ?? '',
-                        caveats: [{
-                            type: 'restrictReturnedAccounts',
-                            value: address
-                        }],
-                        date: Date.now(),
-                    }])
+                    await dapConnectedResponse(message, sender, sendResponse)
                     break
                 }
                 case 'wallet_revokePermissions': {
-                    sendResponse(null)
+                    const data = {
+                        type: "CLWALLET_PAGE_LISTENER", data: {
+                            listener: 'disconnect',
+                            data: null
+                        }
+                    };
+                    sendResponse(data)
                     break
                 }
                 case 'wallet_registerOnboarding': {
@@ -852,7 +933,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                         })
                     }
                     if (chainId in networks) {
-                        mainListner({
+                        mainListener({
                             ...message, method: 'wallet_switchEthereumChain', params: [{
                                 chainId: `0x${(chainId).toString(16)}`
                             }]
@@ -898,21 +979,7 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
                 }
                 // internal messeges
                 case 'wallet_connect': {
-                    const pNetwork = getSelectedNetwork()
-                    const pAccount = getSelectedAccount()
-                    const [network, account] = await Promise.all([pNetwork, pAccount])
-                    const address = account?.address ? [account?.address] : []
-                    const chainId = `0x${(network?.chainId ?? 0).toString(16)}`
-                    const data = {
-                        type: "CLWALLET_PAGE_LISTENER", data: {
-                            listner: 'connect',
-                            data: {
-                                chainId
-                            },
-                            address
-                        }
-                    };
-                    sendResponse(data)
+                    sendResponse((await walletConnect()).data)
                     break
                 }
                 case 'wallet_approve': {
@@ -961,4 +1028,4 @@ const mainListner = (message: RequestArguments, sender: any, sendResponse: (a: a
     return true;
 }
 
-chrome.runtime.onMessage.addListener(mainListner);
+chrome.runtime.onMessage.addListener(mainListener);

@@ -29,10 +29,11 @@ async function main() {
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
   packageJson.version = nextVersion;
   writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  const packageName = packageJson.name;
 
   // 3. Commit changes
   execSync(`git add .`);
-  execSync(`git commit -m "clear-wallet@v${nextVersion}"`);
+  execSync(`git commit -m "${packageName}t@v${nextVersion}"`);
 
   // 4. Create and push tag
   execSync(`git tag v${nextVersion}`);
