@@ -54,11 +54,11 @@
       </ion-item>
       <ion-item>
         <ion-label style="opacity: 0.9; font-size: 0.85rem"
-          >Used to login on warpcast.com without needing a mobile device</ion-label
+          >Used to login on farcaster.xyz without needing a mobile device</ion-label
         >
       </ion-item>
       <ion-item>
-        <button @click="promptForSignIn" class="buttonFc">Login on Warpcast.com</button>
+        <button @click="promptForSignIn" class="buttonFc">Login on Farcaster.xyz</button>
       </ion-item>
       <ion-item>
         <ion-label style="opacity: 0.9; font-size: 0.85rem"
@@ -128,7 +128,7 @@
                 <p style="font-size: 0.7rem; opacity: 0.9">
                   Privy has copy link, if you see `I am on mobile` you can also right
                   click to copy. Link is similar to:
-                  https://warpcast.com/~/siwf?channelToken=AXXXXXXX
+                  https://farcaster.xyz/~/siwf?channelToken=AXXXXXXX
                 </p></ion-label
               >
             </ion-item>
@@ -297,11 +297,11 @@ import {
   validateLinkData,
   getFidFromAddress,
   doSignInWithFarcasterQR,
-} from "@/utils/farcaster";
-import { createJFS, validateCreateJFS } from "@/utils/farcaster-JFS";
+} from "@/utils/farcaster/farcaster";
+import { createJFS, validateCreateJFS } from "@/utils/farcaster/farcaster-JFS";
 
 import { getAccounts, getSelectedAccount, unBlockLockout } from "@/utils/platform";
-import { addWarpAuthToken, generateApiToken } from "@/utils/warpcast-auth";
+import { addWarpAuthToken, generateApiToken } from "@/utils/farcaster/farcaster-auth";
 import { setUnlockModalState } from "@/utils/unlockStore";
 import SelectedAccountModal from "@/views/modals/SelectAccountModal.vue";
 
@@ -473,7 +473,7 @@ const farcasterSWIWQRAuthorize = async () => {
 
 const promptForSignIn = async () => {
   exitWallet.value = false;
-  const targetUrl = "warpcast.com";
+  const targetUrls = ["warpcast.com", "farcaster.xyz"];
   chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
     const lastTab = tabs[0];
 
@@ -483,9 +483,9 @@ const promptForSignIn = async () => {
       return;
     }
 
-    if (!lastTab?.url?.includes(targetUrl)) {
+    if (!targetUrls.some((url) => lastTab.url?.includes(url))) {
       alertOpen.value = true;
-      alertMsg.value = "You are not on warpcast.com page";
+      alertMsg.value = `You are not on ${targetUrls.join(" or ")}`;
       return;
     }
     if (!lastTab.id) {

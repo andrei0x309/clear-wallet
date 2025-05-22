@@ -12,7 +12,8 @@ const defaultSettings = {
     theme: 'system',
     lastLock: Date.now(),
     lastRPCNotification: Date.now(),
-    copyLowerCaseAddress: false
+    copyLowerCaseAddress: false,
+    lastExecutedMigration: '',
 }
 
 const defaultAbis = {} as {

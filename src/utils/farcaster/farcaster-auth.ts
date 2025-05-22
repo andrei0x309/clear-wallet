@@ -1,9 +1,9 @@
-import { signMsg } from './wallet'
+import { signMsg } from '../wallet'
+import { FARCASTER_BASE_URL } from './constants'
 import { getBytes } from 'ethers';
 import bufferLib from 'buffer';
 
 const EIP_191_PREFIX = "eip191:";
-const WARPCAST_API = 'https://client.warpcast.com/v2'
 
 const NO_WALLET = 'NO_WALLET'
 const SIG_DENIED = 'SIG_DENIED'
@@ -83,7 +83,7 @@ export const generateApiToken = async (): Promise<T_RESULT_GEN_AUTH_TOKEN> => {
         const sigBase64 = Buffer.from(getBytes(sig)).toString('base64');
         const cusAuth = EIP_191_PREFIX + sigBase64
 
-        const req = await fetch(`${WARPCAST_API}/auth`, {
+        const req = await fetch(`${FARCASTER_BASE_URL}auth`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

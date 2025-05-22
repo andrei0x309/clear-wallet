@@ -25,7 +25,7 @@ For more info you can check [docs website](https://clear-wallet.flashsoft.eu)
 [Article on Mirror](https://mirror.xyz/andrei0x309.eth/9nc8UXrGIGOvz694ZY2gouS1JM9L8-Z8ITLNtirqD6Q)
 
 ### Latest Demo Clip
-
+<!-- markdownlint-disable MD034 -->
 https://github.com/user-attachments/assets/4f7d267a-7410-43cf-b3bd-0256f1ccc954
 
 ### LINKS
@@ -62,3 +62,7 @@ I developed this pretty fast in my free time, and you should always back-up your
 Q: Will this project be heavily maintained?
 
 A: Planing not to add too many features, so I will update it as long as I'll use it, and not plan to ditch it anytime soon.
+
+### Related Projects that contain farcaster features
+
+You can find a list of open source projects I made that use farcaster tech here: [https://flashsoft.eu/projects/technology/farcaster](https://flashsoft.eu/projects/technology/farcaster)

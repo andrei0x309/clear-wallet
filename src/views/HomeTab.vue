@@ -163,6 +163,9 @@
           >
         </p>
       </ion-item>
+      <ion-item style="font-size: 0.85rem; text-align: center" v-else>
+        <p class="blink-loading">Loading RPC pefromance...</p>
+      </ion-item>
 
       <ion-item style="margin-top: 0.3rem; margin-bottom: 0.3rem; text-align: center">
         <ion-button
@@ -394,25 +397,22 @@ const loadData = () => {
   const pSelectedNetwork = getSelectedNetwork();
   const pSettings = getSettings();
   const pRpcPerformance = getRpcPerformance();
-  Promise.all([
-    pAccounts,
-    pNetworks,
-    pSelectedAccount,
-    pSelectedNetwork,
-    pSettings,
-    pRpcPerformance,
-  ]).then((res) => {
-    accounts.value = res[0];
-    networks.value = res[1];
-    filtredAccounts.value = res[0];
-    filtredNetworks.value = res[1];
-    selectedAccount.value = res[2];
-    selectedNetwork.value = res[3];
-    settings.value = res[4];
-    rpcPerformance.value = res[5];
-  });
+  Promise.all([pAccounts, pNetworks, pSelectedAccount, pSelectedNetwork, pSettings]).then(
+    (res) => {
+      accounts.value = res[0];
+      networks.value = res[1];
+      filtredAccounts.value = res[0];
+      filtredNetworks.value = res[1];
+      selectedAccount.value = res[2];
+      selectedNetwork.value = res[3];
+      settings.value = res[4];
+      loading.value = false;
+    }
+  );
 
-  loading.value = false;
+  pRpcPerformance.then((res) => {
+    rpcPerformance.value = res;
+  });
 };
 
 onIonViewWillEnter(() => {

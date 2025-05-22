@@ -15,7 +15,8 @@
     "release": "bun run ./release-scripts/version-release.ts",
     "postversion": "git push",
     "pub": "bun run build && bun run release && bun run ./release-scripts/create-release.ts",
-    "only-pub": "bun run build && bun run ./release-scripts/create-release.ts"
+    "only-pub": "bun run build && bun run ./release-scripts/create-release.ts",
+    "test": "bun test"
   },
   "dependencies": {
     "@ionic/vue": "8.4.2",
