@@ -23,7 +23,7 @@ export function compareVersions(version1: string, version2: string) {
     return 0;
   }
 
-  const migrations = {} as { [key: string]: () => void };
+  const migrations = {} as { [key: string]: () => Promise<void> };
 
   migrations["1.4.20"] = async () => {
     const networks = await getNetworks();
