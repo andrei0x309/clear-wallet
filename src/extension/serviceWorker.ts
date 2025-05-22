@@ -42,6 +42,7 @@ import { rpcError } from '@/extension/rpcConstants'
 import { updatePrices } from '@/utils/gecko'
 import { allTemplateNets } from '@/utils/networks'
 import { cyrb64Hash, stringify } from '@/utils/misc'
+import { runMigrations } from '@/utils/network-migrations'
 
 // const METAMAKS_EXTENSION_ID = 'nkbihfbeogaeaoehlefnkodbefgpgknn'
 
@@ -205,6 +206,11 @@ chrome.alarms.onAlarm.addListener((alarm) => {
             settings.lastLock = Date.now()
             clearPk()
         }
+        
+        runMigrations(settings).catch((e) => {
+            console.warn('Migration failed', e)
+        })
+
         if((settings.lastRPCNotification + 600 * 1000) < Date.now() && alarm.name === 'checkCurrentRpc') {
             (async () => { const currentRPCPerformance = await getRpcPerformance(true)
                 if(currentRPCPerformance.performance > 5000) {

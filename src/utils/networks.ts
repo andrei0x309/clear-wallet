@@ -67,7 +67,7 @@ export const mainNets: {[key: number]: Network} = {
     },
     42161: {
         name: 'Arbitrum One',
-        rpc: 'https://rpc.ankr.com/arbitrum',
+        rpc: 'https://arb1.arbitrum.io/rpc',
         chainId: 42161,
         explorer: 'https://explorer.offchainlabs.com',
         icon: 'arbitrum.webp',
@@ -167,13 +167,6 @@ export const testNets = {
         icon: 'rootstock_t.webp',
         symbol: 'tRBTC',
     },
-    420: {
-        name: 'TESTNET Optimism Goreli',
-        rpc: 'https://goerli.optimism.io/',
-        chainId: 420,
-        explorer: 'https://goerli.etherscan.io',
-        icon: 'optimism_t.webp'
-    },
     11155420 : {
         name: 'TESTNET Optimism Sepolia',
         rpc: 'https://sepolia.optimism.io',
@@ -236,7 +229,7 @@ export const testNets = {
     }
 }
 
-export const allTemplateNets = {...mainNets, ...testNets}
+export const allTemplateNets = {...mainNets, ...testNets} as { [key: number]: Network };
 
 export const chainIdToPriceId = (chainId: number): string => {
     return mainNets?.[chainId]?.priceId ?? 'x'

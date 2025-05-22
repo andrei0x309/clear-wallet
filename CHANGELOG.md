@@ -1,5 +1,14 @@
 # Changelog
 
+## Manifest Version 1.4.20
+
+- made loading RPC performance progressive on the home page
+- changed warpcast.com to Farcaster.xyz to allow you to log on to both warpcast.com and farcaster.xyz due to the rebranding of Warpcast
+- better organization of farcaster code in a single directory
+- added bun tests to test all public network templates
+- added network migrations to migrate from old or deprecated networks
+- updated CI to use new `farcaster-snapchain-utils` package
+
 ## Manifest Version 1.4.19
 
 - added memory queues for messages to improve performance

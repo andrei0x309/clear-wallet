@@ -1,4 +1,4 @@
-import { FCHubUtils } from 'farcaster-hub-utils'
+import { SnapChainClient } from 'farcaster-snapchain-utils'
 
 const args = Bun.argv.slice(2);
 
@@ -40,6 +40,7 @@ type TGithubEvent = {
 
 const main = async () => {
     const ENABLED = true;
+    let NEYNAR_API_KEY = '';
     let YUP_PK = '';
     let FC_SIGNER = ''
     let GithubEvent: TGithubEvent = {} as TGithubEvent;
@@ -52,12 +53,17 @@ const main = async () => {
         YUP_PK = parsedSecrets.YUP_PK;
         FC_SIGNER = parsedSecrets.FC_SIGNER;
         GithubEvent = JSON.parse(event);
+        NEYNAR_API_KEY = parsedSecrets.NEYNAR_API_KEY;
     } catch (e) {
         console.error('Error parsing data', e)
     }
 
     // const yupAPI = new YupAPI({ PK: YUP_PK });
-    const fchubUtils = new FCHubUtils(FC_SIGNER, USER_FID);
+    const fchubUtils = new SnapChainClient({
+        FID: USER_FID,
+        PK: FC_SIGNER,
+        NEYNAR_API_KEY,
+    })
 
     if (action === 'update') {
         const VERSION = GithubEvent.inputs.version;

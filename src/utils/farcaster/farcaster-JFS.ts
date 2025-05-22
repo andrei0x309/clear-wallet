@@ -1,8 +1,8 @@
 
 import { getFidFromAddress } from './farcaster'
-import { getSelectedAddress, signMsg } from './wallet'
+import { getSelectedAddress, signMsg } from '../wallet'
 import bufferLib from 'buffer';
-import { base64ToBase64Url } from './misc';
+import { base64ToBase64Url } from '../misc';
 
 const Buffer = bufferLib.Buffer;
 

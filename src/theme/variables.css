@@ -393,3 +393,13 @@ body.dark {
 
   --ion-card-background: #1e1e1e;
 }
+
+.blink-loading {
+  animation: wink 1s linear infinite;
+}
+
+@keyframes wink {
+  50% {
+    opacity: 0
+  }
+}

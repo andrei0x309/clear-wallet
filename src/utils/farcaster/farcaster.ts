@@ -1,10 +1,11 @@
-import { signMsg, getSelectedAddress, getOptimismProvider } from './wallet'
-import { FARCASTER_PARTIAL_KEY_ABI } from './abis'
+import { signMsg, getSelectedAddress, getOptimismProvider } from '../wallet'
+import { FARCASTER_PARTIAL_KEY_ABI } from '../abis'
 import { ethers } from 'ethers'
-import { getUrl, setCachedFcAuthToken, getCachedFcAuthToken } from './platform'
-import { generateApiToken} from './warpcast-auth'
-import { getQRCode } from './QR'
-import { wait } from './misc'
+import { getUrl, setCachedFcAuthToken, getCachedFcAuthToken } from '../platform'
+import { generateApiToken} from './farcaster-auth'
+import { getQRCode } from '../QR'
+import { wait } from '../misc'
+import { FARCASTER_BASE_URL } from './constants'
  
 export interface TChannelTokenStatusResponse {
     state: string;
@@ -24,8 +25,7 @@ export interface TChannelTokenStatusResponse {
 }
 
 const TOKEN_STATUS_ENDPOINT = 'https://relay.farcaster.xyz/v1/channel/status'
-const WARPCAST_BASE = 'https://client.warpcast.com/v2/'
-const EP_SIGNIN = `${WARPCAST_BASE}sign-in-with-farcaster`
+const EP_SIGNIN = `${FARCASTER_BASE_URL}sign-in-with-farcaster`
 const FC_ID_REGISTRY_CONTRACT = '0x00000000fc6c5f01fc30151999387bb99a9f489b'
 
 export const getLinkFromQR = async () => {
