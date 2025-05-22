@@ -109,7 +109,7 @@
               :key="network.chainId"
             >
               <ion-item button style="cursor: pointer" @click="fillTemplate(network)">
-                <ion-avatar style="margin-right: 1rem">
+                <ion-avatar class="network-avatar">
                   <img
                     :alt="network.name"
                     :src="getUrl('assets/chain-icons/' + network.icon)"
@@ -125,7 +125,7 @@
               :key="network.chainId"
             >
               <ion-item button style="cursor: pointer" @click="fillTemplate(network)">
-                <ion-avatar style="margin-right: 1rem">
+                <ion-avatar class="network-avatar">
                   <img
                     :alt="network.name"
                     :src="getUrl('assets/chain-icons/' + network.icon)"
@@ -292,3 +292,13 @@ const fillTemplate = (network: typeof mainNets[1]) => {
   modalController?.dismiss(null, "cancel");
 };
 </script>
+
+<style scoped>
+.network-avatar {
+  max-width: 28px;
+  max-height: 28px;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-right: 1rem;
+}
+</style>
