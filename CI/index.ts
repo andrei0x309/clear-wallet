@@ -100,7 +100,9 @@ const main = async () => {
         }
 
     } else if (action === 'push') {
-        if (ENABLED && !GithubEvent.forced && GithubEvent?.head_commit?.message.includes('chore:') && !GithubEvent?.head_commit?.message.includes('!')) {
+        const isAnnounceMessage = (GithubEvent.head_commit.message.includes('chore:') || GithubEvent.head_commit.message.includes('Merge pull')) && !GithubEvent?.head_commit?.message.includes('!')
+
+        if (ENABLED && !GithubEvent.forced && isAnnounceMessage) {
             const commiter = GithubEvent?.head_commit?.author.username || GithubEvent?.head_commit?.committer?.username || ''
             const message = `Github ClearWallet new repo commit!\n
 - ChromeStore: https://bit.ly/clw-evm \n

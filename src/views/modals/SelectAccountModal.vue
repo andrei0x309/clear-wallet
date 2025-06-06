@@ -9,7 +9,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <ion-list style="margin-bottom: 4rem">
+      <ion-list style="margin-bottom: 0.5rem">
         <ion-radio-group :value="selectedAccount?.address ?? ''">
           <ion-list-header>
             <ion-searchbar
@@ -65,7 +65,7 @@
 </template>
 
 <script lang="ts" setup>
-import { type Ref } from "vue";
+import { type Ref, ref } from "vue";
 import {
   IonContent,
   IonHeader,
@@ -84,22 +84,64 @@ import {
 } from "@ionic/vue";
 import type {Account } from "@/extension/types";
 
+import {
+  saveSelectedAccount,
+  replaceAccounts,
+} from "@/utils/platform";
+
+import { triggerListner } from "@/extension/listners";
+
 
 const props = defineProps<{ refs: () => {
+  accounts: Ref<Account[]>,
   accountsModal: Ref<boolean>,
-  accountModalPresented: () => void;
   selectedAccount: Ref<Account> | Ref<null>;
-  changeSelectedAccount: (address: string) => void;
-  filtredAccounts: Ref<Account[]>;
-  searchAccount: (event: any) => void;
 }}>();
 
 const {
+  accounts,
   accountsModal,
-  accountModalPresented,
   selectedAccount,
-  changeSelectedAccount,
-  filtredAccounts,
-  searchAccount,
 } = props.refs();
+
+const accountSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
+const loading = ref(false);
+const filtredAccounts = ref(accounts.value) as Ref<Account[]>;
+
+const accountModalPresented = () => {
+  if (accountSearchBar.value) {
+    accountSearchBar?.value?.$el?.setFocus?.();
+  }
+};
+
+const changeSelectedAccount = async (address: string) => {
+  loading.value = true;
+  const findIndex = accounts.value.findIndex((a) => a.address == address);
+  if (findIndex > -1) {
+    selectedAccount.value = accounts.value[findIndex];
+    accounts.value = accounts.value.filter((a) => a.address !== address);
+    accounts.value.unshift(selectedAccount.value);
+    const newAccounts = [...accounts.value];
+    await Promise.all([
+      saveSelectedAccount(selectedAccount.value),
+      replaceAccounts(newAccounts),
+    ]);
+    triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
+  }
+  accountsModal.value = false;
+  loading.value = false;
+};
+
+const searchAccount = (e: any) => {
+  const text = e.target.value;
+  if (text) {
+    filtredAccounts.value = accounts.value.filter(
+      (item) =>
+        item.name.toLowerCase().includes(text.toLowerCase()) ||
+        item.address.toLowerCase().includes(text.toLowerCase())
+    );
+  } else {
+    filtredAccounts.value = accounts.value;
+  }
+};
 </script>

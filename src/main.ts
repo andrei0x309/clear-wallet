@@ -23,7 +23,7 @@ import '@ionic/vue/css/display.css';
 import './theme/variables.css';
 
 const app = createApp(App)
-  .use(IonicVue, { scrollAssist: false, hideWhenKeyboardOpen: false, rippleEffect: false })
+  .use(IonicVue, { scrollAssist: false, rippleEffect: false })
   .use(router);
 
 router.isReady().then(() => {

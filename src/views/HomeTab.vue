@@ -203,7 +203,6 @@
         :is-open="loading"
         cssClass="my-custom-class"
         message="Please wait..."
-        :duration="4000"
         :key="`k${loading}`"
         @didDismiss="loading = false"
       >
@@ -216,7 +215,7 @@
         :duration="1500"
       ></ion-toast>
     </ion-content>
-    <SelectedAccountModal :refs="() => getRefs()" />
+    <SelectedAccountModal :refs="() => getRefs()" :key="`${loading}-status`" />
     <ion-modal :is-open="networksModal" @ionModalDidPresent="networkModalPresented">
       <ion-header>
         <ion-toolbar>
@@ -331,8 +330,6 @@ import {
   getAccounts,
   getNetworks,
   getSelectedAccount,
-  saveSelectedAccount,
-  replaceAccounts,
   getSelectedNetwork,
   copyText,
   replaceNetworks,
@@ -361,7 +358,6 @@ const rpcPerformanceLevels = {
 const version = getVersion();
 
 const loading = ref(false);
-const filtredAccounts = ref([]) as Ref<Account[]>;
 const filtredNetworks = ref({}) as Ref<Networks>;
 const accounts = ref([]) as Ref<Account[]>;
 const networks = ref({}) as Ref<Networks>;
@@ -373,7 +369,6 @@ const toastState = ref(false);
 const settings = ref({}) as Ref<Awaited<ReturnType<typeof getSettings>>>;
 const rpcPerformance = ref({ performance: 0 }) as Ref<{ performance: number }>;
 
-const accountSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
 const networkSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
 
 const getToastRef = () => toastState;
@@ -381,12 +376,16 @@ const getToastRef = () => toastState;
 const getRefs = () => {
   return {
     accountsModal,
-    accountModalPresented,
     selectedAccount,
-    changeSelectedAccount,
-    filtredAccounts,
-    searchAccount,
+    accounts,
   };
+};
+
+const loadRPCPerformance = () => {
+  rpcPerformance.value = { performance: 0 };
+  getRpcPerformance().then((res) => {
+    rpcPerformance.value = res;
+  });
 };
 
 const loadData = () => {
@@ -396,12 +395,10 @@ const loadData = () => {
   const pSelectedAccount = getSelectedAccount();
   const pSelectedNetwork = getSelectedNetwork();
   const pSettings = getSettings();
-  const pRpcPerformance = getRpcPerformance();
   Promise.all([pAccounts, pNetworks, pSelectedAccount, pSelectedNetwork, pSettings]).then(
     (res) => {
       accounts.value = res[0];
       networks.value = res[1];
-      filtredAccounts.value = res[0];
       filtredNetworks.value = res[1];
       selectedAccount.value = res[2];
       selectedNetwork.value = res[3];
@@ -410,9 +407,7 @@ const loadData = () => {
     }
   );
 
-  pRpcPerformance.then((res) => {
-    rpcPerformance.value = res;
-  });
+  loadRPCPerformance();
 };
 
 onIonViewWillEnter(() => {
@@ -435,24 +430,6 @@ const goToPersonalSign = () => {
   router.push("/personal-sign");
 };
 
-const changeSelectedAccount = async (address: string) => {
-  loading.value = true;
-  const findIndex = accounts.value.findIndex((a) => a.address == address);
-  if (findIndex > -1) {
-    selectedAccount.value = accounts.value[findIndex];
-    accounts.value = accounts.value.filter((a) => a.address !== address);
-    accounts.value.unshift(selectedAccount.value);
-    const newAccounts = [...accounts.value];
-    await Promise.all([
-      saveSelectedAccount(selectedAccount.value),
-      replaceAccounts(newAccounts),
-    ]);
-    triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
-  }
-  accountsModal.value = false;
-  loading.value = false;
-};
-
 const changeSelectedNetwork = async (chainId: number) => {
   loading.value = true;
   if (chainId in networks.value) {
@@ -463,21 +440,11 @@ const changeSelectedNetwork = async (chainId: number) => {
     selectedNetwork.value = networks.value[chainId];
     triggerListner("chainChanged", numToHexStr(chainId));
   }
+
+  loadRPCPerformance();
+
   networksModal.value = false;
   loading.value = false;
-};
-
-const searchAccount = (e: any) => {
-  const text = e.target.value;
-  if (text) {
-    filtredAccounts.value = accounts.value.filter(
-      (item) =>
-        item.name.toLowerCase().includes(text.toLowerCase()) ||
-        item.address.toLowerCase().includes(text.toLowerCase())
-    );
-  } else {
-    filtredAccounts.value = accounts.value;
-  }
 };
 
 const searchNetwork = (e: any) => {
@@ -502,12 +469,6 @@ const searchNetwork = (e: any) => {
 const openAccountsModal = () => {
   accountsModal.value = true;
   toastState.value = false;
-};
-
-const accountModalPresented = () => {
-  if (accountSearchBar.value) {
-    accountSearchBar?.value?.$el?.setFocus?.();
-  }
 };
 
 const networkModalPresented = () => {
