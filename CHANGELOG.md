@@ -1,5 +1,12 @@
 # Changelog
 
+## Manifest Version 1.4.21
+
+- refactored the account selection modal to use less code
+- updated dependencies
+- removed default loading durations to avoid an unnecessary rendering
+- reload RPC performance on network change
+
 ## Manifest Version 1.4.20
 
 - made loading RPC performance progressive on the home page

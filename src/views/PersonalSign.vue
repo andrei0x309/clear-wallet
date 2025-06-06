@@ -134,7 +134,7 @@
         :duration="1500"
       ></ion-toast>
 
-      <SelectedAccountModal :refs="getRefs" />
+      <SelectedAccountModal :refs="() => getRefs()" :key="`${loading}-status`" />
     </ion-content>
   </ion-page>
 </template>
@@ -164,18 +164,11 @@ import router from "@/router";
 import type { Account } from "@/extension/types";
 import { copyOutline } from "ionicons/icons";
 import { clipboardOutline } from "ionicons/icons";
-import {
-  getAccounts,
-  getSelectedAccount,
-  saveSelectedAccount,
-  replaceAccounts,
-  copyText,
-} from "@/utils/platform";
+import { getAccounts, getSelectedAccount, copyText } from "@/utils/platform";
 import { signMsg } from "@/utils/wallet";
 import UnlockModal from "@/views/UnlockModal.vue";
 import { setUnlockModalState } from "@/utils/unlockStore";
 import SelectedAccountModal from "@/views/modals/SelectAccountModal.vue";
-import { triggerListner } from "@/extension/listners";
 
 const textToSig = ref("");
 const sig = ref("");
@@ -186,11 +179,9 @@ const alertHeader = ref("Error");
 
 const loading = ref(false);
 const accounts = ref([]) as Ref<Account[]>;
-const filtredAccounts = ref([]) as Ref<Account[]>;
 const accountsModal = ref(false) as Ref<boolean>;
 const selectedAccount = (ref(null) as unknown) as Ref<Account>;
 const toastState = ref(false);
-const accountSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
 
 const getToastRef = () => toastState;
 
@@ -200,7 +191,6 @@ const loadData = () => {
   const pSelectedAccount = getSelectedAccount();
   Promise.all([pAccounts, pSelectedAccount]).then((res) => {
     accounts.value = res[0];
-    filtredAccounts.value = res[0];
     selectedAccount.value = res[1];
     loading.value = false;
   });
@@ -272,51 +262,11 @@ const dismissAlert = () => {
   exitWallet.value && window?.close();
 };
 
-const searchAccount = (e: any) => {
-  const text = e.target.value;
-  if (text) {
-    filtredAccounts.value = accounts.value.filter(
-      (item) =>
-        item.name.toLowerCase().includes(text.toLowerCase()) ||
-        item.address.toLowerCase().includes(text.toLowerCase())
-    );
-  } else {
-    filtredAccounts.value = accounts.value;
-  }
-};
-
-const accountModalPresented = () => {
-  if (accountSearchBar.value) {
-    accountSearchBar?.value?.$el?.setFocus?.();
-  }
-};
-
-const changeSelectedAccount = async (address: string) => {
-  loading.value = true;
-  const findIndex = accounts.value.findIndex((a) => a.address == address);
-  if (findIndex > -1) {
-    selectedAccount.value = accounts.value[findIndex];
-    accounts.value = accounts.value.filter((a) => a.address !== address);
-    accounts.value.unshift(selectedAccount.value);
-    const newAccounts = [...accounts.value];
-    await Promise.all([
-      saveSelectedAccount(selectedAccount.value),
-      replaceAccounts(newAccounts),
-    ]);
-    triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
-  }
-  accountsModal.value = false;
-  loading.value = false;
-};
-
 const getRefs = () => {
   return {
     accountsModal,
-    accountModalPresented,
     selectedAccount,
-    changeSelectedAccount,
-    filtredAccounts,
-    searchAccount,
+    accounts,
   };
 };
 </script>
