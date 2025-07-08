@@ -9,6 +9,7 @@ const defaultSettings = {
     lockOutEnabled: false,
     lockOutPeriod: 2,
     lockOutBlocked: false,
+    showRawTransactionData: true,
     theme: 'system',
     lastLock: Date.now(),
     lastRPCNotification: Date.now(),

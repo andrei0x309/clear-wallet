@@ -99,7 +99,7 @@
           >Set manually</ion-button
         >
       </ion-item>
-      <ion-item>
+      <ion-item v-if="showRawData">
         <ion-label>Raw TX:</ion-label>
         <ion-textarea
           aria-label="raw tx"
@@ -233,6 +233,7 @@ import {
   getSelectedAccount,
   strToHex,
   hexTostr,
+  getSettings,
 } from "@/utils/platform";
 import { getBalance, getGasPrice, estimateGas } from "@/utils/wallet";
 import type { Network, Account } from "@/extension/types";
@@ -269,6 +270,7 @@ const gasLimitModal = ref(false);
 const gasPriceModal = ref(false);
 const inGasPrice = ref(0);
 const inGasLimit = ref(0);
+const showRawData = ref(false);
 let gasFeed = {} as Awaited<ReturnType<typeof getGasPrice>>["feed"];
 
 let interval = 0;
@@ -385,6 +387,10 @@ onIonViewWillEnter(async () => {
   const pGasPrice = getGasPrice();
   const pBalance = getBalance();
   const pGetPrices = getPrices();
+  getSettings().then((settings) => {
+    showRawData.value = settings.showRawTransactionData;
+  });
+
   const data = await Promise.all([getSelectedNetwork(), getSelectedAccount()]);
   selectedNetwork.value = data[0];
   intialSelectedAccount.value = data[1];

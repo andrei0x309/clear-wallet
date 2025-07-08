@@ -119,6 +119,18 @@
                   :checked="settings.s.copyLowerCaseAddress"
                 ></ion-toggle>
               </ion-item>
+              <ion-item>
+                <ion-label style="font-size: 0.7rem"
+                  >Show raw Data when sending Transaction</ion-label
+                >
+                <ion-toggle
+                  aria-label="Show raw Data when sending Transaction"
+                  @ion-change="changeShowRawTransactionData"
+                  :key="updateKey"
+                  slot="end"
+                  :checked="settings.s.showRawTransactionData"
+                ></ion-toggle>
+              </ion-item>
             </ion-list>
           </div>
         </ion-accordion>
@@ -397,6 +409,12 @@ const changePermaLock = async () => {
 
 const changeCopyLowerCaseAddress = async () => {
   settings.s.copyLowerCaseAddress = !settings.s?.copyLowerCaseAddress;
+  await saveSettings();
+  defaultAccordionOpen.value = "2";
+};
+
+const changeShowRawTransactionData = async () => {
+  settings.s.showRawTransactionData = !settings.s.showRawTransactionData;
   await saveSettings();
   defaultAccordionOpen.value = "2";
 };

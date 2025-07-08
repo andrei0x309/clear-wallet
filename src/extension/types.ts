@@ -60,6 +60,7 @@ export interface Settings {
     copyLowerCaseAddress?: boolean
     lastRPCNotification: number
     lastExecutedMigration: string
+    showRawTransactionData: boolean
 }
 
 export type listnerType = 'accountsChanged' | 'connect' | 'disconnect' | 'chainChanged'

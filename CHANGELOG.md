@@ -1,5 +1,10 @@
 # Changelog
 
+## Manifest Version 1.4.23
+
+- updated dependencies
+- added option to not display the raw transaction data when sending a transaction
+
 ## Manifest Version 1.4.21
 
 - refactored the account selection modal to use less code
