@@ -686,10 +686,10 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
                                 type: 'popup'
                             }).then((win) => {
                                 gWin = win
-                                userReject[String(win.id)] = reject
-                                userApprove[String(win.id)] = resolve
-                                rIdWin[String(win.id)] = String(message.resId)
-                                rIdData[String(win.id)] = {}
+                                userReject[String(win?.id)] = reject
+                                userApprove[String(win?.id)] = resolve
+                                rIdWin[String(win?.id)] = String(message.resId)
+                                rIdData[String(win?.id)] = {}
                             })
 
                         })
@@ -813,9 +813,9 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
                                 url: chrome.runtime.getURL(`index.html?route=sign-msg&param=${strToHex(signMsgData)}&rid=${String(message?.resId ?? '')}&website=${strToHex(webDomain)}`),
                                 type: 'popup'
                             }).then((win) => {
-                                userReject[String(win.id)] = reject
-                                userApprove[String(win.id)] = resolve
-                                rIdWin[String(win.id)] = String(message.resId)
+                                userReject[String(win?.id)] = reject
+                                userApprove[String(win?.id)] = resolve
+                                rIdWin[String(win?.id)] = String(message.resId)
                             })
 
                         })
@@ -911,9 +911,9 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
                                     url: chrome.runtime.getURL(`index.html?route=switch-network&param=${String(message?.params?.[0]?.chainId ?? '')}&rid=${String(message?.resId ?? '')}&website=${strToHex(webDomain)}`),
                                     type: 'popup'
                                 }).then((win) => {
-                                    userReject[String(win.id)] = reject
-                                    userApprove[String(win.id)] = resolve
-                                    rIdWin[String(win.id)] = String(message.resId)
+                                    userReject[String(win?.id)] = reject
+                                    userApprove[String(win?.id)] = resolve
+                                    rIdWin[String(win?.id)] = String(message.resId)
                                 })
                             })
                             sendResponse(null)
@@ -965,9 +965,9 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
                                         url: chrome.runtime.getURL(`index.html?route=request-network&param=${strToHex(JSON.stringify({ ...{ website: message?.website ?? '' }, ...(message?.params?.[0] ?? {}) }) ?? '')}&rid=${String(message?.resId ?? '')}`),
                                         type: 'popup'
                                     }).then((win) => {
-                                        userReject[String(win.id)] = reject
-                                        userApprove[String(win.id)] = resolve
-                                        rIdWin[String(win.id)] = String(message.resId)
+                                        userReject[String(win?.id)] = reject
+                                        userApprove[String(win?.id)] = resolve
+                                        rIdWin[String(win?.id)] = String(message.resId)
                                     })
                                 })
                                 sendResponse(null)

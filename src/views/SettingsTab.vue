@@ -6,8 +6,8 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <ion-accordion-group :value="defaultAccordionOpen" v-if="!loading">
-        <ion-accordion value="1">
+      <ion-accordion-group>
+        <ion-accordion>
           <ion-item slot="header" color="light">
             <ion-label>Security</ion-label>
           </ion-item>
@@ -18,92 +18,149 @@
               >
               <ion-list :disabled="noAccounts">
                 <ion-item>
-                  <ion-label>Enable Storage Encryption</ion-label>
-                  <ion-toggle
-                    aria-label="Enable Storage Encryption"
-                    :key="updateKey"
-                    @ion-change="changeEncryption"
-                    slot="end"
-                    :checked="settings.s.enableStorageEnctyption"
-                  ></ion-toggle>
-                </ion-item>
-                <ion-item>
-                  This will require to input an encrypto key when storage is locked.
+                  <div style="display: flex; flex-direction: column">
+                    <ion-item class="ion-no-padding no-inner-border">
+                      <ion-label>Enable Storage Encryption</ion-label>
+                      <ion-toggle
+                        aria-label="Enable Storage Encryption"
+                        @ion-change="changeEncryption"
+                        slot="end"
+                        :checked="settings.s.enableStorageEnctyption"
+                      ></ion-toggle>
+                    </ion-item>
+                    <p class="helper-label">
+                      This will require to input an encrypto key when storage is locked.
+                    </p>
+                  </div>
                 </ion-item>
               </ion-list>
               <ion-item :disabled="!settings.s.enableStorageEnctyption">
-                <ion-label>Enable Auto Lock</ion-label>
-                <ion-toggle
-                  aria-label="Enable Auto Lock"
-                  :key="updateKey"
-                  @ion-change="changeAutoLock"
-                  slot="end"
-                  :checked="settings.s.lockOutEnabled"
-                ></ion-toggle>
+                <div style="display: flex; flex-direction: column; width: 100%">
+                  <ion-item class="ion-no-padding no-inner-border">
+                    <ion-label>Enable Auto Lock</ion-label>
+                    <ion-toggle
+                      aria-label="Enable Auto Lock"
+                      @ion-change="changeAutoLock"
+                      slot="end"
+                      :checked="settings.s.lockOutEnabled"
+                    ></ion-toggle>
+                  </ion-item>
+                  <ion-item
+                    class="ion-no-padding no-inner-border"
+                    :disabled="
+                      !settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled
+                    "
+                  >
+                    <ion-label>Auto-lock Period: (2-120) minutes</ion-label>
+                  </ion-item>
+                  <ion-item class="ion-no-padding no-inner-border">
+                    <ion-input
+                      :disabled="
+                        !settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled
+                      "
+                      v-model="settings.s.lockOutPeriod"
+                      type="number"
+                      style="width: 110px; margin-right: 10px"
+                    ></ion-input>
+                    <ion-button
+                      @click="setTime"
+                      style="margin-left: auto"
+                      :disabled="
+                        !settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled
+                      "
+                      >Set Auto-lock</ion-button
+                    >
+                  </ion-item>
+                </div>
               </ion-item>
               <ion-list>
-                <ion-item
-                  :disabled="
-                    !settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled
-                  "
-                >
-                  <ion-label>Auto-lock Period: (2-120) minutes</ion-label>
-                </ion-item>
-                <ion-item
-                  :disabled="
-                    !settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled
-                  "
-                >
-                  <ion-input
-                    :key="updateKey"
-                    v-model="settings.s.lockOutPeriod"
-                    type="number"
-                  ></ion-input>
-                </ion-item>
-                <ion-item
-                  :disabled="
-                    !settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled
-                  "
-                >
-                  <ion-button @click="setTime">Set Auto-lock</ion-button>
-                </ion-item>
-              </ion-list>
-              <ion-list>
                 <ion-item>
-                  <ion-label>Permanent Lock</ion-label>
-                  <ion-toggle
-                    aria-label="Permanent Lock"
-                    @ion-change="changePermaLock"
-                    :key="updateKey"
-                    slot="end"
-                    :disabled="!settings.s.enableStorageEnctyption"
-                    :checked="settings.s.encryptAfterEveryTx"
-                  ></ion-toggle>
+                  <div style="display: flex; flex-direction: column">
+                    <ion-item class="ion-no-padding no-inner-border">
+                      <ion-label>Permanent Lock</ion-label>
+                      <ion-toggle
+                        aria-label="Permanent Lock"
+                        @ion-change="changePermaLock"
+                        slot="end"
+                        :disabled="!settings.s.enableStorageEnctyption"
+                        :checked="settings.s.encryptAfterEveryTx"
+                      ></ion-toggle>
+                    </ion-item>
+                    <p class="helper-label">
+                      It will require the lock password before any signing of messages or
+                      transactions.
+                    </p>
+                  </div>
                 </ion-item>
-                <ion-item
-                  >Will require decrypt pass before any sign or transaction</ion-item
-                >
               </ion-list>
+              <ion-item>
+                <div style="display: flex; flex-direction: column">
+                  <ion-item class="ion-no-padding no-inner-border">
+                    <ion-label>Show raw data when sending transactions</ion-label>
+                    <ion-toggle
+                      aria-label="Show raw Data when sending Transaction"
+                      @ion-change="changeShowRawTransactionData"
+                      slot="end"
+                      :checked="settings.s.showRawTransactionData"
+                    ></ion-toggle>
+                  </ion-item>
+                  <p class="helper-label">
+                    It will show the raw binary data of the transactions, might be useful
+                    in some development cases.
+                  </p>
+                </div>
+              </ion-item>
+              <ion-item>
+                <div style="display: flex; flex-direction: column">
+                  <ion-item class="ion-no-padding no-inner-border">
+                    <ion-label>Simulate asset changes</ion-label>
+                    <ion-toggle
+                      aria-label="Show raw Data when sending Transaction"
+                      @ion-change="changeAssetTransactionSimulation"
+                      slot="end"
+                      :checked="settings.s.enableAssetTransactionSimulation"
+                    ></ion-toggle>
+                  </ion-item>
+                  <ion-item class="ion-no-padding no-inner-border">
+                    <ion-textarea
+                      @ion-input="changeAssetTransactionSimulationAlchemyKey"
+                      :disabled="!settings.s.enableAssetTransactionSimulation"
+                      label="Alchemy Key"
+                      label-placement="floating"
+                      fill="outline"
+                      placeholder="example: jTI2AsqMJUkp33r7frrf1SJnxt-Cf2X1"
+                      :value="settings.s.assetTransactionSimulationAlchemyKey"
+                      style="font-size: 0.8rem; margin-bottom: 10px; margin-top: 10px"
+                    ></ion-textarea>
+                  </ion-item>
+                  <p class="helper-label">
+                    It will show potential changes to your assets when sending a
+                    transaction. This features requires a valid Alchemy API Key, if you
+                    have a free account a key can be used for up to 1k simulations per
+                    day.
+                  </p>
+                </div>
+              </ion-item>
             </ion-list>
           </div>
         </ion-accordion>
-        <ion-accordion value="2">
+        <ion-accordion>
           <ion-item slot="header" color="light">
             <ion-label>Theme & Misc</ion-label>
           </ion-item>
           <div class="ion-padding" slot="content">
             <ion-list>
               <ion-radio-group :value="radioTheme">
-                <ion-item>
-                  <ion-radio slot="start" value="system" @click="changeTheme('system')" />
+                <ion-item @click="changeTheme('system')">
+                  <ion-radio slot="start" value="system" />
                   <ion-label>System Default</ion-label>
                 </ion-item>
-                <ion-item>
-                  <ion-radio slot="start" value="dark" @click="changeTheme('dark')" />
+                <ion-item @click="changeTheme('dark')">
+                  <ion-radio slot="start" value="dark" />
                   <ion-label>Dark</ion-label>
                 </ion-item>
-                <ion-item>
-                  <ion-radio slot="start" value="light" @click="changeTheme('light')" />
+                <ion-item @click="changeTheme('light')">
+                  <ion-radio slot="start" value="light" />
                   <ion-label>Light</ion-label>
                 </ion-item>
               </ion-radio-group>
@@ -114,7 +171,6 @@
                 <ion-toggle
                   aria-label="Convert Address to Lowercase on Copy"
                   @ion-change="changeCopyLowerCaseAddress"
-                  :key="updateKey"
                   slot="end"
                   :checked="settings.s.copyLowerCaseAddress"
                 ></ion-toggle>
@@ -122,7 +178,41 @@
             </ion-list>
           </div>
         </ion-accordion>
-        <ion-accordion value="3">
+        <ion-accordion>
+          <ion-item slot="header" color="light">
+            <ion-label> Import / Export Accounts</ion-label>
+          </ion-item>
+          <div class="ion-padding" slot="content">
+            <ion-item class="ion-no-padding no-inner-border">
+              <ion-label>Import Additional Accounts</ion-label>
+            </ion-item>
+            <ion-item class="ion-no-padding no-inner-border">
+              <input ref="importFile" type="file" accept=".json" class="file-input-cls" />
+            </ion-item>
+            <ion-item
+              class="ion-no-padding no-inner-border"
+              style="display: flex; justify-self: center"
+            >
+              <ion-button color="warning" @click="importAcc">Import</ion-button>
+            </ion-item>
+            <ion-item class="ion-no-padding export-border">
+              <ion-label>Export All Accounts</ion-label>
+              <ion-button color="warning" @click="exportAcc">Export</ion-button>
+            </ion-item>
+          </div>
+        </ion-accordion>
+        <ion-accordion>
+          <ion-item slot="header" color="light">
+            <ion-label>Danger</ion-label>
+          </ion-item>
+          <div class="ion-padding" slot="content">
+            <ion-item>
+              <ion-label>WIPE All DATA</ion-label>
+              <ion-button color="danger" @click="wipeStorage">PERMA WIPE</ion-button>
+            </ion-item>
+          </div>
+        </ion-accordion>
+        <ion-accordion>
           <ion-item slot="header" color="light">
             <ion-label>About</ion-label>
           </ion-item>
@@ -163,33 +253,6 @@
               Blog Flashsoft
               <a href="#" @click="openTab('https://blog.flashsoft.eu')">LINK</a>
             </p>
-          </div>
-        </ion-accordion>
-        <ion-accordion value="4">
-          <ion-item slot="header" color="light">
-            <ion-label> Import / Export Accounts</ion-label>
-          </ion-item>
-          <div class="ion-padding" slot="content">
-            <ion-item>
-              <ion-label>Import Additional Accounts</ion-label>
-              <input ref="importFile" type="file" accept=".json" />
-              <ion-button color="warning" @click="importAcc">Import</ion-button>
-            </ion-item>
-            <ion-item>
-              <ion-label>Export All Accounts</ion-label>
-              <ion-button color="warning" @click="exportAcc">Export</ion-button>
-            </ion-item>
-          </div>
-        </ion-accordion>
-        <ion-accordion value="5">
-          <ion-item slot="header" color="light">
-            <ion-label>Danger</ion-label>
-          </ion-item>
-          <div class="ion-padding" slot="content">
-            <ion-item>
-              <ion-label>WIPE All DATA</ion-label>
-              <ion-button color="danger" @click="wipeStorage">PERMA WIPE</ion-button>
-            </ion-item>
           </div>
         </ion-accordion>
       </ion-accordion-group>
@@ -316,6 +379,7 @@ import { decrypt, encrypt, getCryptoParams } from "@/utils/webCrypto";
 import { Account } from "@/extension/types";
 import { exportFile } from "@/utils/misc";
 import type { Settings } from "@/extension/types";
+import type { IonTextareaCustomEvent, TextareaInputEventDetail } from "@ionic/core";
 import {
   IonContent,
   IonHeader,
@@ -331,6 +395,7 @@ import {
   IonToggle,
   IonModal,
   IonInput,
+  IonTextarea,
   IonAccordion,
   IonAccordionGroup,
   IonRadioGroup,
@@ -344,7 +409,6 @@ const loading = ref(true);
 const mpModal = ref(false);
 const mpPass = ref("");
 const mpConfirm = ref("");
-const updateKey = ref(0);
 const alertOpen = ref(false);
 const alertMsg = ref("");
 const toastState = ref(false);
@@ -357,7 +421,6 @@ type ModalPromisePassword = null | {
 };
 const modalGetPassword = ref(null) as Ref<ModalPromisePassword>;
 const noAccounts = ref(true);
-const defaultAccordionOpen = ref("0");
 const radioTheme = ref("system") as Ref<"system" | "light" | "dark">;
 
 const wipeStorage = async () => {
@@ -377,28 +440,39 @@ const saveSettings = async () => {
 
 const setEncryptToggle = (state: boolean) => {
   settings.s.enableStorageEnctyption = state;
-  updateKey.value++;
-  defaultAccordionOpen.value = "1";
 };
 
 const changeAutoLock = async () => {
   settings.s.lockOutEnabled = !settings.s.lockOutEnabled;
-  updateKey.value++;
   await saveSettings();
-  defaultAccordionOpen.value = "1";
 };
 
 const changePermaLock = async () => {
   settings.s.encryptAfterEveryTx = !settings.s.encryptAfterEveryTx;
-  updateKey.value++;
   await saveSettings();
-  defaultAccordionOpen.value = "1";
+};
+
+const changeShowRawTransactionData = async () => {
+  settings.s.showRawTransactionData = !settings.s.showRawTransactionData;
+  await saveSettings();
+};
+
+const changeAssetTransactionSimulationAlchemyKey = async (
+  e: IonTextareaCustomEvent<TextareaInputEventDetail>
+) => {
+  settings.s.assetTransactionSimulationAlchemyKey = e.detail.value || "";
+  await saveSettings();
+};
+
+const changeAssetTransactionSimulation = async () => {
+  settings.s.enableAssetTransactionSimulation = !settings.s
+    .enableAssetTransactionSimulation;
+  await saveSettings();
 };
 
 const changeCopyLowerCaseAddress = async () => {
   settings.s.copyLowerCaseAddress = !settings.s?.copyLowerCaseAddress;
   await saveSettings();
-  defaultAccordionOpen.value = "2";
 };
 
 const changeTheme = async (theme: "system" | "light" | "dark") => {
@@ -407,7 +481,6 @@ const changeTheme = async (theme: "system" | "light" | "dark") => {
   radioTheme.value = theme;
   settings.s.theme = theme;
   await saveSettings();
-  defaultAccordionOpen.value = "2";
 };
 
 const changeEncryption = async () => {
@@ -661,3 +734,27 @@ const modalDismiss = () => {
   setEncryptToggle(settings.s.enableStorageEnctyption);
 };
 </script>
+
+<style lang="css" scoped>
+.helper-label {
+  font-size: 0.82rem;
+  opacity: 0.85;
+  margin: -0.1rem 0 0.6rem 0;
+}
+
+.dark .file-input-cls {
+  cursor: pointer;
+  background-color: #222428;
+}
+.file-input-cls {
+  cursor: pointer;
+  background-color: #f4f5f8;
+}
+
+.dark .export-border {
+  border-top: 1px solid #222;
+}
+.export-border {
+  border-top: 1px solid #eee;
+}
+</style>

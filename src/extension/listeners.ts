@@ -1,7 +1,7 @@
-import type { listnerType } from '@/extension/types'
+import type { listenerType } from '@/extension/types'
 
-export const triggerListner = ( type: listnerType, listnerData: any ) => {
-    const data = { type: "CLWALLET_EXT_LISTNER", data: { listner: type, data: listnerData } }
+export const triggerListener = ( type: listenerType, listenerData: any ) => {
+    const data = { type: "CLWALLET_EXT_LISTENER", data: { listener: type, data: listenerData } }
     chrome.tabs.query({}, (tabs) => tabs.forEach( async tab => 
         {   
             if (tab?.id) {

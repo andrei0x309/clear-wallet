@@ -138,7 +138,7 @@ import {
 import type { Network, Networks } from "@/extension/types";
 import { allTemplateNets } from "@/utils/networks";
 import { approve, walletPing } from "@/extension/userRequest";
-import { triggerListner } from "@/extension/listners";
+import { triggerListener } from "@/extension/listeners";
 
 const route = useRoute();
 const loading = ref(true);
@@ -197,7 +197,7 @@ const onSwitchExists = async () => {
   const existingNetworks = await pnetworks;
   selectedNetwork.value = existingNetworks[Number(networkId.value)];
   await saveSelectedNetwork(selectedNetwork.value);
-  triggerListner("chainChanged", numToHexStr(selectedNetwork.value?.chainId ?? 0));
+  triggerListener("chainChanged", numToHexStr(selectedNetwork.value?.chainId ?? 0));
   approve(rid);
   loading.value = false;
 };
@@ -208,7 +208,7 @@ const onSwitchTemplates = async () => {
   selectedNetwork.value = allTemplateNets[nId];
   await saveNetwork(allTemplateNets[nId]);
   await saveSelectedNetwork(allTemplateNets[nId]);
-  triggerListner("chainChanged", numToHexStr(selectedNetwork.value?.chainId ?? 0));
+  triggerListener("chainChanged", numToHexStr(selectedNetwork.value?.chainId ?? 0));
   approve(rid);
   loading.value = false;
 };

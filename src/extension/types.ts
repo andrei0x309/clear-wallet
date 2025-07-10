@@ -60,9 +60,12 @@ export interface Settings {
     copyLowerCaseAddress?: boolean
     lastRPCNotification: number
     lastExecutedMigration: string
+    showRawTransactionData: boolean
+    enableAssetTransactionSimulation: boolean
+    assetTransactionSimulationAlchemyKey: string
 }
 
-export type listnerType = 'accountsChanged' | 'connect' | 'disconnect' | 'chainChanged'
+export type listenerType = 'accountsChanged' | 'connect' | 'disconnect' | 'chainChanged'
 
 export interface HistoryItem {
     date: number
@@ -144,3 +147,14 @@ export interface UniSwapPortfolioResponse {
         }[];
     };
 }
+
+export type AlchemyAssetChange = {
+     assetType: 'NATIVE' | 'ERC20' | 'ERC721' | 'ERC1155';
+     changeType: string,
+     from: string,
+     to: string,
+     amount: string,
+     name: string,
+     logo: string,
+     symbol: string,
+};

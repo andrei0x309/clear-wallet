@@ -343,7 +343,7 @@ import {
 import type { Network, Account, Networks } from "@/extension/types";
 import { allTemplateNets } from "@/utils/networks";
 import router from "@/router";
-import { triggerListner } from "@/extension/listners";
+import { triggerListener } from "@/extension/listeners";
 import { copyOutline } from "ionicons/icons";
 import GitHub from "@/components/icons/GitHub.vue";
 import SelectedAccountModal from "@/views/modals/SelectAccountModal.vue";
@@ -438,7 +438,7 @@ const changeSelectedNetwork = async (chainId: number) => {
       Object.assign({ [chainId]: networks.value[chainId] }, networks.value)
     );
     selectedNetwork.value = networks.value[chainId];
-    triggerListner("chainChanged", numToHexStr(chainId));
+    triggerListener("chainChanged", numToHexStr(chainId));
   }
 
   loadRPCPerformance();

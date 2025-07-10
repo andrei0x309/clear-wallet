@@ -112,13 +112,12 @@ import { useRoute } from "vue-router";
 import { saveSelectedNetwork, saveNetwork, hexTostr } from "@/utils/platform";
 import type { Network } from "@/extension/types";
 import { approve, walletPing } from "@/extension/userRequest";
-import { triggerListner } from "@/extension/listners";
+import { triggerListener } from "@/extension/listeners";
 
 const route = useRoute();
 const loading = ref(true);
 const rid = (route?.params?.rid as string) ?? "";
 const networkData = hexTostr((route.params?.param as string) ?? "");
-const alertOpen = ref(false);
 const timerReject = ref(140);
 let interval: any;
 const website = ref("");
@@ -180,7 +179,7 @@ const onAddSwitch = async () => {
   };
   await saveNetwork(network);
   await saveSelectedNetwork(network);
-  triggerListner("chainChanged", chainId.value);
+  triggerListener("chainChanged", chainId.value);
   approve(rid);
   loading.value = false;
 };

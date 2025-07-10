@@ -26,12 +26,15 @@
         <ion-button @click="goToAddAccount">Add Account</ion-button>
       </ion-item>
       <ion-list v-for="account of accounts" :key="account.address">
-        <ion-item>
+        <ion-item class="no-inner-border">
           <ion-label style="color: var(--primary-color)">
             {{ account.name }}
           </ion-label>
         </ion-item>
-        <ion-item @click="copyText(account.address, getToastRef())">
+        <ion-item
+          class="no-inner-border"
+          @click="copyText(account.address, getToastRef())"
+        >
           <p style="font-size: 0.7rem">{{ account.address }}</p>
           &nbsp;
           <ion-icon class="copy-icon" :icon="copyOutline"></ion-icon>

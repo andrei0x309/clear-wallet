@@ -1,5 +1,18 @@
 # Changelog
 
+## Manifest Version 1.5.1
+
+- updated dependencies
+- added option to not display the raw transaction data when sending a transaction
+- changed the packing for injected script to iife from esm to improve isolation
+- performance improvements
+- reverted to darker theme for dark mode
+- refactored code in inject script and fixed some naming issues
+- switched to version 1.5.x due to larger changes and newer features
+- enabled minify for injected content scripts
+- added option to eanble transaction simulation(requires User to have an Alchemy API key)
+- many small UI improvements and changes
+
 ## Manifest Version 1.4.21
 
 - refactored the account selection modal to use less code
