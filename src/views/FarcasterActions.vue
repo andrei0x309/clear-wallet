@@ -284,11 +284,10 @@ import {
   IonIcon,
   IonToast,
 } from "@ionic/vue";
-import { saveSelectedAccount, copyText, replaceAccounts } from "@/utils/platform";
+import { copyText } from "@/utils/platform";
 import router from "@/router";
 import type { Account } from "@/extension/types";
 import UnlockModal from "@/views/UnlockModal.vue";
-import { triggerListner } from "@/extension/listners";
 import { copyOutline } from "ionicons/icons";
 
 import {

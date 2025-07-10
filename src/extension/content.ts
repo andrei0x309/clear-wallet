@@ -124,9 +124,9 @@ chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
   if (chrome.runtime.lastError) {
     console.warn("Error receiving message:", chrome.runtime.lastError);
   }
-  if (message.type === "CLWALLET_EXT_LISTNER") {
+  if (message.type === "CLWALLET_EXT_LISTENER") {
     const data = { type: "CLWALLET_PAGE_LISTENER", data: message.data };
-    // console.log('data listner', data)
+    // console.log('data listener', data)
     window.postMessage(data, "*");
   }
   return true

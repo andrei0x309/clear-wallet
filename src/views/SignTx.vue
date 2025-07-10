@@ -110,10 +110,21 @@
           readonly
         ></ion-textarea>
       </ion-item>
-      <ion-item>
+      <AssetChanges
+        v-if="isAssetChangesEnabled && assetChangesKey"
+        :asset-changes="assetChanges"
+        :chain-not-supported="assetChangesNotSupported"
+        :loading="assetChangesLoading"
+        :error="assetChangesError"
+      />
+
+      <ion-item>Auto-reject timer: {{ timerReject }}</ion-item>
+      <ion-item v-if="gasPriceReFetch">New fee price timer: {{ timerFee }}</ion-item>
+
+      <ion-item style="display: flex; justify-self: end" class="no-inner-border">
         <ion-button @click="onCancel">Cancel</ion-button>
-        <ion-button :disabled="insuficientBalance" @click="onSign">{{
-          insuficientBalance ? "Insuficient Balance" : "Send"
+        <ion-button :disabled="insufficientBalance" @click="onSign">{{
+          insufficientBalance ? "Insufficient Balance" : "Send"
         }}</ion-button>
       </ion-item>
       <ion-alert
@@ -123,13 +134,6 @@
         :buttons="['OK']"
         @didDismiss="alertOpen = false"
       ></ion-alert>
-
-      <ion-list>
-        <ion-item>Auto-reject Timer: {{ timerReject }}</ion-item>
-      </ion-list>
-      <ion-list v-if="gasPriceReFetch">
-        <ion-item>New Fee price Timer: {{ timerFee }}</ion-item>
-      </ion-list>
 
       <ion-loading
         :is-open="loading"
@@ -236,11 +240,14 @@ import {
   getSettings,
 } from "@/utils/platform";
 import { getBalance, getGasPrice, estimateGas } from "@/utils/wallet";
-import type { Network, Account } from "@/extension/types";
+import type { Network, Account, Settings } from "@/extension/types";
 import { allTemplateNets, chainIdToPriceId } from "@/utils/networks";
 import UnlockModal from "@/views/UnlockModal.vue";
 import router from "@/router";
 import { setUnlockModalState } from "@/utils/unlockStore";
+import AssetChanges from "./sub-views/AssetChanges.vue";
+import type { AlchemyAssetChange } from "@/extension/types";
+import { getAlchemyEndpointFromChainId, simulateTx } from "@/utils/alchemy";
 
 const route = useRoute();
 const rid = (route?.params?.rid as string) ?? "";
@@ -261,7 +268,7 @@ const userBalance = ref(0);
 const txValue = ref(0);
 const timerReject = ref(140);
 const timerFee = ref(20);
-const insuficientBalance = ref(false);
+const insufficientBalance = ref(false);
 const gasPriceReFetch = ref(true);
 const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
 const intialSelectedAccount = ref(null as unknown) as Ref<Account>;
@@ -271,6 +278,15 @@ const gasPriceModal = ref(false);
 const inGasPrice = ref(0);
 const inGasLimit = ref(0);
 const showRawData = ref(false);
+
+// asset changes
+const isAssetChangesEnabled = ref(false);
+const assetChangesKey = ref("");
+const assetChanges = ref([]) as Ref<AlchemyAssetChange[]>;
+const assetChangesError = ref(false);
+const assetChangesLoading = ref(true);
+const assetChangesNotSupported = ref(false);
+
 let gasFeed = {} as Awaited<ReturnType<typeof getGasPrice>>["feed"];
 
 let interval = 0;
@@ -381,17 +397,50 @@ const newGasData = async () => {
   totalCost.value = gasFee.value + txValue.value;
 };
 
+const runSimularion = async (settings: Settings, network: Network) => {
+  isAssetChangesEnabled.value = settings.enableAssetTransactionSimulation;
+  assetChangesKey.value = settings.assetTransactionSimulationAlchemyKey;
+  if (!isAssetChangesEnabled.value || !assetChangesKey.value) {
+    return;
+  }
+  const endpoint = getAlchemyEndpointFromChainId(network.chainId, assetChangesKey.value);
+  if (!endpoint) {
+    assetChangesNotSupported.value = true;
+    assetChangesLoading.value = false;
+    return;
+  }
+  try {
+    const changes = await simulateTx(endpoint, params);
+    assetChangesError.value = false;
+    if (!changes) {
+      assetChangesLoading.value = false;
+      assetChangesError.value = true;
+      return;
+    }
+    assetChanges.value = changes ?? [];
+    assetChangesLoading.value = false;
+  } catch (error) {
+    assetChangesLoading.value = false;
+    assetChangesError.value = true;
+  }
+};
+
 onIonViewWillEnter(async () => {
   (window as any)?.resizeTo?.(600, 860);
   blockLockout();
   const pGasPrice = getGasPrice();
   const pBalance = getBalance();
   const pGetPrices = getPrices();
+  const pGetSelectedAccount = getSelectedAccount();
+  const pGetSelectedNetwork = getSelectedNetwork();
   getSettings().then((settings) => {
     showRawData.value = settings.showRawTransactionData;
+    pGetSelectedNetwork.then((network) => {
+      runSimularion(settings, network);
+    });
   });
 
-  const data = await Promise.all([getSelectedNetwork(), getSelectedAccount()]);
+  const data = await Promise.all([pGetSelectedNetwork, pGetSelectedAccount]);
   selectedNetwork.value = data[0];
   intialSelectedAccount.value = data[1];
   userBalance.value = Number(ethers.formatEther((await pBalance).toString() ?? "0x0"));
@@ -419,7 +468,7 @@ onIonViewWillEnter(async () => {
   inGasLimit.value = gasLimit.value;
 
   if (userBalance.value < totalCost.value) {
-    insuficientBalance.value = true;
+    insufficientBalance.value = true;
   }
   const prices = await pGetPrices;
   dollarPrice.value =

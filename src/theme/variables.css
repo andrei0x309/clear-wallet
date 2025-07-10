@@ -400,3 +400,7 @@ body.dark {
     opacity: 0
   }
 }
+
+.no-inner-border {
+  --inner-border-width: 0;
+}

@@ -46,13 +46,13 @@
           {{ signMsg }}
         </div>
       </ion-item>
-      <ion-item>
-        <ion-button @click="onCancel">Cancel</ion-button>
-        <ion-button @click="onSign">Sign</ion-button>
-      </ion-item>
       <ion-item style="margin-top: 6px"
         >Auto-reject Timer:&nbsp;<b>{{ timerReject }}</b></ion-item
       >
+      <ion-item style="display: flex; justify-self: end" class="no-inner-border">
+        <ion-button @click="onCancel">Cancel</ion-button>
+        <ion-button @click="onSign">Sign</ion-button>
+      </ion-item>
       <ion-alert
         :is-open="alertOpen"
         header="Error"
@@ -118,7 +118,6 @@ const alertOpen = ref(false);
 const alertMsg = ref("");
 const timerReject = ref(140);
 let interval: any;
-const testin = ref(null) as any;
 
 const onCancel = () => {
   window.close();

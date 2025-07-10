@@ -89,7 +89,7 @@ import {
   replaceAccounts,
 } from "@/utils/platform";
 
-import { triggerListner } from "@/extension/listners";
+import { triggerListener } from "@/extension/listeners";
 
 
 const props = defineProps<{ refs: () => {
@@ -126,7 +126,7 @@ const changeSelectedAccount = async (address: string) => {
       saveSelectedAccount(selectedAccount.value),
       replaceAccounts(newAccounts),
     ]);
-    triggerListner("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
+    triggerListener("accountsChanged", [newAccounts.map((a) => a.address)?.[0]]);
   }
   accountsModal.value = false;
   loading.value = false;

@@ -10,6 +10,8 @@ const defaultSettings = {
     lockOutPeriod: 2,
     lockOutBlocked: false,
     showRawTransactionData: true,
+    enableAssetTransactionSimulation: false,
+    assetTransactionSimulationAlchemyKey: '',
     theme: 'system',
     lastLock: Date.now(),
     lastRPCNotification: Date.now(),

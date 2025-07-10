@@ -20,7 +20,7 @@
       </ion-item>
 
       <ion-list v-for="network of networks" :key="network.chainId">
-        <ion-item>
+        <ion-item class="no-inner-border">
           <ion-avatar
             v-if="(allTemplateNets as any)[network.chainId]?.icon"
             style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
