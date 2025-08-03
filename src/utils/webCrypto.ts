@@ -27,7 +27,7 @@ const getSalt = async() => {
     return salt
 }
 
-async function getKey(passwordBytes: Uint8Array) {
+async function getKey(passwordBytes: BufferSource) {
     
     const salt = await getSalt()
 
