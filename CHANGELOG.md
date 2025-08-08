@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.5.2
+
+- updated dependencies
+- released new version
+- improved type match in `getKey` function
+
 ## Manifest Version 1.5.1
 
 - updated dependencies
