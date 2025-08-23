@@ -17,7 +17,9 @@
           <p>No Abi selected</p>
         </template>
 
-        <ion-button @click="openAbiListModal()" expand="block">Load Abi</ion-button>
+        <ion-button style="left: 0.4rem" @click="openAbiListModal()" expand="block"
+          >Load Abi</ion-button
+        >
       </ion-item>
       <ion-item>
         <ion-icon
@@ -78,21 +80,23 @@
             format.
           </ion-item>
           <ion-item>SET PARAMS: </ion-item>
-          <ion-list v-for="(param, index) in params" :key="index" class="param-list">
-            <ion-item>
-              <ion-label style="font-size: 0.85rem"
-                >P:{{ Number(index) + 1 }} name: {{ param.name }} type: ({{
-                  param.type
-                }})</ion-label
-              >
-            </ion-item>
-            <ion-item>
-              <ion-input
-                aria-label="value"
-                v-model="param.value"
-                placeholder="ex: 1 or 0x22 or 'hello' or [1, 2] etc "
-                type="text"
-              ></ion-input>
+          <ion-list class="param-list">
+            <ion-item v-for="(param, index) in params" :key="index">
+              <ion-item>
+                <ion-label style="font-size: 0.85rem"
+                  >P:{{ Number(index) + 1 }} name: {{ param.name }} type: ({{
+                    param.type
+                  }})</ion-label
+                >
+              </ion-item>
+              <ion-item>
+                <ion-input
+                  aria-label="value"
+                  v-model="param.value"
+                  placeholder="ex: 1 or 0x22 or 'hello' or [1, 2] etc "
+                  type="text"
+                ></ion-input>
+              </ion-item>
             </ion-item>
           </ion-list>
           <ion-item v-if="!params?.length">

@@ -1,9 +1,9 @@
 <template>
-  <ion-modal :is-open="accountsModal" @ionModalDidPresent="accountModalPresented">
+  <ion-modal :is-open="accountsModal" @didPresent="accountModalPresented">
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-button @click="accountsModal = false">Close</ion-button>
+          <ion-button @click="closeModal()">Close</ion-button>
         </ion-buttons>
         <ion-title>Select Account</ion-title>
       </ion-toolbar>
@@ -25,14 +25,13 @@
             ></ion-searchbar>
           </ion-list-header>
 
-          <ion-list
-            @click="changeSelectedAccount(account.address)"
-            class="ion-padding"
-            v-for="account of filtredAccounts"
-            :key="account.address"
-            button
-          >
-            <ion-item>
+          <ion-list>
+            <ion-item
+              @click="changeSelectedAccount(account.address)"
+              v-for="account of filtredAccounts"
+              :key="account.address"
+              button
+            >
               <ion-radio
                 :aria-label="account.name"
                 :value="account.address"
@@ -41,7 +40,7 @@
                 mode="ios"
                 justify="start"
                 color="warning"
-                style="margin-left: 0.1rem"
+                style="left: -1.2rem"
               >
                 <div style="margin-left: 0.5rem">{{ account.name }}</div>
                 <div style="margin-top: 0.1rem">
@@ -106,9 +105,9 @@ const {
 
 const accountSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
 const loading = ref(false);
-const filtredAccounts = ref(accounts.value) as Ref<Account[]>;
+const filtredAccounts = ref(accounts.value ?? []) as Ref<Account[]>;
 
-const accountModalPresented = () => {
+const accountModalPresented = async () => {
   if (accountSearchBar.value) {
     accountSearchBar?.value?.$el?.setFocus?.();
   }
@@ -132,8 +131,14 @@ const changeSelectedAccount = async (address: string) => {
   loading.value = false;
 };
 
+const closeModal = () => {
+  filtredAccounts.value = accounts.value;
+  accountsModal.value = false;
+};
+
 const searchAccount = (e: any) => {
   const text = e.target.value;
+
   if (text) {
     filtredAccounts.value = accounts.value.filter(
       (item) =>

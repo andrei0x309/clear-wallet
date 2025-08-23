@@ -19,8 +19,12 @@
         <ion-button @click="goToAddNetwork">Add Network</ion-button>
       </ion-item>
 
-      <ion-list v-for="network of networks" :key="network.chainId">
-        <ion-item class="no-inner-border">
+      <ion-list>
+        <ion-item
+          class="no-inner-border"
+          v-for="network of networks"
+          :key="network.chainId"
+        >
           <ion-avatar
             v-if="(allTemplateNets as any)[network.chainId]?.icon"
             style="margin-right: 1rem; width: 1.6rem; height: 1.6rem"
@@ -30,14 +34,25 @@
               :src="getUrl('assets/chain-icons/' + (allTemplateNets as any)[network.chainId].icon)"
             />
           </ion-avatar>
-          <ion-label>
-            {{ network.name }}
-          </ion-label>
-          <ion-label> ID: {{ network.chainId }} </ion-label>
-        </ion-item>
-        <ion-item>
-          <ion-chip @click="editNetwork(network.chainId)" button>Edit</ion-chip>
-          <ion-chip @click="deleteNetwork(network.chainId)" button>Delete</ion-chip>
+          <ion-avatar v-else style="margin-right: 1rem; width: 1.6rem; height: 1.6rem">
+            <GenericBlockChain />
+          </ion-avatar>
+          <div style="display: flex; flex-direction: column; max-width: 7rem">
+            <ion-label style="font-size: 0.9rem">
+              {{ network.name }}
+            </ion-label>
+            <ion-label style="font-size: 0.82rem; opacity: 0.8">
+              ID: {{ network.chainId }}
+            </ion-label>
+          </div>
+          <ion-item style="margin-left: auto; font-size: 0.9rem">
+            <ion-chip color="primary" @click="editNetwork(network.chainId)" button
+              >Edit</ion-chip
+            >
+            <ion-chip color="primary" @click="deleteNetwork(network.chainId)" button
+              >Delete</ion-chip
+            >
+          </ion-item>
         </ion-item>
       </ion-list>
     </ion-content>
@@ -67,6 +82,7 @@ import { allTemplateNets } from "@/utils/networks";
 import { addCircleOutline, copyOutline } from "ionicons/icons";
 import router from "@/router/index";
 import type { Networks } from "@/extension/types";
+import GenericBlockChain from "@/components/icons/GenericBlockChain.vue";
 
 const networks = ref({}) as Ref<Networks>;
 const loading = ref(true);

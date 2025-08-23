@@ -1,6 +1,6 @@
 <template>
   <ion-app>
-    <ion-router-outlet />
+    <ion-router-outlet aria-label="Main content" :aria-hidden="false" />
   </ion-app>
 </template>
 
@@ -15,6 +15,13 @@ import type { RequestArguments } from "@/extension/types";
 const route = useRoute();
 const router = useRouter();
 const { param, rid, website } = route.query;
+
+window.addEventListener("hide.bs.modal", (event) => {
+  (event.target as any)!.inert = true;
+});
+window.addEventListener("show.bs.modal", (event) => {
+  (event.target as any)! = false;
+});
 
 const pageListener = (
   message: RequestArguments,

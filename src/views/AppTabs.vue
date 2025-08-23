@@ -2,7 +2,7 @@
   <ion-page>
     <ion-content>
       <ion-tabs @ionTabsWillChange="beforeTabChange" @ionTabsDidChange="afterTabChange">
-        <ion-router-outlet />
+        <ion-router-outlet aria-label="Tab content" />
         <ion-tab-bar
           slot="bottom"
           style="display: flex; flex-direction: column; height: 116px"

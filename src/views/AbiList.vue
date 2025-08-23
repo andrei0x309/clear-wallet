@@ -16,8 +16,8 @@
           <ion-label>Saved ABIs</ion-label>
         </ion-list-header>
 
-        <ion-list class="ion-padding" v-for="item of Object.keys(abis ?? {})" :key="item">
-          <ion-item>
+        <ion-list class="ion-padding">
+          <ion-item v-for="item of Object.keys(abis ?? {})" :key="item">
             <ion-radio
               @click="changeSelected(item)"
               slot="start"

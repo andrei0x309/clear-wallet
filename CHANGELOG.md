@@ -1,5 +1,13 @@
 # Changelog
 
+## Manifest Version 1.5.3
+
+- made ethereum object writable since some older MetaMask sdk expects to be writable
+- updated ionic/vue to latest 8.7.x ( resolved issues that started with 8.4.x, also found a ionic-bug [https://github.com/ionic-team/ionic-framework/issues/30641](https://github.com/ionic-team/ionic-framework/issues/30641))
+- updated dependencies
+- UI changes (better chips, generic icon of missing blockchain icon, redesign of contacts select, other minor UI changes and fixes)
+- added some more helpful text in settings section
+
 ## Manifest Version 1.5.2
 
 - updated dependencies
