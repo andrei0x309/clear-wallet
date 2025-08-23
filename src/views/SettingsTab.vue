@@ -25,7 +25,7 @@
                         aria-label="Enable Storage Encryption"
                         @ion-change="changeEncryption"
                         slot="end"
-                        :checked="settings.s.enableStorageEnctyption"
+                        :checked="settings.s?.enableStorageEnctyption"
                       ></ion-toggle>
                     </ion-item>
                     <p class="helper-label">
@@ -34,7 +34,7 @@
                   </div>
                 </ion-item>
               </ion-list>
-              <ion-item :disabled="!settings.s.enableStorageEnctyption">
+              <ion-item :disabled="!settings.s?.enableStorageEnctyption">
                 <div style="display: flex; flex-direction: column; width: 100%">
                   <ion-item class="ion-no-padding no-inner-border">
                     <ion-label>Enable Auto Lock</ion-label>
@@ -42,13 +42,17 @@
                       aria-label="Enable Auto Lock"
                       @ion-change="changeAutoLock"
                       slot="end"
-                      :checked="settings.s.lockOutEnabled"
+                      :checked="settings.s?.lockOutEnabled"
                     ></ion-toggle>
                   </ion-item>
+                  <p class="helper-label">
+                    This will lock the private keys after a period of inactivity, set
+                    bellow, permanent lock option takes precedence.
+                  </p>
                   <ion-item
                     class="ion-no-padding no-inner-border"
                     :disabled="
-                      !settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled
+                      !settings.s?.enableStorageEnctyption || !settings.s?.lockOutEnabled
                     "
                   >
                     <ion-label>Auto-lock Period: (2-120) minutes</ion-label>
@@ -56,17 +60,24 @@
                   <ion-item class="ion-no-padding no-inner-border">
                     <ion-input
                       :disabled="
-                        !settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled
+                        !settings.s?.enableStorageEnctyption ||
+                        !settings.s?.lockOutEnabled
                       "
-                      v-model="settings.s.lockOutPeriod"
+                      v-model="lockOutPeriod"
                       type="number"
-                      style="width: 110px; margin-right: 10px"
+                      style="
+                        width: 110px;
+                        margin-right: 10px;
+                        border: 0.3rem solid var(--border-color);
+                        padding: 0.4rem;
+                      "
                     ></ion-input>
                     <ion-button
                       @click="setTime"
                       style="margin-left: auto"
                       :disabled="
-                        !settings.s.enableStorageEnctyption || !settings.s.lockOutEnabled
+                        !settings.s?.enableStorageEnctyption ||
+                        !settings.s?.lockOutEnabled
                       "
                       >Set Auto-lock</ion-button
                     >
@@ -82,8 +93,8 @@
                         aria-label="Permanent Lock"
                         @ion-change="changePermaLock"
                         slot="end"
-                        :disabled="!settings.s.enableStorageEnctyption"
-                        :checked="settings.s.encryptAfterEveryTx"
+                        :disabled="!settings.s?.enableStorageEnctyption"
+                        :checked="settings.s?.encryptAfterEveryTx"
                       ></ion-toggle>
                     </ion-item>
                     <p class="helper-label">
@@ -101,7 +112,7 @@
                       aria-label="Show raw Data when sending Transaction"
                       @ion-change="changeShowRawTransactionData"
                       slot="end"
-                      :checked="settings.s.showRawTransactionData"
+                      :checked="settings.s?.showRawTransactionData"
                     ></ion-toggle>
                   </ion-item>
                   <p class="helper-label">
@@ -118,18 +129,18 @@
                       aria-label="Show raw Data when sending Transaction"
                       @ion-change="changeAssetTransactionSimulation"
                       slot="end"
-                      :checked="settings.s.enableAssetTransactionSimulation"
+                      :checked="settings.s?.enableAssetTransactionSimulation"
                     ></ion-toggle>
                   </ion-item>
                   <ion-item class="ion-no-padding no-inner-border">
                     <ion-textarea
                       @ion-input="changeAssetTransactionSimulationAlchemyKey"
-                      :disabled="!settings.s.enableAssetTransactionSimulation"
+                      :disabled="!settings.s?.enableAssetTransactionSimulation"
                       label="Alchemy Key"
                       label-placement="floating"
                       fill="outline"
                       placeholder="example: jTI2AsqMJUkp33r7frrf1SJnxt-Cf2X1"
-                      :value="settings.s.assetTransactionSimulationAlchemyKey"
+                      :value="settings.s?.assetTransactionSimulationAlchemyKey"
                       style="font-size: 0.8rem; margin-bottom: 10px; margin-top: 10px"
                     ></ion-textarea>
                   </ion-item>
@@ -172,7 +183,7 @@
                   aria-label="Convert Address to Lowercase on Copy"
                   @ion-change="changeCopyLowerCaseAddress"
                   slot="end"
-                  :checked="settings.s.copyLowerCaseAddress"
+                  :checked="settings.s?.copyLowerCaseAddress"
                 ></ion-toggle>
               </ion-item>
             </ion-list>
@@ -222,12 +233,17 @@
               and Ethers.
             </p>
             <p>
-              Unlike most wallets, this wallet has no ads, no analytics, no trackers, no
+              If a website does not detect Clear Wallet try selecting MetaMask, as this
+              wallet also implements the metamask API. It's recommended to not have
+              MetaMask enabled at the same time as Clear Wallet.
+            </p>
+            <p>
+              Unlike most wallets, Clear Wallet has no ads, no analytics, no trackers, no
               bloatware, no telemetry, no data collection, no sponsored content, no
-              sponsored Dapps, no sponsored tokens, no sponsored NFTs, no sponsored
-              anything. It is a clean wallet with no revenue model, made by a single
-              developer, if you want to support this project financially you can donate at
-              andrei0x309.eth.
+              sponsored DApps, no sponsored tokens, no sponsored NFTs, and no fees. It is
+              a clean wallet with no revenue model, made by a single developer, if you
+              want to support this project financially you can donate
+              <a href="#" @click="openTab('https://blog.flashsoft.eu/tip-me')">here</a>
             </p>
             <p>
               Github Repo:
@@ -414,6 +430,7 @@ const alertMsg = ref("");
 const toastState = ref(false);
 const toastMsg = ref("");
 const alertHeader = ref("Error");
+const lockOutPeriod = defineModel({ default: 2 });
 const importFile = (ref(null) as unknown) as Ref<HTMLInputElement>;
 type ModalPromisePassword = null | {
   resolve: (p?: unknown) => void;
@@ -704,6 +721,7 @@ onIonViewWillEnter(async () => {
   await Promise.all([
     getSettings().then((storeSettings) => {
       settings.s = storeSettings;
+      lockOutPeriod.value = settings.s.lockOutPeriod;
       radioTheme.value = settings.s.theme;
     }),
     getAccounts().then((accounts) => {
@@ -717,13 +735,13 @@ onIonViewWillEnter(async () => {
 
 const setTime = async () => {
   loading.value = true;
-  if (settings.s.lockOutPeriod < 2 || settings.s.lockOutPeriod > 120) {
+  if (lockOutPeriod.value < 2 || lockOutPeriod.value > 120) {
     loading.value = false;
     alertMsg.value = "Auto-lock period must be between 2 and 120";
     alertOpen.value = true;
     return;
   }
-  settings.s.lockOutPeriod = Math.trunc(settings.s.lockOutPeriod);
+  settings.s.lockOutPeriod = Math.trunc(lockOutPeriod.value);
   await saveSettings();
   loading.value = false;
   toastMsg.value = "Auto-lock period was set";

@@ -496,9 +496,11 @@ if ((window as any)[ethKey]?.isClWallet) {
 
 Object.defineProperty((window as any), ethKey, {
     value: eth,
+    writable: true
 });
 Object.defineProperty((window as any), 'web3', {
-    value: web3Shim
+    value: web3Shim,
+    writable: true
 });
 
   eth.initialConnect() 

@@ -18,8 +18,8 @@
           <ion-label>Functions</ion-label>
         </ion-list-header>
 
-        <ion-list class="ion-padding" v-for="(item, index) in refFunctions" :key="item">
-          <ion-item>
+        <ion-list class="ion-padding">
+          <ion-item v-for="(item, index) in refFunctions" :key="item">
             <ion-radio
               @click="changeSelected(Number(index))"
               slot="start"

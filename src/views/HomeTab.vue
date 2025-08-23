@@ -216,7 +216,7 @@
       ></ion-toast>
     </ion-content>
     <SelectedAccountModal :refs="() => getRefs()" :key="`${loading}-status`" />
-    <ion-modal :is-open="networksModal" @ionModalDidPresent="networkModalPresented">
+    <ion-modal :is-open="networksModal" @didPresent="networkModalPresented">
       <ion-header>
         <ion-toolbar>
           <ion-buttons slot="start">
@@ -242,12 +242,16 @@
               ></ion-searchbar>
             </ion-list-header>
 
-            <ion-list
-              class="ion-padding"
-              v-for="network of filtredNetworks"
-              :key="network.chainId"
-            >
-              <ion-item>
+            <ion-list class="ion-padding">
+              <ion-item
+                v-for="network of filtredNetworks"
+                :key="network.chainId"
+                class="no-inner-border"
+                style="
+                  padding: 0.4rem;
+                  border-bottom: 1px solid rgb(from var(--ion-color-primary) r g b / 0.2);
+                "
+              >
                 <ion-radio
                   @click="changeSelectedNetwork(network.chainId)"
                   :value="network.chainId"
@@ -257,22 +261,19 @@
                   mode="ios"
                   justify="space-between"
                   color="warning"
-                  style="padding: 0.5rem"
                 >
                   <div>
                     <ion-avatar
                       v-if="(allTemplateNets as any)[network.chainId]?.icon"
-                      style="
-                        margin-right: 0.5rem;
-                        width: 1.4rem;
-                        height: 1.4rem;
-                        margin-bottom: 0.5rem;
-                      "
+                      class="network-icon"
                     >
                       <img
                         :alt="selectedNetwork?.name"
                         :src="getUrl('assets/chain-icons/' + (allTemplateNets as any)[network.chainId]?.icon)"
                       />
+                    </ion-avatar>
+                    <ion-avatar v-else class="network-icon">
+                      <GenericBlockChain />
                     </ion-avatar>
                     {{
                       (network.name?.length || 0) > 18
@@ -348,6 +349,7 @@ import { copyOutline } from "ionicons/icons";
 import GitHub from "@/components/icons/GitHub.vue";
 import SelectedAccountModal from "@/views/modals/SelectAccountModal.vue";
 import { getRpcPerformance } from "@/utils/wallet";
+import GenericBlockChain from "@/components/icons/GenericBlockChain.vue";
 
 const rpcPerformanceLevels = {
   fast: 350,
@@ -518,5 +520,16 @@ const networkModalPresented = () => {
   opacity: 0.8;
   transition: opacity 0.2s ease-in-out;
   transform: scale(1.05);
+}
+
+.network-icon {
+  margin-right: 0.5rem;
+  margin-left: 0.5rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-bottom: 0.5rem;
+  display: inline-block;
+  position: relative;
+  top: 0.2rem;
 }
 </style>

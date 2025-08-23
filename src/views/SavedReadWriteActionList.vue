@@ -18,19 +18,21 @@
           <ion-label>Actions</ion-label>
         </ion-list-header>
 
-        <ion-list class="ion-padding" v-for="key in Object.keys(actions)" :key="key">
-          <ion-item>
-            <ion-radio
-              @click="changeSelected(key)"
-              slot="start"
-              :value="key"
-              :aria-label="key"
-            >
-              {{ key }} on ABI {{ actions[key].abi }}
-            </ion-radio>
-          </ion-item>
-          <ion-item>
-            <ion-button @click="onDelete(key)">Delete</ion-button>
+        <ion-list class="ion-padding">
+          <ion-item v-for="key in Object.keys(actions)" :key="key">
+            <ion-item>
+              <ion-radio
+                @click="changeSelected(key)"
+                slot="start"
+                :value="key"
+                :aria-label="key"
+              >
+                {{ key }} on ABI {{ actions[key].abi }}
+              </ion-radio>
+            </ion-item>
+            <ion-item>
+              <ion-button @click="onDelete(key)">Delete</ion-button>
+            </ion-item>
           </ion-item>
         </ion-list>
       </ion-radio-group>

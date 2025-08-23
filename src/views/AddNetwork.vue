@@ -103,12 +103,14 @@
           </ion-segment>
 
           <div v-if="currentSegment === 'mainnets'">
-            <ion-list
-              class="ion-padding"
-              v-for="network of Object.values(mainNets)"
-              :key="network.chainId"
-            >
-              <ion-item button style="cursor: pointer" @click="fillTemplate(network)">
+            <ion-list class="ion-padding">
+              <ion-item
+                button
+                style="cursor: pointer"
+                @click="fillTemplate(network)"
+                v-for="network of Object.values(mainNets)"
+                :key="network.chainId"
+              >
                 <ion-avatar class="network-avatar">
                   <img
                     :alt="network.name"

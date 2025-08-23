@@ -26,23 +26,31 @@
         <ion-button @click="goToAddAccount">Add Account</ion-button>
       </ion-item>
       <ion-list v-for="account of accounts" :key="account.address">
-        <ion-item class="no-inner-border">
+        <ion-item
+          class="no-inner-border"
+          style="margin-bottom: -1rem; margin-top: -0.7rem"
+        >
           <ion-label style="color: var(--primary-color)">
             {{ account.name }}
           </ion-label>
         </ion-item>
         <ion-item
           class="no-inner-border"
+          style="cursor: pointer"
           @click="copyText(account.address, getToastRef())"
         >
           <p style="font-size: 0.7rem">{{ account.address }}</p>
           &nbsp;
           <ion-icon class="copy-icon" :icon="copyOutline"></ion-icon>
         </ion-item>
-        <ion-item>
-          <ion-chip @click="viewPk(account.address)">View Pk</ion-chip>
-          <ion-chip @click="deleteAccount(account.address)">Delete</ion-chip>
-          <ion-chip @click="editAccount(account.address)">Edit Name</ion-chip>
+        <ion-item style="margin-top: -0.7rem">
+          <ion-chip color="primary" @click="viewPk(account.address)">View Pk</ion-chip>
+          <ion-chip color="primary" @click="deleteAccount(account.address)"
+            >Delete</ion-chip
+          >
+          <ion-chip color="primary" @click="editAccount(account.address)"
+            >Edit Name</ion-chip
+          >
         </ion-item>
       </ion-list>
 
