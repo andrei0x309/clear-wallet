@@ -1,5 +1,15 @@
 # Changelog
 
+## Manifest Version 1.5.4
+
+- created scripts to foxify and unfoxify manifest to be able to build for Firefox
+- made some changes to content script to work with Firefox
+- added minor UI changes in order to better accommodate Firefox
+- updated build commands to also build a firefox version in releases/firefox
+- added default networks to automatically add when user installs the wallet
+- improved Add Account UI
+- improved Settings UI
+
 ## Manifest Version 1.5.3
 
 - made ethereum object writable since some older MetaMask sdk expects to be writable

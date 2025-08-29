@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "inject": "bun build src/extension/inject.ts --minify --target=browser --format iife --outdir ./src/extension/",
-    "content": "bun build src/extension/content.ts --minify --target=browser --outdir ./src/extension/",
+    "inject": "bun build src/extension/inject.ts --target=browser --format iife --outdir ./src/extension/",
+    "content": "bun build src/extension/content.ts --target=browser --outdir ./src/extension/",
     "post-build": "bun run ./release-scripts/post-build.ts",
     "build": "bun run inject && bun run content && vue-tsc --noEmit && vite build && bun run post-build",
     "rebuild": "bun run build && bun run ./release-scripts/create-release.ts rebuild",

@@ -163,7 +163,10 @@
           >
         </p>
       </ion-item>
-      <ion-item style="font-size: 0.85rem; text-align: center" v-else>
+      <ion-item
+        style="font-size: 0.85rem; text-align: center"
+        v-else-if="rpcPerformance.performance > -1"
+      >
         <p class="blink-loading">Loading RPC pefromance...</p>
       </ion-item>
 

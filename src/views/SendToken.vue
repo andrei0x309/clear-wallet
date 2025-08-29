@@ -20,180 +20,186 @@
           <ion-label>ERC20</ion-label>
         </ion-segment-button>
       </ion-segment>
-
-      <template v-if="currentSegment === 'native'">
+      <template v-if="!selectedAccount || !selectedNetwork">
         <ion-item>
-          <ion-label>Current Network</ion-label>
-        </ion-item>
-        <template v-if="selectedNetwork?.name">
-          <ion-item>
-            Name: <b>{{ selectedNetwork.name }}</b>
-          </ion-item>
-          <ion-item>
-            ID: <b>{{ selectedNetwork.chainId }}</b>
-          </ion-item>
-        </template>
-        <hr />
-        <ion-item>
-          <ion-label>Current Address</ion-label>
-        </ion-item>
-        <ion-item v-if="selectedAccount?.address">
-          <b style="font-size: 0.8rem">{{ selectedAccount?.address }}</b>
-        </ion-item>
-        <hr />
-        <ion-item>
-          <ion-label>Current Balance</ion-label>
-        </ion-item>
-        <ion-item v-if="currentBalance">
-          <b>{{ currentBalance.toFixed(8) }}</b>
-        </ion-item>
-        <hr />
-
-        <ion-item>
-          <ion-label>Send To Address:</ion-label>
-        </ion-item>
-
-        <ion-item>
-          <ion-input
-            aria-label="address"
-            style="font-size: 0.8rem"
-            id="pasteAddress"
-            v-model="sendTo"
-          ></ion-input>
-          <ion-icon
-            style="margin-right: 0.5rem; cursor: pointer"
-            @click="paste('pasteAddress')"
-            :icon="clipboardOutline"
-            button
-          />
-        </ion-item>
-
-        <ion-item button>
-          <ion-button @click="openModalAddContact()">
-            Load address from contacts
-          </ion-button>
-        </ion-item>
-
-        <ion-item>
-          <ion-label>Amount (e.g. 1.2):</ion-label>
-        </ion-item>
-
-        <ion-item>
-          <ion-input
-            aria-label="Amount (e.g. 1.2)"
-            type="number"
-            id="amount"
-            v-model="amount"
-          ></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-button @click="promptTransaction">Prompt Transaction</ion-button>
+          <ion-label>Please select an account and network first to send tokens</ion-label>
         </ion-item>
       </template>
       <template v-else>
-        <ion-item>
-          <ion-label>ERC20 Token</ion-label>
-        </ion-item>
-        <ion-item>
-          <ion-input
-            aria-label="ERC20 Token"
-            type="text"
-            id="erc20"
-            v-model="erc20"
-          ></ion-input>
-          <ion-icon
-            style="margin-right: 0.5rem; cursor: pointer"
-            @click="paste('erc20')"
-            :icon="clipboardOutline"
-            button
-          />
-        </ion-item>
+        <template v-if="currentSegment === 'native'">
+          <ion-item>
+            <ion-label>Current Network</ion-label>
+          </ion-item>
+          <template v-if="selectedNetwork?.name">
+            <ion-item>
+              Name: <b>{{ selectedNetwork.name }}</b>
+              <span style="font-size: 0.8rem; opacity: 0.7"
+                >(ID: {{ selectedNetwork.chainId }})</span
+              >
+            </ion-item>
+          </template>
+          <hr />
+          <ion-item>
+            <ion-label>Current Address</ion-label>
+          </ion-item>
+          <ion-item v-if="selectedAccount?.address">
+            <b style="font-size: 0.8rem">{{ selectedAccount?.address }}</b>
+          </ion-item>
+          <hr />
+          <ion-item>
+            <ion-label>Current Balance</ion-label>
+          </ion-item>
+          <ion-item v-if="currentBalance">
+            <b>{{ currentBalance.toFixed(8) }}</b>
+          </ion-item>
+          <hr />
 
-        <ion-item button>
-          <ion-button @click="openModalAddContact(true)">
-            Load address from contacts
-          </ion-button>
-        </ion-item>
+          <ion-item>
+            <ion-label>Send To Address:</ion-label>
+          </ion-item>
 
-        <ion-item>
-          <ion-label>Send To Address:</ion-label>
-        </ion-item>
+          <ion-item>
+            <ion-input
+              aria-label="address"
+              style="font-size: 0.8rem"
+              id="pasteAddress"
+              v-model="sendTo"
+            ></ion-input>
+            <ion-icon
+              style="margin-right: 0.5rem; cursor: pointer"
+              @click="paste('pasteAddress')"
+              :icon="clipboardOutline"
+              button
+            />
+          </ion-item>
 
-        <ion-item>
-          <ion-input
-            aria-label="address"
-            style="font-size: 0.8rem"
-            id="pasteAddress"
-            v-model="sendTo"
-          ></ion-input>
-          <ion-icon
-            style="margin-right: 0.5rem; cursor: pointer"
-            @click="paste('pasteAddress')"
-            :icon="clipboardOutline"
-            button
-          />
-        </ion-item>
+          <ion-item button>
+            <ion-button @click="openModalAddContact()">
+              Load address from contacts
+            </ion-button>
+          </ion-item>
 
-        <ion-item button>
-          <ion-button @click="openModalAddContact()">
-            Load address from contacts
-          </ion-button>
-        </ion-item>
+          <ion-item>
+            <ion-label>Amount (e.g. 1.2):</ion-label>
+          </ion-item>
 
-        <ion-item>
-          <ion-button
-            @click="
-              async () => {
-                if (!erc20) {
-                  alertOpen = true;
-                  alertMsg = 'Invalid ERC20 address';
-                  return;
+          <ion-item>
+            <ion-input
+              aria-label="Amount (e.g. 1.2)"
+              type="number"
+              id="amount"
+              v-model="amount"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-button @click="promptTransaction">Prompt Transaction</ion-button>
+          </ion-item>
+        </template>
+        <template v-else>
+          <ion-item>
+            <ion-label>ERC20 Token</ion-label>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              aria-label="ERC20 Token"
+              type="text"
+              id="erc20"
+              v-model="erc20"
+            ></ion-input>
+            <ion-icon
+              style="margin-right: 0.5rem; cursor: pointer"
+              @click="paste('erc20')"
+              :icon="clipboardOutline"
+              button
+            />
+          </ion-item>
+
+          <ion-item button>
+            <ion-button @click="openModalAddContact(true)">
+              Load address from contacts
+            </ion-button>
+          </ion-item>
+
+          <ion-item>
+            <ion-label>Send To Address:</ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-input
+              aria-label="address"
+              style="font-size: 0.8rem"
+              id="pasteAddress"
+              v-model="sendTo"
+            ></ion-input>
+            <ion-icon
+              style="margin-right: 0.5rem; cursor: pointer"
+              @click="paste('pasteAddress')"
+              :icon="clipboardOutline"
+              button
+            />
+          </ion-item>
+
+          <ion-item button>
+            <ion-button @click="openModalAddContact()">
+              Load address from contacts
+            </ion-button>
+          </ion-item>
+
+          <ion-item>
+            <ion-button
+              @click="
+                async () => {
+                  if (!erc20) {
+                    alertOpen = true;
+                    alertMsg = 'Invalid ERC20 address';
+                    return;
+                  }
+                  if (loading) return;
+                  loading = true;
+                  await wait(100);
+                  await balanceOfERC20();
                 }
-                if (loading) return;
-                loading = true;
-                await wait(100);
-                await balanceOfERC20();
-              }
-            "
-          >
-            <svg
-              height="24px"
-              width="24px"
-              id="Layer_1"
-              style="enable-background: new 0 0 512 512"
-              version="1.1"
-              viewBox="0 0 512 512"
-              xml:space="preserve"
-              xmlns="http://www.w3.org/2000/svg"
-              xmlns:xlink="http://www.w3.org/1999/xlink"
+              "
             >
-              <path
-                d="M384,352l96-109.3h-66.1C407.1,141.8,325,64,223.2,64C117.8,64,32,150.1,32,256s85.8,192,191.2,192  c43.1,0,83.8-14.1,117.7-40.7l7.5-5.9l-43.2-46.2l-6.2,4.6c-22.1,16.3-48.3,24.9-75.8,24.9C152.6,384.7,95.1,327,95.1,256  c0-71,57.5-128.7,128.1-128.7c66.4,0,120.7,50,127.4,115.3h-74.1L384,352z"
-              />
-            </svg>
-          </ion-button>
-          <ion-label>Current Balance</ion-label>
-          <b v-if="currentBalanceERC20">{{ currentBalanceERC20.toFixed(8) }}</b>
-          <b v-else-if="currentBalanceERC20 === null">Not Fetched</b>
-          <b v-else-if="currentBalanceERC20 === 0">0</b>
-        </ion-item>
+              <svg
+                height="24px"
+                width="24px"
+                id="Layer_1"
+                style="enable-background: new 0 0 512 512"
+                version="1.1"
+                viewBox="0 0 512 512"
+                xml:space="preserve"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+              >
+                <path
+                  d="M384,352l96-109.3h-66.1C407.1,141.8,325,64,223.2,64C117.8,64,32,150.1,32,256s85.8,192,191.2,192  c43.1,0,83.8-14.1,117.7-40.7l7.5-5.9l-43.2-46.2l-6.2,4.6c-22.1,16.3-48.3,24.9-75.8,24.9C152.6,384.7,95.1,327,95.1,256  c0-71,57.5-128.7,128.1-128.7c66.4,0,120.7,50,127.4,115.3h-74.1L384,352z"
+                />
+              </svg>
+            </ion-button>
+            <ion-label>Current Balance</ion-label>
+            <b v-if="currentBalanceERC20">{{ currentBalanceERC20.toFixed(8) }}</b>
+            <b v-else-if="currentBalanceERC20 === null">Not Fetched</b>
+            <b v-else-if="currentBalanceERC20 === 0">0</b>
+          </ion-item>
 
-        <ion-item>
-          <ion-label>Amount (e.g. 1.2):</ion-label>
-        </ion-item>
+          <ion-item>
+            <ion-label>Amount (e.g. 1.2):</ion-label>
+          </ion-item>
 
-        <ion-item>
-          <ion-input
-            aria-label="Amount (e.g. 1.2)"
-            type="number"
-            v-model="erc20Amount"
-          ></ion-input>
-        </ion-item>
+          <ion-item>
+            <ion-input
+              aria-label="Amount (e.g. 1.2)"
+              type="number"
+              v-model="erc20Amount"
+            ></ion-input>
+          </ion-item>
 
-        <ion-item>
-          <ion-button @click="promptTransactionERC20">Prompt Transaction</ion-button>
-        </ion-item>
+          <ion-item>
+            <ion-button @click="promptTransactionERC20">Prompt Transaction</ion-button>
+          </ion-item>
+        </template>
       </template>
 
       <ion-alert
@@ -284,6 +290,12 @@ onIonViewWillEnter(async () => {
   try {
     selectedNetwork.value = await getSelectedNetwork();
     selectedAccount.value = await getSelectedAccount();
+
+    if (!selectedNetwork.value || !selectedAccount.value) {
+      loading.value = false;
+      return;
+    }
+
     currentBalance.value = Number(formatEther((await getBalance()).toString()));
   } catch (e) {
     alertOpen.value = true;

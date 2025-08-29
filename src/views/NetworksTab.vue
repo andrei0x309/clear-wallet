@@ -14,7 +14,10 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-      <ion-item v-if="loading || Object.keys(networks).length < 1">
+      <ion-item
+        v-if="loading || Object.keys(networks).length < 1"
+        class="no-inner-border"
+      >
         <ion-label>No EVM Networks found</ion-label>
         <ion-button @click="goToAddNetwork">Add Network</ion-button>
       </ion-item>

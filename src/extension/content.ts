@@ -41,21 +41,23 @@ window.addEventListener("message", (event) => {
   if (event.source != window)
     return;
   if (event?.data?.type === "CLWALLET_CONTENT") {
-    event.data.data.data.resId = event.data.resId
-    event.data.data.data.type = "CLWALLET_CONTENT_MSG"
-    event.data.data.data.website = document?.location?.href ?? ''
-    if ((event?.data?.data?.method ?? 'x') in allowedMethods) {
-      event.data.data.data.method = event?.data?.data?.method ?? ''
+    const eventData = {
+      ...event.data.data.data
+    }
+    eventData.resId = event.data.resId
+    eventData.type = "CLWALLET_CONTENT_MSG"
+    eventData.website = document?.location?.href ?? ''
+    if ((eventData?.method ?? 'x') in allowedMethods) {
       try {
-        chrome?.runtime?.sendMessage(event.data.data.data, (res) => {
+        chrome?.runtime?.sendMessage(eventData, (res) => {
           if (chrome.runtime.lastError) {
             console.warn("LOC1: Error sending message:", JSON.stringify(chrome.runtime.lastError));
           }
-          const id = Number(event.data.resId.replace(/[A-Za-z]/g, '').slice(0, 10))
+          const id = Number(eventData.resId.replace(/[A-Za-z]/g, '').slice(0, 10))
           const data = {
             target: 'metamask-inpage',
             type: "CLWALLET_PAGE",
-            resId: event.data.resId,
+            resId: eventData.resId,
             data: {
               name: 'metamask-provider', data: {
                 jsonrpc: '2.0',
@@ -63,8 +65,8 @@ window.addEventListener("message", (event) => {
                 result: res,
               },
               id,
-              method: event?.data?.data?.data?.method ?? '',
-              params: event?.data?.data?.data?.params ?? [],
+              method: eventData?.method ?? '',
+              params: eventData?.params ?? [],
               listener: undefined
             },
           }
@@ -75,7 +77,7 @@ window.addEventListener("message", (event) => {
             data.data.data.result = res?.data?.data
           }
 
-          if (event?.data?.data?.data?.method !== 'eth_chainId') {
+          if (eventData?.method !== 'eth_chainId') {
             // console.info('data out', data)
           }
 
@@ -100,12 +102,15 @@ window.addEventListener("message", (event) => {
       window.postMessage(data, "*");
     }
   } else if (event?.data?.type === "CLWALLET_PING") {
-    event.data.data.data.resId = event.data.resId
-    event.data.data.data.type = "CLWALLET_CONTENT_MSG"
-    event.data.data.data.method = "wallet_connect"
-    event.data.data.data.params = Array(0)
+    const data = {
+      ...event.data.data.data
+    }
+    data.resId = event.data.resId
+    data.type = "CLWALLET_CONTENT_MSG"
+    data.method = "wallet_connect"
+    data.params = []
     try {
-      chrome.runtime.sendMessage(event.data.data.data, async (res) => {
+      chrome.runtime.sendMessage(data, async (res) => {
         if (chrome.runtime.lastError) {
           console.warn("LOC2: Error sending message:", chrome.runtime.lastError);
         }
@@ -120,7 +125,7 @@ window.addEventListener("message", (event) => {
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
+chrome.runtime?.onMessage?.addListener((message: any, sender, sendResponse) => {
   if (chrome.runtime.lastError) {
     console.warn("Error receiving message:", chrome.runtime.lastError);
   }

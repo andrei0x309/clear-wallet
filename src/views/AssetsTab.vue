@@ -21,38 +21,39 @@
         message="Copied to clipboard"
         :duration="1500"
       ></ion-toast>
-
-      <ion-item>
-        <ion-label style="text-align: center"
-          >Assets for: {{ selectedAccount?.name }}</ion-label
-        >
-      </ion-item>
-      <ion-item button @click="copyText(selectedAccount?.address, getToastRef())">
-        <p style="font-size: 0.7rem">{{ selectedAccount?.address }}</p>
-        <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
-      </ion-item>
-      <ion-item v-if="assetsValue?.value">
-        <ion-list>
-          <ion-item
-            ><b>Total Value:&nbsp;</b>
-            <span style="color: #ffcc00; font-size: 0.9rem">
-              {{ formatNumber(assetsValue?.value, 2) }} $</span
-            ></ion-item
+      <template v-if="!noSelectedAccount">
+        <ion-item>
+          <ion-label style="text-align: center"
+            >Assets for: {{ selectedAccount?.name }}</ion-label
           >
-          <ion-item
-            ><b>24H Change:&nbsp;</b>
-            <arrow-up v-if="assetsChange.percentage.value > 0" />
-            <arrow-down v-else />
-            <span
-              :style="`font-size: 0.9rem;color: ${
-                assetsChange.percentage.value > 0 ? '#33cc33' : '#ff5050'
-              }`"
+        </ion-item>
+        <ion-item button @click="copyText(selectedAccount?.address, getToastRef())">
+          <p style="font-size: 0.7rem">{{ selectedAccount?.address }}</p>
+          <ion-icon style="margin-left: 0.5rem" :icon="copyOutline"></ion-icon>
+        </ion-item>
+        <ion-item v-if="assetsValue?.value">
+          <ion-list style="width: 100%; display: grid; justify-content: center">
+            <ion-item
+              ><b>Total Value:&nbsp;</b>
+              <span style="color: #ffcc00; font-size: 0.9rem">
+                {{ formatNumber(assetsValue?.value, 2) }} $</span
+              ></ion-item
             >
-              {{ formatNumber(assetsChange.percentage.value, 2) }}%</span
-            ></ion-item
-          >
-        </ion-list>
-      </ion-item>
+            <ion-item
+              ><b>24H Change:&nbsp;</b>
+              <arrow-up v-if="assetsChange.percentage.value > 0" />
+              <arrow-down v-else />
+              <span
+                :style="`font-size: 0.9rem;color: ${
+                  assetsChange.percentage.value > 0 ? '#33cc33' : '#ff5050'
+                }`"
+              >
+                {{ formatNumber(assetsChange.percentage.value, 2) }}%</span
+              ></ion-item
+            >
+          </ion-list>
+        </ion-item>
+      </template>
       <ion-item>
         <div style="display: flex; flex-direction: column; margin: auto">
           <button
@@ -65,12 +66,19 @@
           </button>
         </div>
       </ion-item>
-      <template v-if="isError">
-        Assets info could not be retrieved because of an http error, API down or
-        conectivity issues.
+      <template v-if="noSelectedAccount">
+        <p class="warn-msg">
+          No account selected, please select an account to see assets.
+        </p>
+      </template>
+      <template v-else-if="isError">
+        <p class="warn-msg">
+          Assets info could not be retrieved because of an http error, API down or
+          conectivity issues.
+        </p>
       </template>
       <template v-else-if="noAssets">
-        <p class="padding: 1rem;">No know assets found for this wallet address.</p>
+        <p class="warn-msg">No know assets found for this wallet address.</p>
       </template>
       <template v-else>
         <ion-list>
@@ -147,6 +155,7 @@ import BridgeIcon from "@/components/icons/Bridge.vue";
 const selectedAccount = ref({}) as Ref<Account>;
 const loading = ref(true);
 const isError = ref(false);
+const noSelectedAccount = ref(false);
 const noAssets = ref(false);
 const toastState = ref(false);
 const getToastRef = () => toastState;
@@ -224,6 +233,13 @@ const getUniwapAssets = async (ownerAddress: string) => {
 
 onIonViewWillEnter(async () => {
   selectedAccount.value = await getSelectedAccount();
+
+  if (!selectedAccount.value) {
+    noSelectedAccount.value = true;
+    loading.value = false;
+    return;
+  }
+
   const result = await getUniwapAssets(selectedAccount.value.address);
 
   if (!result) {
@@ -278,5 +294,11 @@ onIonViewWillEnter(async () => {
   background-color: #37368f;
   transform: scale(1.05);
   transition: all 0.3s;
+}
+
+.warn-msg {
+  text-align: center;
+  font-size: 1.1rem;
+  margin-top: 2.5rem;
 }
 </style>

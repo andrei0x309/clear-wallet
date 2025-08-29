@@ -17,7 +17,7 @@
           <p>No Abi selected</p>
         </template>
 
-        <ion-button style="left: 0.4rem" @click="openAbiListModal()" expand="block"
+        <ion-button style="margin-left: 0.4rem" @click="openAbiListModal()" expand="block"
           >Load Abi</ion-button
         >
       </ion-item>

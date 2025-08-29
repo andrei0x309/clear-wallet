@@ -13,11 +13,14 @@
           </ion-item>
           <div class="ion-padding" slot="content">
             <ion-list>
-              <ion-item v-if="noAccounts"
-                >You need at least one account to touch this settings</ion-item
+              <ion-item
+                v-if="noAccounts"
+                color="warning"
+                style="text-align: center; font-size: 0.8rem"
+                >You need at least one account to set encryption settings</ion-item
               >
-              <ion-list :disabled="noAccounts">
-                <ion-item>
+              <div :style="noAccounts ? 'pointer-events: none; opacity: 0.7' : ''">
+                <ion-item :disabled="noAccounts">
                   <div style="display: flex; flex-direction: column">
                     <ion-item class="ion-no-padding no-inner-border">
                       <ion-label>Enable Storage Encryption</ion-label>
@@ -33,58 +36,57 @@
                     </p>
                   </div>
                 </ion-item>
-              </ion-list>
-              <ion-item :disabled="!settings.s?.enableStorageEnctyption">
-                <div style="display: flex; flex-direction: column; width: 100%">
-                  <ion-item class="ion-no-padding no-inner-border">
-                    <ion-label>Enable Auto Lock</ion-label>
-                    <ion-toggle
-                      aria-label="Enable Auto Lock"
-                      @ion-change="changeAutoLock"
-                      slot="end"
-                      :checked="settings.s?.lockOutEnabled"
-                    ></ion-toggle>
-                  </ion-item>
-                  <p class="helper-label">
-                    This will lock the private keys after a period of inactivity, set
-                    bellow, permanent lock option takes precedence.
-                  </p>
-                  <ion-item
-                    class="ion-no-padding no-inner-border"
-                    :disabled="
-                      !settings.s?.enableStorageEnctyption || !settings.s?.lockOutEnabled
-                    "
-                  >
-                    <ion-label>Auto-lock Period: (2-120) minutes</ion-label>
-                  </ion-item>
-                  <ion-item class="ion-no-padding no-inner-border">
-                    <ion-input
+                <ion-item :disabled="!settings.s?.enableStorageEnctyption">
+                  <div style="display: flex; flex-direction: column; width: 100%">
+                    <ion-item class="ion-no-padding no-inner-border">
+                      <ion-label>Enable Auto Lock</ion-label>
+                      <ion-toggle
+                        aria-label="Enable Auto Lock"
+                        @ion-change="changeAutoLock"
+                        slot="end"
+                        :checked="settings.s?.lockOutEnabled"
+                      ></ion-toggle>
+                    </ion-item>
+                    <p class="helper-label">
+                      This will lock the private keys after a period of inactivity, set
+                      bellow, permanent lock option takes precedence.
+                    </p>
+                    <ion-item
+                      class="ion-no-padding no-inner-border"
                       :disabled="
                         !settings.s?.enableStorageEnctyption ||
                         !settings.s?.lockOutEnabled
                       "
-                      v-model="lockOutPeriod"
-                      type="number"
-                      style="
-                        width: 110px;
-                        margin-right: 10px;
-                        border: 0.3rem solid var(--border-color);
-                        padding: 0.4rem;
-                      "
-                    ></ion-input>
-                    <ion-button
-                      @click="setTime"
-                      style="margin-left: auto"
-                      :disabled="
-                        !settings.s?.enableStorageEnctyption ||
-                        !settings.s?.lockOutEnabled
-                      "
-                      >Set Auto-lock</ion-button
                     >
-                  </ion-item>
-                </div>
-              </ion-item>
-              <ion-list>
+                      <ion-label>Auto-lock Period: (2-120) minutes</ion-label>
+                    </ion-item>
+                    <ion-item class="ion-no-padding no-inner-border">
+                      <ion-input
+                        :disabled="
+                          !settings.s?.enableStorageEnctyption ||
+                          !settings.s?.lockOutEnabled
+                        "
+                        v-model="lockOutPeriod"
+                        type="number"
+                        style="
+                          width: 110px;
+                          margin-right: 10px;
+                          border: 0.3rem solid var(--border-color);
+                          padding: 0.4rem;
+                        "
+                      ></ion-input>
+                      <ion-button
+                        @click="setTime"
+                        style="margin-left: auto"
+                        :disabled="
+                          !settings.s?.enableStorageEnctyption ||
+                          !settings.s?.lockOutEnabled
+                        "
+                        >Set Auto-lock</ion-button
+                      >
+                    </ion-item>
+                  </div>
+                </ion-item>
                 <ion-item>
                   <div style="display: flex; flex-direction: column">
                     <ion-item class="ion-no-padding no-inner-border">
@@ -103,7 +105,7 @@
                     </p>
                   </div>
                 </ion-item>
-              </ion-list>
+              </div>
               <ion-item>
                 <div style="display: flex; flex-direction: column">
                   <ion-item class="ion-no-padding no-inner-border">
@@ -325,6 +327,7 @@
                 aria-label="password"
                 v-model="mpPass"
                 type="password"
+                fill="outline"
               ></ion-input>
             </ion-item>
           </ion-list>
@@ -338,6 +341,7 @@
                   aria-label="password"
                   v-model="mpPass"
                   type="password"
+                  fill="outline"
                 ></ion-input>
               </ion-item>
             </ion-list>
@@ -350,6 +354,7 @@
                   aria-label="password"
                   v-model="mpConfirm"
                   type="password"
+                  fill="outline"
                 ></ion-input>
               </ion-item>
             </ion-list>
@@ -766,7 +771,7 @@ const modalDismiss = () => {
 }
 .file-input-cls {
   cursor: pointer;
-  background-color: #f4f5f8;
+  background-color: var(--ion-background-color);
 }
 
 .dark .export-border {

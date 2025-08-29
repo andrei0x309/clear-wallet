@@ -343,3 +343,7 @@ export const openTab = (url: string) => {
 }
 
 export const getVersion = () => chrome?.runtime?.getManifest()?.version ?? ''
+
+export const isFirefox = () => {
+ return chrome?.runtime.getURL('').startsWith('moz-extension://')
+}
