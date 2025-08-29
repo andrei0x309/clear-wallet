@@ -6,6 +6,13 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
+      <ion-item v-if="isRuntimeFirefox">
+        <ion-label style="font-size: 0.9rem" color="warning"
+          >Warning: This vew might not work currently on Firefox due to missing sandbox
+          support.</ion-label
+        >
+      </ion-item>
+
       <ion-button @click="selectSavedAction" expand="block"
         >Load saved wite action</ion-button
       >
@@ -179,7 +186,7 @@ import {
   IonButtons,
   IonModal,
 } from "@ionic/vue";
-import { paste, writeCASet, getAbis } from "@/utils/platform";
+import { paste, writeCASet, getAbis, isFirefox } from "@/utils/platform";
 import { clipboardOutline } from "ionicons/icons";
 import type { ContractAction } from "@/extension/types";
 import { ethers } from "ethers";
@@ -192,6 +199,7 @@ import SelectedContacts from "./ContactsSelect.vue";
 
 const saveActionModal = ref(false);
 const alertOpen = ref(false);
+const isRuntimeFirefox = ref(false);
 const alertMsg = ref("");
 const name = ref("");
 const loadingSend = ref(false);
@@ -429,6 +437,7 @@ const messageHandler = (event: any) => {
 
 onMounted(() => {
   window.addEventListener("message", messageHandler);
+  isRuntimeFirefox.value = isFirefox();
 });
 
 onBeforeUnmount(() => {
