@@ -29,6 +29,7 @@
                         @ion-change="changeEncryption"
                         slot="end"
                         :checked="settings.s?.enableStorageEnctyption"
+                        :key="setEncryptToggleKey"
                       ></ion-toggle>
                     </ion-item>
                     <p class="helper-label">
@@ -191,7 +192,7 @@
             </ion-list>
           </div>
         </ion-accordion>
-        <ion-accordion>
+        <ion-accordion v-if="!isRuntimeFirefox">
           <ion-item slot="header" color="light">
             <ion-label> Import / Export Accounts</ion-label>
           </ion-item>
@@ -202,10 +203,7 @@
             <ion-item class="ion-no-padding no-inner-border">
               <input ref="importFile" type="file" accept=".json" class="file-input-cls" />
             </ion-item>
-            <ion-item
-              class="ion-no-padding no-inner-border"
-              style="display: flex; justify-self: center"
-            >
+            <ion-item class="ion-no-padding no-inner-border">
               <ion-button color="warning" @click="importAcc">Import</ion-button>
             </ion-item>
             <ion-item class="ion-no-padding export-border">
@@ -306,7 +304,10 @@
                         modalGetPassword.reject();
                         modalGetPassword = null;
                       })()
-                    : (mpModal = false)
+                    : (() => {
+                        mpModal = false;
+                        mpModalEnctyption = settings.s.enableStorageEnctyption;
+                      })()
                 "
                 >Close</ion-button
               >
@@ -318,9 +319,14 @@
           </ion-toolbar>
         </ion-header>
         <ion-content class="ion-padding">
-          <ion-list v-if="settings.s.enableStorageEnctyption">
+          <template v-if="settings.s.enableStorageEnctyption">
             <ion-item>
-              <ion-label>Old Password</ion-label>
+              <ion-label
+                >Password
+                <span class="helper-label"
+                  >(Required: was set before by user)
+                </span></ion-label
+              >
             </ion-item>
             <ion-item>
               <ion-input
@@ -330,35 +336,31 @@
                 fill="outline"
               ></ion-input>
             </ion-item>
-          </ion-list>
-          <div v-else>
-            <ion-list>
-              <ion-item>
-                <ion-label>New Password</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-input
-                  aria-label="password"
-                  v-model="mpPass"
-                  type="password"
-                  fill="outline"
-                ></ion-input>
-              </ion-item>
-            </ion-list>
-            <ion-list>
-              <ion-item>
-                <ion-label>Confirm</ion-label>
-              </ion-item>
-              <ion-item>
-                <ion-input
-                  aria-label="password"
-                  v-model="mpConfirm"
-                  type="password"
-                  fill="outline"
-                ></ion-input>
-              </ion-item>
-            </ion-list>
-          </div>
+          </template>
+          <template v-else>
+            <ion-item>
+              <ion-label>New Password</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-input
+                aria-label="password"
+                v-model="mpPass"
+                type="password"
+                fill="outline"
+              ></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label>Confirm New Password</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-input
+                aria-label="password"
+                v-model="mpConfirm"
+                type="password"
+                fill="outline"
+              ></ion-input>
+            </ion-item>
+          </template>
           <ion-item>
             <ion-button
               @click="
@@ -395,6 +397,7 @@ import {
   saveSelectedAccount,
   replaceAccounts,
   openTab,
+  isFirefox,
 } from "@/utils/platform";
 import { decrypt, encrypt, getCryptoParams } from "@/utils/webCrypto";
 import { Account } from "@/extension/types";
@@ -428,6 +431,7 @@ import {
 
 const loading = ref(true);
 const mpModal = ref(false);
+const mpModalEnctyption = ref(false);
 const mpPass = ref("");
 const mpConfirm = ref("");
 const alertOpen = ref(false);
@@ -436,7 +440,10 @@ const toastState = ref(false);
 const toastMsg = ref("");
 const alertHeader = ref("Error");
 const lockOutPeriod = defineModel({ default: 2 });
+const setEncryptToggleKey = ref(0);
 const importFile = (ref(null) as unknown) as Ref<HTMLInputElement>;
+const isRuntimeFirefox = ref(false);
+
 type ModalPromisePassword = null | {
   resolve: (p?: unknown) => void;
   reject: (p?: unknown) => void;
@@ -456,11 +463,12 @@ const settings = reactive({
 
 const saveSettings = async () => {
   loading.value = true;
-  await setSettings(settings.s);
+  await setSettings({ ...settings.s });
   loading.value = false;
 };
 
 const setEncryptToggle = (state: boolean) => {
+  setEncryptToggleKey.value++;
   settings.s.enableStorageEnctyption = state;
 };
 
@@ -518,7 +526,7 @@ const confirmModal = async () => {
     alertHeader.value = "Error";
     alertMsg.value = "Password is too short. More than 3 characters are required.";
     alertOpen.value = true;
-    setEncryptToggle(settings.s.enableStorageEnctyption);
+    mpModalEnctyption.value = settings.s.enableStorageEnctyption;
     return;
   }
 
@@ -528,7 +536,7 @@ const confirmModal = async () => {
       alertHeader.value = "Error";
       alertMsg.value = "Password and confirm password do not match";
       alertOpen.value = true;
-      setEncryptToggle(settings.s.enableStorageEnctyption);
+      mpModalEnctyption.value = settings.s.enableStorageEnctyption;
       return;
     }
     let accounts = await getAccounts();
@@ -541,8 +549,9 @@ const confirmModal = async () => {
     accounts = await Promise.all(accProm);
     await replaceAccounts(accounts);
     await saveSelectedAccount(accounts[0]);
-    setEncryptToggle(true);
-    await setSettings(settings.s);
+    mpModalEnctyption.value = true;
+    settings.s.enableStorageEnctyption = true;
+    await setSettings({ ...settings.s });
     mpPass.value = "";
     mpConfirm.value = "";
     mpModal.value = false;
@@ -559,10 +568,11 @@ const confirmModal = async () => {
       accounts = await Promise.all(accProm);
       await replaceAccounts(accounts);
       await saveSelectedAccount(accounts[0]);
-      setEncryptToggle(false);
+      mpModalEnctyption.value = false;
+      settings.s.enableStorageEnctyption = false;
       settings.s.lockOutEnabled = false;
       settings.s.encryptAfterEveryTx = false;
-      await setSettings(settings.s);
+      await setSettings({ ...settings.s });
       mpPass.value = "";
       mpConfirm.value = "";
       mpModal.value = false;
@@ -571,7 +581,7 @@ const confirmModal = async () => {
       alertHeader.value = "Error";
       alertMsg.value = "Decryption failed, password is not correct.";
       alertOpen.value = true;
-      setEncryptToggle(settings.s.enableStorageEnctyption);
+      mpModalEnctyption.value = settings.s.enableStorageEnctyption;
       return;
     }
   }
@@ -682,6 +692,8 @@ const importAcc = async () => {
       alertMsg.value = "Successfully imported new accounts.";
       alertOpen.value = true;
       noAccounts.value = false;
+      mpPass.value = "";
+      mpModal.value = false;
     }
     return false;
   } else {
@@ -696,6 +708,7 @@ const importAcc = async () => {
     alertMsg.value = "Successfully imported new accounts.";
     alertOpen.value = true;
     noAccounts.value = false;
+    mpModal.value = false;
   }
 };
 
@@ -723,6 +736,8 @@ const exportAcc = async () => {
 };
 
 onIonViewWillEnter(async () => {
+  isRuntimeFirefox.value = isFirefox();
+
   await Promise.all([
     getSettings().then((storeSettings) => {
       settings.s = storeSettings;
@@ -754,7 +769,8 @@ const setTime = async () => {
 };
 
 const modalDismiss = () => {
-  setEncryptToggle(settings.s.enableStorageEnctyption);
+  console.log("modalDismiss");
+  setEncryptToggle(mpModalEnctyption.value);
 };
 </script>
 
@@ -779,5 +795,9 @@ const modalDismiss = () => {
 }
 .export-border {
   border-top: 1px solid #eee;
+}
+
+native-input sc-ion-input-md-h {
+  padding-left: 0.4rem;
 }
 </style>
