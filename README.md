@@ -4,15 +4,38 @@
 
 ## Description
 
-It is a simple EVM wallet chrome extension implementation using ethers, manifest version 3, Ionc, and Vue, first released on the Chrome web store on August 2022.
+This is an open source, NON-KYC privacy focused, EVM wallet browser extension implementation using Ethers, manifest version 3, Ionic, and Vue, first released on the Chrome web store on August 2022.
 
-ATM it also has some farcaster & warpcast related features.
+ATM it also has some farcaster related features.
 
 For more info you can check [docs website](https://clear-wallet.flashsoft.eu)
 
 ![Featured on Alchemy](/repo_res/alchemy.png?raw=true "Featured on Alchemy")
 
-**Listed on:** ethereum.org, alchemy, product hunt, alternativeto, walletconnect, and more.
+**Listed on:** ethereum.org, alchemy, product hunt, alternativeto, walletconnect, and most connect kits including Rainbow, thirdweb, privy and more.
+
+## How to Build
+
+```bash
+git clone https://github.com/andrei0x309/clear-wallet.git
+cd clear-wallet
+bun install
+bun run build
+```
+
+This will create a chromium extension in the dist folder.
+
+You can also generate both chromium and firefox zips with the following command:
+
+```bash
+bun install
+bun run rebuild
+```
+
+This will create both firefox and chromium extensions in this locations:
+
+- releases/x.x.x.zip (chromium x is replaced with the version number)
+- releases/firefox/x.x.x.zip (firefox x is replaced with the version number)
 
 <!-- [![Clear EVM Wallet (CLW) - Open source EVM wallet that implements meta mask API. | Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=381026&theme=dark)](https://www.producthunt.com/posts/clear-evm-wallet-clw?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-clear-evm-wallet-clw) -->
 
