@@ -4,15 +4,15 @@
 
 ## Description
 
-This is an open source, NON-KYC privacy focused, EVM wallet browser extension implementation using Ethers, manifest version 3, Ionic, and Vue, first released on the Chrome web store on August 2022.
+This is an open source, NON-KYC, privacy-focused, EVM wallet browser extension implementation using Ethers, manifest version 3, Ionic, and Vue, first released on the Chrome Webstore in August 2022.
 
-ATM it also has some farcaster related features.
+ATM, it also includes some Farcaster-related features.
 
-For more info you can check [docs website](https://clear-wallet.flashsoft.eu)
+For more info, you can check [docs website](https://clear-wallet.flashsoft.eu)
 
 ![Featured on Alchemy](/repo_res/alchemy.png?raw=true "Featured on Alchemy")
 
-**Listed on:** ethereum.org, alchemy, product hunt, alternativeto, walletconnect, and most connect kits including Rainbow, thirdweb, privy and more.
+**Listed on:** ethereum.org, alchemy, product hunt, alternativeto, walletconnect, and most connect kits, including Rainbow, thirdweb, privy, and more.
 
 ## How to Build
 
@@ -23,16 +23,16 @@ bun install
 bun run build
 ```
 
-This will create a chromium extension in the dist folder.
+This will create a Chromium extension in the dist folder.
 
-You can also generate both chromium and firefox zips with the following command:
+You can also generate both Chromium and Firefox zips with the following command:
 
 ```bash
 bun install
 bun run rebuild
 ```
 
-This will create both firefox and chromium extensions in this locations:
+This will create both Firefox and Chromium extensions in these locations:
 
 - releases/x.x.x.zip (chromium x is replaced with the version number)
 - releases/firefox/x.x.x.zip (firefox x is replaced with the version number)
@@ -56,36 +56,3 @@ https://github.com/user-attachments/assets/4f7d267a-7410-43cf-b3bd-0256f1ccc954
 [LICENSE.md](LICENSE.md)
 
 [PRIVACY_POLICY.md](PRIVACY_POLICY.md)
-
-### FAQ
-
-Q: Why use Ionic?
-A: The main idea is to extend the codebase to try additional platforms like Desktop and Mobile because Ionic has a simple and friendly interface that is instantly ready to use with no additional design work.
-
-Q: Is released on the Chrome web store?
-
-A: Yes, Link: [https://chrome.google.com/webstore/detail/clear-evm-wallet-clw/djlahdpfkflehaepgohnnodmaajabdlg?hl=en](https://chrome.google.com/webstore/detail/clear-evm-wallet-clw/djlahdpfkflehaepgohnnodmaajabdlg?hl=en)
-
-Q: What are some features?
-
-A:  - It assumes that the user has some knowledge about the EVM ecosystem. It doesn't come with any predefined network. You can add any EVM network you want, and it lets you select from the templates of some more popular networks.
-    - You can have the key stored with or without encryption, you can enable or disable auto-lock, and you can force decryption for every message sign or transaction sign & send.
-    - You can import and export accounts.
-    - You can wipe the data
-    - It only uses local chrome storage
-    - Is a drop-in replacement for meta mask, and currently will overwrite meta mask if you have both enabled
-    - It will allow sites directly to get your EVM address without prompting
-    - Prompts only for changing the network, sending/signing the transaction, and sending a message.
-
-Q: Is this ready to use?
-
-A: Should work on most modern websites as a Metamask replacement. Currently is pretty stable. It has a nice set of features that I needed.
-I developed this pretty fast in my free time, and you should always back-up your keys( since I've seen even well-known wallets sometimes render keys inaccessible). This wallet only handles the keys and personal data locally for maximum privacy and trust.
-
-Q: Will this project be heavily maintained?
-
-A: Planing not to add too many features, so I will update it as long as I'll use it, and not plan to ditch it anytime soon.
-
-### Related Projects that contain farcaster features
-
-You can find a list of open source projects I made that use farcaster tech here: [https://flashsoft.eu/projects/technology/farcaster](https://flashsoft.eu/projects/technology/farcaster)
