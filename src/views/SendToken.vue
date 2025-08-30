@@ -28,11 +28,12 @@
       <template v-else>
         <template v-if="currentSegment === 'native'">
           <ion-item>
-            <ion-label>Current Network</ion-label>
+            <ion-label style="font-size: 0.9rem">Current Network</ion-label>
           </ion-item>
           <template v-if="selectedNetwork?.name">
             <ion-item>
-              Name: <b>{{ selectedNetwork.name }}</b>
+              Name:&nbsp;<b>{{ selectedNetwork.name }}</b
+              >&nbsp;
               <span style="font-size: 0.8rem; opacity: 0.7"
                 >(ID: {{ selectedNetwork.chainId }})</span
               >
@@ -40,17 +41,20 @@
           </template>
           <hr />
           <ion-item>
-            <ion-label>Current Address</ion-label>
+            <ion-label style="font-size: 0.9rem">Current Address</ion-label>
           </ion-item>
           <ion-item v-if="selectedAccount?.address">
             <b style="font-size: 0.8rem">{{ selectedAccount?.address }}</b>
           </ion-item>
           <hr />
           <ion-item>
-            <ion-label>Current Balance</ion-label>
+            <ion-label style="font-size: 0.9rem">Current Balance</ion-label>
           </ion-item>
           <ion-item v-if="currentBalance">
             <b>{{ currentBalance.toFixed(8) }}</b>
+          </ion-item>
+          <ion-item v-if="currentBalance === 0">
+            <b>0</b>
           </ion-item>
           <hr />
 
