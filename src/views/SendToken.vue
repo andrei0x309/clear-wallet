@@ -218,7 +218,7 @@
         :is-open="loading"
         cssClass="my-custom-class"
         message="Please wait..."
-        :duration="loadingSend ? 0 : 4000"
+        :duration="loadingSend ? 0 : 5200"
         :key="`k${loading}`"
         @didDismiss="loading = false"
       >
@@ -296,6 +296,17 @@ onIonViewWillEnter(async () => {
     selectedAccount.value = await getSelectedAccount();
 
     if (!selectedNetwork.value || !selectedAccount.value) {
+      loading.value = false;
+      return;
+    }
+
+    const balanceRace = [getBalance(), new Promise((r) => wait(5000).then(() => r(-1)))];
+    const balance = await Promise.race(balanceRace);
+
+    if (balance === -1) {
+      alertOpen.value = true;
+      alertMsg.value =
+        "Timeout getting balance from RPC endpoint, RPC endpoint may have issues";
       loading.value = false;
       return;
     }

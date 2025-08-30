@@ -9,6 +9,7 @@
 - added default networks to automatically add when user installs the wallet
 - improved Add Account UI
 - improved Settings UI
+- change QR library wich works better with privy farcaster QR
 
 ## Manifest Version 1.5.3
 

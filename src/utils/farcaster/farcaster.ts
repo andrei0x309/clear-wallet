@@ -29,7 +29,10 @@ const EP_SIGNIN = `${FARCASTER_BASE_URL}sign-in-with-farcaster`
 const FC_ID_REGISTRY_CONTRACT = '0x00000000fc6c5f01fc30151999387bb99a9f489b'
 
 export const getLinkFromQR = async () => {
-    const data = await chrome.tabs.captureVisibleTab()
+    const data = await chrome.tabs.captureVisibleTab({
+        format: 'png',
+        quality: 100
+    })
     return await getQRCode(data)
 }
 
@@ -45,6 +48,7 @@ const getChannelTokenStatus = async (channelToken: string) => {
 }
 
 export const extractLinkData = (link: string) => {
+    try {
     const url = new URL(link);
     const channelToken = url.searchParams.get('channelToken');
     const siweUri = url.searchParams.get('siweUri');
@@ -67,6 +71,16 @@ export const extractLinkData = (link: string) => {
         domain: string,
         notBefore: string,
         expirationTime: string,
+    }
+    } catch (e) {
+        return {
+            channelToken: '',
+            nonce: '',
+            siweUri: '',
+            domain: '',
+            notBefore: '',
+            expirationTime: '',
+        }
     }
 }
 

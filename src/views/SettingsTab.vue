@@ -520,7 +520,6 @@ const changeEncryption = async () => {
 };
 
 const confirmModal = async () => {
-  loading.value = true;
   if (mpPass.value.length < 3) {
     loading.value = false;
     alertHeader.value = "Error";
@@ -550,8 +549,7 @@ const confirmModal = async () => {
     await replaceAccounts(accounts);
     await saveSelectedAccount(accounts[0]);
     mpModalEnctyption.value = true;
-    settings.s.enableStorageEnctyption = true;
-    await setSettings({ ...settings.s });
+    await setSettings({ ...settings.s, enableStorageEnctyption: true });
     mpPass.value = "";
     mpConfirm.value = "";
     mpModal.value = false;
@@ -769,7 +767,6 @@ const setTime = async () => {
 };
 
 const modalDismiss = () => {
-  console.log("modalDismiss");
   setEncryptToggle(mpModalEnctyption.value);
 };
 </script>
