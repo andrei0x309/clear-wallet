@@ -5,7 +5,12 @@
         <ion-router-outlet aria-label="Tab content" />
         <ion-tab-bar
           slot="bottom"
-          style="display: flex; flex-direction: column; height: 116px"
+          style="
+            display: flex;
+            flex-direction: column;
+            height: 116px;
+            box-shadow: -3px -1px #7e7e7e80;
+          "
         >
           <div style="display: flex">
             <ion-tab-button tab="home" href="/tabs/home">

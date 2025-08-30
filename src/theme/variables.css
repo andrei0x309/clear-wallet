@@ -131,7 +131,7 @@ http://ionicframework.com/docs/theming/ */
     --ion-text-color: #ffffff;
     --ion-text-color-rgb: 255,255,255;
 
-    --ion-border-color: #161616;
+    --ion-border-color: #222222;
 
     --ion-color-step-50: #1e1e1e;
     --ion-color-step-100: #2a2a2a;
@@ -403,12 +403,4 @@ body.dark {
 
 .no-inner-border {
   --inner-border-width: 0;
-}
-
-.searchbar-input-container {
-  border: 0.5rem solid var(--ion-border-color);
-}
-
-ion-chip {
-  border-radius: 4px;
 }

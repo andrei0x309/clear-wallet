@@ -12,7 +12,9 @@ import {
     strToHex,
     numToHexStr,
     enableRightClickPasteAddr,
-    setSettings
+    setSettings,
+    replaceNetworks,
+    saveSelectedNetwork
 } from '@/utils/platform';
 import {
     userApprove,
@@ -40,7 +42,7 @@ import {
 import type { RequestArguments } from '@/extension/types'
 import { rpcError } from '@/extension/rpcConstants'
 import { updatePrices } from '@/utils/gecko'
-import { allTemplateNets } from '@/utils/networks'
+import { allTemplateNets, noFoundNetworks } from '@/utils/networks'
 import { cyrb64Hash, stringify } from '@/utils/misc'
 import { runMigrations } from '@/utils/network-migrations'
 
@@ -64,7 +66,7 @@ const dappNotConnectedResponse = (sendResponse: (a: any) => any) => {
       })
 }
 
-const dapConnectedResponse = async (message: RequestArguments, sender: any, sendResponse: (a: any) => any) => {
+const dappConnectedResponse = async (message: RequestArguments, sender: any, sendResponse: (a: any) => any) => {
     const wallectConect = await walletConnect()
     const response = [{
         id: smallRandomString(21),
@@ -127,9 +129,27 @@ const reInjectContentScripts = async () => {
     }
 }
 
+
+const addDefaultNetworksOnInstall = async () => {
+    const userNetworks = await getNetworks()
+    if (Object.keys(userNetworks).length === 0) {
+        const networks = []
+        const selectedNetwork = allTemplateNets[noFoundNetworks.defaultNetworks[0]]
+        for (const network of noFoundNetworks.defaultNetworks) {
+            if (allTemplateNets[network]) {
+                networks.push(allTemplateNets[network])
+            }
+        }
+        replaceNetworks(networks)
+        saveSelectedNetwork(selectedNetwork)
+    }
+     
+}
+
 chrome.runtime.onInstalled.addListener(() => {
-    enableRightClickPasteAddr()
+    enableRightClickPasteAddr();
     reInjectContentScripts();
+    addDefaultNetworksOnInstall();
     console.info('Service worker installed version', chrome.runtime.getManifest().version);
     if (chrome.runtime.lastError) {
         console.warn("Whoops.. " + chrome.runtime.lastError.message);
@@ -860,7 +880,7 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
                 case 'wallet_getPermissions': {
                     const isConnected = message.params?.[0]?.isConnected ?? false;
                     if(isConnected) {
-                        await dapConnectedResponse(message, sender, sendResponse)
+                        await dappConnectedResponse(message, sender, sendResponse)
                     } else {
                         await dappNotConnectedResponse(sendResponse)
                     }
@@ -868,7 +888,7 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
                     break
                 }
                 case 'wallet_requestPermissions': {
-                    await dapConnectedResponse(message, sender, sendResponse)
+                    await dappConnectedResponse(message, sender, sendResponse)
                     break
                 }
                 case 'wallet_revokePermissions': {

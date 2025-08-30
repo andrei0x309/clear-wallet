@@ -9,11 +9,15 @@
 
     <ion-content class="ion-padding">
       <ion-item>
-        <ion-input label="Name" labelPlacement="stacked" v-model="name"></ion-input>
+        <ion-input
+          label="Name"
+          labelPlacement="stacked"
+          v-model="name"
+          fill="outline"
+        ></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label>Get Random Name</ion-label>
-        <ion-button @click="getRandomName">Generate</ion-button>
+        <ion-button @click="getRandomName">Generate Random Name</ion-button>
       </ion-item>
       <ion-item v-if="!isEdit">
         <ion-icon
@@ -27,31 +31,33 @@
           labelPlacement="stacked"
           id="pastePk"
           v-model="pk"
+          fill="outline"
         ></ion-input>
       </ion-item>
       <template v-if="!isEdit">
         <ion-item>
-          <ion-label>Get Random PK</ion-label>
-          <ion-button @click="generateRandomPk">Generate</ion-button>
+          <ion-button @click="generateRandomPk">Generate Random Private Key</ion-button>
         </ion-item>
         <ion-item>
           <ion-button @click="mnemonicModal = true" expand="full"
-            >Extract From A Mnemonic</ion-button
+            >Extract Private Key From A Mnemonic</ion-button
           >
         </ion-item>
       </template>
       <ion-item>
-        <ion-button @click="onCancel">Cancel</ion-button>
-        <ion-button
-          @click="
-            () => {
-              isEdit ? onEditAccount() : onAddAccount();
-            }
-          "
-          expand="full"
-          color="primary"
-          >{{ isEdit ? "Edit Account" : "Add Account" }}</ion-button
-        >
+        <div style="margin-left: auto; display: flex">
+          <ion-button @click="onCancel">Cancel</ion-button>
+          <ion-button
+            @click="
+              () => {
+                isEdit ? onEditAccount() : onAddAccount();
+              }
+            "
+            expand="full"
+            color="primary"
+            >{{ isEdit ? "Edit Account" : "Add Account" }}</ion-button
+          >
+        </div>
       </ion-item>
       <ion-alert
         :is-open="alertOpen"
@@ -343,3 +349,9 @@ const extractMnemonic = () => {
   mnemonicModal.value = false;
 };
 </script>
+
+<style scoped>
+.input-fill-outline.sc-ion-input-md-h {
+  min-height: 38px;
+}
+</style>

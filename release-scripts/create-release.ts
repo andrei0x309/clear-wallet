@@ -1,3 +1,4 @@
+import { foxyfyManifest, unfoxyfyManifest } from './utils/firefoxify'
 const pFs = import('fs')
 const pCps = import('child_process')
 
@@ -53,14 +54,23 @@ export const getLastChangeLog = async () => {
 }
 
 
-
-async function ghRelease (isRebuild: boolean) {
-  const fs = (await pFs).default
+ 
+async function ghRelease (isRebuild: boolean, forFireFox: boolean = false) {
+   const fs = (await pFs).default
 
   if (!fs.existsSync('releases')) {
     fs.mkdirSync('releases');
   }
 
+  if (forFireFox) {
+    await foxyfyManifest()
+
+    if (!fs.existsSync('releases/firefox')) {
+      fs.mkdirSync('releases/firefox');
+    }
+
+  }
+  
   const pkg = JSON.parse(fs.readFileSync('package.json').toString());
 
   const archiver = (await import('archiver')).default
@@ -68,7 +78,7 @@ async function ghRelease (isRebuild: boolean) {
   const dirPipes = ['dist'];
 
   const filePipes = ['LICENSE', 'README.md', 'PRIVACY_POLICY.md'];
-  const outputPath = `releases/${pkg.version}.zip`;
+  const outputPath = `releases/${forFireFox ? 'firefox/' : ''}${pkg.version}.zip`;
   const outputZip = fs.createWriteStream(outputPath);
 
   await new Promise((resolve, reject) => {
@@ -84,6 +94,10 @@ async function ghRelease (isRebuild: boolean) {
     outputZip.on('close', () => resolve(true));
     arch.finalize();
   });
+
+  if (forFireFox) {
+    await unfoxyfyManifest()
+  }
 
   if (!isRebuild) {
     const changeLogPath = `releases/${pkg.version}.changelog.md`;
@@ -116,5 +130,6 @@ async function ghRelease (isRebuild: boolean) {
   const isRebuild = process.argv[2] === 'rebuild';
 
   await ghRelease(isRebuild);
+  await ghRelease(true, true);
   console.log('Release created');
 })();

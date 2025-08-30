@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "inject": "bun build src/extension/inject.ts --minify --target=browser --format iife --outdir ./src/extension/",
-    "content": "bun build src/extension/content.ts --minify --target=browser --outdir ./src/extension/",
+    "inject": "bun build src/extension/inject.ts --target=browser --format iife --outdir ./src/extension/",
+    "content": "bun build src/extension/content.ts --target=browser --outdir ./src/extension/",
     "post-build": "bun run ./release-scripts/post-build.ts",
     "build": "bun run inject && bun run content && vue-tsc --noEmit && vite build && bun run post-build",
     "rebuild": "bun run build && bun run ./release-scripts/create-release.ts rebuild",
@@ -21,9 +21,9 @@
   "dependencies": {
     "@ionic/vue": "8.7.2",
     "@ionic/vue-router": "8.7.2",
-    "@zxing/browser": "^0.1.5",
     "core-js": "^3.45.0",
     "ethers": "^6.15.0",
+    "jsqr": "^1.4.0",
     "p-queue": "^8.1.0",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"

@@ -6,6 +6,12 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
+      <ion-item v-if="isRuntimeFirefox">
+        <ion-label style="font-size: 0.9rem" color="warning"
+          >Warning: This vew might not work currently on Firefox due to missing sandbox
+          support.</ion-label
+        >
+      </ion-item>
       <ion-button @click="selectSavedAction" expand="block"
         >Load saved read action</ion-button
       >
@@ -17,7 +23,7 @@
           <p>No Abi selected</p>
         </template>
 
-        <ion-button style="left: 0.4rem" @click="openAbiListModal()" expand="block"
+        <ion-button style="margin-left: 0.4rem" @click="openAbiListModal()" expand="block"
           >Load Abi</ion-button
         >
       </ion-item>
@@ -187,7 +193,7 @@ import {
   IonModal,
   IonButtons,
 } from "@ionic/vue";
-import { paste, readCASet, getAbis } from "@/utils/platform";
+import { paste, readCASet, getAbis, isFirefox } from "@/utils/platform";
 import { clipboardOutline } from "ionicons/icons";
 import type { ContractAction } from "@/extension/types";
 import { ethers } from "ethers";
@@ -197,7 +203,7 @@ import AbiSelectFunction from "./AbiSelectFunction.vue";
 import SavedReadWriteActionList from "./SavedReadWriteActionList.vue";
 import SelectedContacts from "./ContactsSelect.vue";
 
-const savedModalState = ref(false);
+const isRuntimeFirefox = ref(false);
 const saveActionModal = ref(false);
 const alertOpen = ref(false);
 const alertMsg = ref("");
@@ -422,6 +428,7 @@ const messageHandler = (event: any) => {
 
 onMounted(() => {
   window.addEventListener("message", messageHandler);
+  isRuntimeFirefox.value = isFirefox();
 });
 
 onBeforeUnmount(() => {
@@ -450,10 +457,6 @@ const openModalAddContact = async () => {
   if (role === "confirm") {
     contractAddress.value = data.address;
   }
-};
-
-const handleFnChange = (event: any) => {
-  functionName.value = event.detail.value;
 };
 </script>
 

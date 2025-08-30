@@ -135,8 +135,8 @@
             <ion-item>
               <ion-label>
                 <p style="font-size: 0.7rem; opacity: 0.9">
-                  Account needs to own a fid, WC API has become slow you might need to try
-                  multiple, times if you don't get signed in
+                  Account needs to own a FID, farcaster.xyz might be slow you might need
+                  to try multiple, times if you don't get signed in
                 </p>
               </ion-label>
             </ion-item>
@@ -361,9 +361,11 @@ const farcasterSWIWAuthorize = async () => {
     const modalResult = await openModal();
     if (modalResult) {
       unBlockLockout();
-      loading.value = true;
     } else {
       onCancel();
+      alertMsg.value = "Password not provided";
+      alertOpen.value = true;
+      return;
     }
   } else {
     unBlockLockout();
@@ -412,9 +414,11 @@ const farcasterSWIWQRAuthorize = async () => {
     const modalResult = await openModal();
     if (modalResult) {
       unBlockLockout();
-      loading.value = true;
     } else {
       onCancel();
+      alertMsg.value = "Password not provided";
+      alertOpen.value = true;
+      return;
     }
   } else {
     unBlockLockout();

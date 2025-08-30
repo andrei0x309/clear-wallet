@@ -108,7 +108,7 @@ import {
 } from "@ionic/vue";
 import { getAccounts, replaceAccounts, saveSelectedAccount } from "@/utils/platform";
 import { decrypt, getCryptoParams } from "@/utils/webCrypto";
-import { unlockModalStateSubscribe, setUnlockModalState } from "@/utils/unlockStore";
+import { unlockModalStateSubscribe } from "@/utils/unlockStore";
 
 defineProps<{
   unlockType: string;
@@ -121,7 +121,6 @@ const alertMsg = ref("");
 const passinputref: Ref<any> = ref(null);
 
 const close = () => {
-  setUnlockModalState(false);
   return modalController?.dismiss(null, "cancel");
 };
 

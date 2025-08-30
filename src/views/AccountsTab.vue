@@ -21,7 +21,7 @@
         message="Copied to clipboard"
         :duration="1500"
       ></ion-toast>
-      <ion-item v-if="loading || accounts.length < 1">
+      <ion-item v-if="loading || accounts.length < 1" class="no-inner-border">
         <ion-label>No EVM accounts found</ion-label>
         <ion-button @click="goToAddAccount">Add Account</ion-button>
       </ion-item>
@@ -65,14 +65,25 @@
         </ion-header>
         <ion-content class="ion-padding">
           <ion-item @click="copyText(shownPk, getToastRef())" button>
-            <ion-icon style="margin-right: 0.5rem" :icon="copyOutline" />
-            <ion-label button>PK</ion-label>
-            <ion-input
-              aria-label="pk"
-              id="pastePk"
-              v-model="shownPk"
-              readonly
-            ></ion-input>
+            <div
+              style="display: flex; flex-direction: column; width: 100%; padding: 1rem 0"
+            >
+              <div style="display: flex">
+                <ion-icon style="margin-right: 0.5rem" :icon="copyOutline" />
+                <ion-label button>Copy</ion-label>
+              </div>
+              <ion-input
+                aria-label="pk"
+                id="pastePk"
+                v-model="shownPk"
+                readonly
+              ></ion-input>
+            </div>
+          </ion-item>
+          <ion-item class="no-inner-border">
+            <ion-buttons slot="end">
+              <ion-button color="primary" @click="pkModal = false">Close</ion-button>
+            </ion-buttons>
           </ion-item>
         </ion-content>
       </ion-modal>

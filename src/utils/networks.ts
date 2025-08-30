@@ -1,6 +1,18 @@
 
 import type { Network } from '@/extension/types'
 
+export const noFoundNetworks = {
+    selectedDefaultNetwork: 8453, // Base Mainnet
+    defaultNetworks: [
+        8453, // Base Mainnet
+        42161, // Arbitrum One
+        137, // Polygon Mainnet
+        10, // Optimism Mainnet
+        1, // Ethereum Main
+        56, // Binance Smart Chain
+    ]
+}
+
 export const mainNets: {[key: number]: Network} = {
     1: {
         name: 'Ethereum Main',

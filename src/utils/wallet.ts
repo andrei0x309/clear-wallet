@@ -2,7 +2,9 @@ import { getSelectedAccount, getSelectedNetwork, numToHexStr } from '@/utils/pla
 import { ethers } from "ethers"
 import { mainNets } from '@/utils/networks';
 
-const FAIL_PERFORMANCE_CONST = 600000
+const FAIL_PERFORMANCE_ERROR = 600000
+const FAIL_PERFORMANCE_NO_NETOWRK = -1
+
 let provider: ethers.JsonRpcProvider | null = null
 
 const bigIntMax = (...args: bigint[]) => args.reduce((m, e) => e > m ? e : m, BigInt(0))
@@ -95,6 +97,12 @@ export const getBlockNumber = async () => {
 }
 
 export const getRpcPerformance = async (highTimeout = false): Promise<{performance: number}> => {
+    const network = await getSelectedNetwork()
+    if(!(network?.chainId > 0)) {
+        return {
+            performance: FAIL_PERFORMANCE_NO_NETOWRK
+        }
+    }
     const time = performance.now()
     const timeoutTime = highTimeout ? 8000 : 1400
     const timeoutPromise = new Promise((resolve) => {
@@ -106,7 +114,7 @@ export const getRpcPerformance = async (highTimeout = false): Promise<{performan
         getBlockNumber().then(() => {
             resolve(performance.now() - time)
         }).catch(() => {
-            resolve(FAIL_PERFORMANCE_CONST)
+            resolve(FAIL_PERFORMANCE_ERROR)
         })
     }) as Promise<number>
     return {
