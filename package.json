@@ -11,6 +11,7 @@
     "post-build": "bun run ./release-scripts/post-build.ts",
     "build": "bun run inject && bun run content && vue-tsc --noEmit && vite build && bun run post-build",
     "rebuild": "bun run build && bun run ./release-scripts/create-release.ts rebuild",
+    "build-source": "bun run ./release-scripts/create-source-archive.ts",
     "preview": "vite preview",
     "release": "bun run ./release-scripts/version-release.ts",
     "postversion": "git push",
