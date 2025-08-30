@@ -49,7 +49,7 @@ export const foxyfyManifest = async () => {
     pkg.browser_specific_settings = {
         gecko: {
             id: 'clear-wallet@flashsoft.eu',
-            strict_min_version: '128' // minimum version that supports injecting into world main
+            strict_min_version: '128.0' // minimum version that supports injecting into world main
         }
     }
 
