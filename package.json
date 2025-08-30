@@ -1,13 +1,13 @@
 {
   "name": "clear-wallet",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "private": true,
   "description": "Clear Wallet (CLW) is a wallet that helps you manage your Ethereum assets and interact with Ethereum dApps and contracts with the main focus on absolute privacy.",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "inject": "bun build src/extension/inject.ts --target=browser --format iife --outdir ./src/extension/",
-    "content": "bun build src/extension/content.ts --target=browser --outdir ./src/extension/",
+    "inject": "bun build src/extension/inject.ts --minify --target=browser --format iife --outdir ./src/extension/",
+    "content": "bun build src/extension/content.ts --minify --target=browser --outdir ./src/extension/",
     "post-build": "bun run ./release-scripts/post-build.ts",
     "build": "bun run inject && bun run content && vue-tsc --noEmit && vite build && bun run post-build",
     "rebuild": "bun run build && bun run ./release-scripts/create-release.ts rebuild",
