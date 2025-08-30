@@ -50,6 +50,10 @@ export const foxyfyManifest = async () => {
         gecko: {
             id: 'clear-wallet@flashsoft.eu',
             strict_min_version: '128.0' // minimum version that supports injecting into world main
+        },
+        // For later use FF Android lack neaded features maybe in the future they will be implemented
+        gecko_android: {
+            strict_min_version: '128.0' // minimum version that supports injecting into world main
         }
     }
 
