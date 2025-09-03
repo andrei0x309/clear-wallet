@@ -52,7 +52,7 @@ async function buildSource () {
     await new Promise((resolve, reject) => {
         let arch = archive;
         dirPipes.forEach((dir) => {
-            arch = arch.directory(dir, false);
+            arch = arch.directory(dir, dir);
         });
         filePipes.forEach((file) => {
             arch = arch.file(file, { name: file });

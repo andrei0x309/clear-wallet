@@ -1,7 +1,5 @@
-import { foxyfyManifest, unfoxyfyManifest } from './utils/firefoxify'
 const pFs = import('fs')
 const pCps = import('child_process')
-
 
 async function readFirst2000Characters(filePath: string): Promise<string> {
 
@@ -63,11 +61,16 @@ async function ghRelease (isRebuild: boolean, forFireFox: boolean = false) {
   }
 
   if (forFireFox) {
-    await foxyfyManifest()
+    
+    fs.writeFileSync('dist/manifest.json', fs.readFileSync('dist/firefox-manifest.json').toString())
 
     if (!fs.existsSync('releases/firefox')) {
       fs.mkdirSync('releases/firefox');
     }
+
+  } else {
+    
+    fs.writeFileSync('dist/manifest.json', fs.readFileSync('dist/chromium-manifest.json').toString())
 
   }
   
@@ -94,10 +97,6 @@ async function ghRelease (isRebuild: boolean, forFireFox: boolean = false) {
     outputZip.on('close', () => resolve(true));
     arch.finalize();
   });
-
-  if (forFireFox) {
-    await unfoxyfyManifest()
-  }
 
   if (!isRebuild) {
     const changeLogPath = `releases/${pkg.version}.changelog.md`;

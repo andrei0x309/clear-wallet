@@ -1,5 +1,11 @@
+import { foxyfyManifest } from './utils/firefoxify'
+
 
 (async () => {
+
+    const isFirefox = process.argv[2] === 'firefox';
+
+
     const CONTENT_BUILD_PATH = 'src/extension/content.js'
     const METAMASK_INJECT_PATH = 'src/extension/inject.js'
     const fs = (await import('fs')).default
@@ -17,4 +23,9 @@
                 fs.unlinkSync( path.resolve(directory + file)) 
         });
     });
+
+    await foxyfyManifest(isFirefox);
+
+    console.log('Post build executed');
+
   })();
