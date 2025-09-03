@@ -10,6 +10,7 @@
     "content": "bun build src/extension/content.ts --minify --target=browser --outdir ./src/extension/",
     "post-build": "bun run ./release-scripts/post-build.ts",
     "build": "bun run inject && bun run content && vue-tsc --noEmit && vite build && bun run post-build",
+    "build-firefox": "bun run inject && bun run content && vue-tsc --noEmit && vite build && bun run post-build firefox",
     "rebuild": "bun run build && bun run ./release-scripts/create-release.ts rebuild",
     "build-source": "bun run ./release-scripts/create-source-archive.ts",
     "preview": "vite preview",

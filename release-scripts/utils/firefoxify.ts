@@ -1,6 +1,6 @@
 const pFs = import('fs')
 
-export const foxyfyManifest = async () => {
+export const foxyfyManifest = async (writeFFManifest = true) => {
     const fs = (await pFs).default
     const pkg = JSON.parse(fs.readFileSync('dist/manifest.json').toString());
 
@@ -59,8 +59,9 @@ export const foxyfyManifest = async () => {
 
     // Save foxyfied manifest
     fs.writeFileSync('dist/firefox-manifest.json', JSON.stringify(pkg, null, 2))
-    fs.writeFileSync('dist/manifest.json', JSON.stringify(pkg, null, 2))
-  
+    if (writeFFManifest) {
+        fs.writeFileSync('dist/manifest.json', JSON.stringify(pkg, null, 2))
+    }
 }
 
 export const unfoxyfyManifest = async () => {

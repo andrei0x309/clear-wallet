@@ -1,6 +1,4 @@
-# Clear EVM wallet
-
-![CLW LOGO](/public/assets/extension-icon/wallet_128.png?raw=true "CLW LOGO")
+# ![CLW LOGO](/public/assets/extension-icon/wallet_16.png?raw=true "CLW LOGO") Clear EVM wallet
 
 ## Description
 
@@ -14,18 +12,19 @@ For more info, you can check [docs website](https://clear-wallet.flashsoft.eu)
 
 **Listed on:** ethereum.org, alchemy, product hunt, alternativeto, walletconnect, and most connect kits, including Rainbow, thirdweb, privy, and more.
 
-## How to Build
+## How to Build from Github
 
 ```bash
 git clone https://github.com/andrei0x309/clear-wallet.git
 cd clear-wallet
 bun install
-bun run build
+bun run build # will build extension with chromium manifest
+bun run build-firefox # will build extension with firefox manifest
 ```
 
 This will create a Chromium extension in the dist folder.
 
-You can also generate both Chromium and Firefox zips with the following command:
+You can also generate both Chromium and Firefox zip archives by running:
 
 ```bash
 bun install
@@ -36,6 +35,23 @@ This will create both Firefox and Chromium extensions in these locations:
 
 - releases/x.x.x.zip (chromium x is replaced with the version number)
 - releases/firefox/x.x.x.zip (firefox x is replaced with the version number)
+
+## Create Source Archive
+
+```bash
+bun run build-source
+```
+
+This will create a zip archive containing the source code in the releases/source/source-x.x.x.zip (x is replaced with the version number)
+
+Building from source is similar:
+
+```bash
+cd source-x.x.x # x.x.x is replaced with the version number
+bun install
+bun run build # will build extension with chromium manifest
+bun run build-firefox # will build extension with firefox manifest
+```
 
 <!-- [![Clear EVM Wallet (CLW) - Open source EVM wallet that implements meta mask API. | Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=381026&theme=dark)](https://www.producthunt.com/posts/clear-evm-wallet-clw?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-clear-evm-wallet-clw) -->
 
