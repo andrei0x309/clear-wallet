@@ -49,7 +49,10 @@ export const foxyfyManifest = async (writeFFManifest = true) => {
     pkg.browser_specific_settings = {
         gecko: {
             id: 'clear-wallet@flashsoft.eu',
-            strict_min_version: '128.0' // minimum version that supports injecting into world main
+            strict_min_version: '128.0', // minimum version that supports injecting into world main
+            "data_collection_permissions": {
+                "required": ["none"]
+            }
         },
         // For later use FF Android lack neaded features maybe in the future they will be implemented
         gecko_android: {
@@ -63,6 +66,8 @@ export const foxyfyManifest = async (writeFFManifest = true) => {
         fs.writeFileSync('dist/manifest.json', JSON.stringify(pkg, null, 2))
     }
 }
+
+
 
 export const unfoxyfyManifest = async () => {
     const fs = (await pFs).default
