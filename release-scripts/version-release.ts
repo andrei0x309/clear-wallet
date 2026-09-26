@@ -43,7 +43,7 @@ async function main() {
 
 function bumpVersion(version: string): string {
   const parts = version.split('.');
-  parts[2] = String(parseInt(parts[2]) + 1);
+  parts[2] = String(Number.parseInt(parts[2]) + 1);
   return parts.join('.');
 }
 

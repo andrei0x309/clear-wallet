@@ -201,7 +201,13 @@
               <ion-label>Import Additional Accounts</ion-label>
             </ion-item>
             <ion-item class="ion-no-padding no-inner-border">
-              <input ref="importFile" type="file" accept=".json" class="file-input-cls" />
+              <input
+                ref="importFile"
+                type="file"
+                accept=".json"
+                class="file-input-cls"
+                id="importFile"
+              />
             </ion-item>
             <ion-item class="ion-no-padding no-inner-border">
               <ion-button color="warning" @click="importAcc">Import</ion-button>

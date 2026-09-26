@@ -66,7 +66,7 @@
             <ion-input
               aria-label="address"
               style="font-size: 0.8rem"
-              id="pasteAddress"
+              id="pasteAddressNative"
               v-model="sendTo"
             ></ion-input>
             <ion-icon
@@ -133,7 +133,7 @@
             <ion-input
               aria-label="address"
               style="font-size: 0.8rem"
-              id="pasteAddress"
+              id="pasteAddressERC20"
               v-model="sendTo"
             ></ion-input>
             <ion-icon
