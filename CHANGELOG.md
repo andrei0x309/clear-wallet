@@ -1,5 +1,9 @@
 # Changelog
 
+## Manifest Version 1.5.5
+
+- used browser session for temporal storage
+
 ## Manifest Version 1.5.4
 
 - created scripts to foxify and unfoxify manifest to be able to build for Firefox

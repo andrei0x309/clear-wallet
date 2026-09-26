@@ -106,7 +106,12 @@ import {
   modalController,
   IonLoading,
 } from "@ionic/vue";
-import { getAccounts, replaceAccounts, saveSelectedAccount } from "@/utils/platform";
+import {
+  getAccounts,
+  replaceAccounts,
+  saveSelectedAccount,
+  saveTempPkForAccount,
+} from "@/utils/platform";
 import { decrypt, getCryptoParams } from "@/utils/webCrypto";
 import { unlockModalStateSubscribe } from "@/utils/unlockStore";
 
@@ -131,7 +136,7 @@ const unlock = async () => {
     const cryptoParams = await getCryptoParams(mpPass.value);
     const accProm = accounts.map(async (a) => {
       if (a.encPk) {
-        a.pk = await decrypt(a.encPk, cryptoParams);
+        saveTempPkForAccount(a.address, await decrypt(a.encPk, cryptoParams));
       }
       return a;
     });

@@ -33,6 +33,14 @@ export const storageGet = async (key: string): Promise<{ [key: string]: any }> =
     return await chrome.storage.local.get(key)
 }
 
+export const sessionGet = async (key: string): Promise<{ [key: string]: any }> => {
+    return await chrome.storage.session.get(key)
+}
+
+export const sessionSave = async (key: string, value: any): Promise<void> => {
+    await chrome.storage.session.set({ [key]: value })
+}
+
 export const storageWipe = async (): Promise<void> => {
     await chrome.storage.local.clear()
 }
@@ -88,7 +96,6 @@ export const replaceAccounts = async (accounts: Account[]): Promise<void> => {
     await storageSave('accounts', accounts)
 }
 
-
 export const getSelectedAccount = async (): Promise<Account> => {
     return (await storageGet('selectedAccount'))?.selectedAccount ?? null as unknown as Account
 }
@@ -97,6 +104,15 @@ export const getSelectedAccount = async (): Promise<Account> => {
 export const saveSelectedAccount = async (selectedAccount: Account): Promise<void> => {
     await storageSave('selectedAccount', selectedAccount )
 }
+
+export const getTempPkForAccount = async (address: string): Promise<string> => {
+    return (await sessionGet( `temp-pk-${address}`))?.[`temp-pk-${address}`] ?? (await getAccounts()).find((a) => a.address === address)?.pk ?? ''
+}
+
+export const saveTempPkForAccount = async (address: string, pk: string): Promise<void> => {
+    await sessionSave( `temp-pk-${address}`, pk )
+}
+
 
 export const setPrices = async (prices: Prices): Promise<void> => {
     await storageSave('prices', prices )
@@ -260,6 +276,7 @@ export const clearPk = async (): Promise<void> => {
     const accProm = accounts.map(async a => {
         if(a.encPk) {
             a.pk = ''
+            saveTempPkForAccount(a.address, '')
         }
       return a
     })

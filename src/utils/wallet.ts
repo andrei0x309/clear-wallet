@@ -1,4 +1,4 @@
-import { getSelectedAccount, getSelectedNetwork, numToHexStr } from '@/utils/platform';
+import { getSelectedAccount, getSelectedNetwork, numToHexStr, getTempPkForAccount } from '@/utils/platform';
 import { ethers } from "ethers"
 import { mainNets } from '@/utils/networks';
 
@@ -54,13 +54,15 @@ const convertReceipt = (receipt: ethers.TransactionReceipt | null) => {
 
 export const signMsg = async (msg: string) => {
     const account = await getSelectedAccount()
-    const wallet = new ethers.Wallet(account.pk)
+    const accountPK = account.pk || (await getTempPkForAccount(account.address))
+    const wallet = new ethers.Wallet(accountPK)
     return await wallet.signMessage( msg.startsWith('0x') ? ethers.getBytes(msg): msg)
 }
 
 export const signTypedData = async (msg: string) => {
     const account = await getSelectedAccount()
-    const wallet = new ethers.Wallet(account.pk)
+    const accountPK = account.pk || (await getTempPkForAccount(account.address))
+    const wallet = new ethers.Wallet(accountPK)
     const parsedMsg = JSON.parse(msg)
     const types = {} as Record<string, any>
     for (const key in parsedMsg.types) {
@@ -198,7 +200,8 @@ export const sendTransaction = async ({ data= '', gas='0x0', to='', from='', val
 {to: string, from: string, data: string, value: string, gas: string, gasPrice: string, supportsEIP1559: boolean}) => {
     const account = await getSelectedAccount()
     const { provider } = await getCurrentProvider()
-    const wallet = new ethers.Wallet(account.pk, provider)
+    const accountPK = account.pk || (await getTempPkForAccount(account.address))
+    const wallet = new ethers.Wallet(accountPK, provider)
     const gasPriceInt = BigInt(gasPrice)
     const gasInt = BigInt(gas)
 

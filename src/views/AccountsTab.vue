@@ -101,6 +101,7 @@ import {
   clearPk,
   getSelectedAccount,
   saveSelectedAccount,
+  getTempPkForAccount,
 } from "@/utils/platform";
 import {
   IonContent,
@@ -208,7 +209,7 @@ const viewPk = async (addr: string) => {
       const modalR = await openModal("viewPk");
       if (modalR) {
         const account = (await getAccounts()).find((a) => a.address === addr);
-        pk = account?.pk ?? "";
+        pk = account?.pk ?? (await getTempPkForAccount(addr)) ?? "";
       }
     } else {
       pk = account?.pk ?? "";
