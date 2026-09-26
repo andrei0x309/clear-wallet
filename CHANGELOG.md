@@ -2,7 +2,7 @@
 
 ## Manifest Version 1.5.5
 
-- used browser session for temporal storage
+- used browser session for temporary storage
 
 ## Manifest Version 1.5.4
 

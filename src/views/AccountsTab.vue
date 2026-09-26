@@ -208,9 +208,9 @@ const viewPk = async (addr: string) => {
     if (account?.encPk) {
       const modalR = await openModal("viewPk");
       if (modalR) {
-        const account = (await getAccounts()).find((a) => a.address === addr);
-        pk = account?.pk ?? (await getTempPkForAccount(addr)) ?? "";
+        pk = (await getTempPkForAccount(addr)) ?? "";
       }
+      clearPk();
     } else {
       pk = account?.pk ?? "";
     }
@@ -219,9 +219,6 @@ const viewPk = async (addr: string) => {
   }
   if (pk) {
     shownPk.value = pk;
-    if (settings.value.encryptAfterEveryTx) {
-      clearPk();
-    }
     pkModal.value = true;
   }
 };
