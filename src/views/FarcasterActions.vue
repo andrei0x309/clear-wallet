@@ -298,7 +298,12 @@ import {
 } from "@/utils/farcaster/farcaster";
 import { createJFS, validateCreateJFS } from "@/utils/farcaster/farcaster-JFS";
 
-import { getAccounts, getSelectedAccount, unBlockLockout } from "@/utils/platform";
+import {
+  getAccounts,
+  getSelectedAccount,
+  unBlockLockout,
+  getTempPkForAccount,
+} from "@/utils/platform";
 import { addWarpAuthToken, generateApiToken } from "@/utils/farcaster/farcaster-auth";
 import { setUnlockModalState } from "@/utils/unlockStore";
 import SelectedAccountModal from "@/views/modals/SelectAccountModal.vue";
@@ -357,7 +362,9 @@ const farcasterSWIWAuthorize = async () => {
     return;
   }
 
-  if ((selectedAccount.value.pk ?? "").length !== 66) {
+  const pk = await getTempPkForAccount(selectedAccount.value.address);
+
+  if ((pk ?? "").length !== 66) {
     const modalResult = await openModal();
     if (modalResult) {
       unBlockLockout();
@@ -410,7 +417,10 @@ const farcasterSWIWAuthorize = async () => {
 
 const farcasterSWIWQRAuthorize = async () => {
   exitWallet.value = false;
-  if ((selectedAccount.value.pk ?? "").length !== 66) {
+
+  const pk = await getTempPkForAccount(selectedAccount.value.address);
+
+  if ((pk ?? "").length !== 66) {
     const modalResult = await openModal();
     if (modalResult) {
       unBlockLockout();
@@ -493,7 +503,9 @@ const promptForSignIn = async () => {
       return;
     }
 
-    if ((selectedAccount.value.pk ?? "").length !== 66) {
+    const pk = await getTempPkForAccount(selectedAccount.value.address);
+
+    if ((pk ?? "").length !== 66) {
       const modalResult = await openModal();
       if (modalResult) {
         unBlockLockout();
@@ -575,7 +587,9 @@ const doJFS = async () => {
     return;
   }
 
-  if ((selectedAccount.value.pk ?? "").length !== 66) {
+  const pk = await getTempPkForAccount(selectedAccount.value.address);
+
+  if ((pk ?? "").length !== 66) {
     const modalResult = await openModal();
     if (modalResult) {
       unBlockLockout();

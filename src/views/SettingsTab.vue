@@ -682,6 +682,7 @@ const importAcc = async () => {
           a.pk = `0x${a.pk}`;
         }
         a.encPk = await encrypt(a.pk, cryptoParams);
+        a.pk = "";
         return a;
       });
       const encNewAccounts = await Promise.all(accProm);
