@@ -319,7 +319,7 @@ const setItervalFn = async () => {
       loading.value = true;
       const { feed, price } = await getGasPrice();
       gasFeed = feed;
-      gasPrice.value = parseFloat(price.toString() ?? 0.1);
+      gasPrice.value = Number.parseFloat(price.toString() ?? 0.1);
       await newGasData();
       loading.value = false;
     }
@@ -447,7 +447,7 @@ onIonViewWillEnter(async () => {
   const { feed, price } = await pGasPrice;
   gasFeed = feed;
 
-  gasPrice.value = parseFloat(price.toString() ?? 0.1);
+  gasPrice.value = Number.parseFloat(price.toString() ?? 0.1);
 
   const pEstimateGas = estimateGas({
     to: params?.to ?? "",
@@ -457,7 +457,7 @@ onIonViewWillEnter(async () => {
   });
 
   try {
-    gasLimit.value = parseInt((await pEstimateGas).toString(), 10);
+    gasLimit.value = Number.parseInt((await pEstimateGas).toString(), 10);
   } catch (err) {
     const errorToHex = strToHex(String(err));
     router.push(`/contract-error/${rid}/${errorToHex}/${contract}`);

@@ -421,14 +421,14 @@ const listener =  function(event: any) {
             try {
                 const listenerName = eventDataData.listener as ('accountsChanged' | 'connect' | 'disconnect' | 'chainChanged')
                 if( listenerName === 'connect' && eventDataData) {
-                    (<any>eth).networkVersion = String(parseInt(eventDataDataData?.chainId ?? "0x89", 16));
+                    (<any>eth).networkVersion = String(Number.parseInt(eventDataDataData?.chainId ?? "0x89", 16));
                     (<any>eth).chainId = eventDataDataData?.chainId ?? '0x89';
                     (<any>eth).selectedAddress = eventDataData?.address?.[0] ?? null;
                     (<any>eth).accounts = eventDataData.address?.[0] ? [eventDataData.address?.[0]] : [];
                     (<any>eth)._state.accounts = (<any>eth).accounts;
                     (<any>eth)._state.isConnected = true;
                 } else if( listenerName === 'chainChanged' ) {
-                    (<any>eth).networkVersion = String(parseInt(eventDataDataData ?? "0x89", 16));
+                    (<any>eth).networkVersion = String(Number.parseInt(eventDataDataData ?? "0x89", 16));
                     (<any>eth).chainId = eventDataData ?? '0x89';
                 } else if ( listenerName === 'accountsChanged' ) {
                     (<any>eth).accounts = eventDataData?.[0] ? [eventDataData?.[0]] : [];

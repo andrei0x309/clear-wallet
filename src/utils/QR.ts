@@ -12,11 +12,11 @@ async function base64ImageToCanvas(imageBase64: string): Promise<HTMLCanvasEleme
                 ctx.drawImage(img, 0, 0);
                 resolve(canvas);
             } else {
-                reject('Canvas context not available.');
+                reject(new Error('Canvas context not available.'));
             }
         };
         img.onerror = () => {
-            reject('Image load error.');
+            reject(new Error('Image load error.'));
         };
         img.src = imageBase64;
     });

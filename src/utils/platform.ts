@@ -290,7 +290,7 @@ export const hexTostr = (hexStr: string) => {
     }
     hexStr = hexStr.substring(2);
     const match = hexStr.match(/../g);
-    const bytes = new Uint8Array(match ? match.map(h => parseInt(h, 16)) : []);
+    const bytes = new Uint8Array(match ? match.map(h => Number.parseInt(h, 16)) : []);
     try {
     const decoder = new TextDecoder('utf-8', { fatal: true });
     return decoder.decode(bytes);
@@ -300,7 +300,7 @@ export const hexTostr = (hexStr: string) => {
             chunks.push(hexStr.substring(i, i + 2));
         }
        return chunks.reduce(
-       (pv, cv) => `${pv}${String.fromCharCode(parseInt(cv, 16))}`,
+       (pv, cv) => `${pv}${String.fromCharCode(Number.parseInt(cv, 16))}`,
                '')
        }
 };

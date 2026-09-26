@@ -21,11 +21,11 @@ type T_IDDB_VALUE = {
 }
 
 function serialize (object: any) {
-    if (typeof object === 'number' && isNaN(object)) {
+    if (typeof object === 'number' && Number.isNaN(object)) {
       throw new Error('NaN is not allowed');
     }
   
-    if (typeof object === 'number' && !isFinite(object)) {
+    if (typeof object === 'number' && !Number.isFinite(object)) {
       throw new Error('Infinity is not allowed');
     }
   
