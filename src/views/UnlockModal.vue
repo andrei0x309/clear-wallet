@@ -47,7 +47,7 @@
               type="password"
               v-model="mpPass"
               autocomplete="off"
-              autocorrect="off"
+              :autocorrect="false"
               :clear-input="false"
               :clear-on-edit="false"
               :spellcheck="false"

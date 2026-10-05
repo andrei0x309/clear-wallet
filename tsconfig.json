@@ -10,6 +10,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": false,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "types": [
       "chrome",

@@ -1,5 +1,11 @@
 # Changelog
 
+## Manifest Version 1.5.6
+
+- updated all dependencies
+- migrated to ionic/vue 9.x.x (latest version)
+- removed some deprecated networks from templates
+
 ## Manifest Version 1.5.5
 
 - used browser session for temporary storage

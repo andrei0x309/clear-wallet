@@ -76,8 +76,8 @@ async function ghRelease (isRebuild: boolean, forFireFox: boolean = false) {
   
   const pkg = JSON.parse(fs.readFileSync('package.json').toString());
 
-  const archiver = (await import('archiver')).default
-  const archive = archiver('zip', { zlib: { level: 9 } });
+  const ZipArchive = (await import('archiver')).ZipArchive 
+  const archive = new ZipArchive({ zlib: { level: 9 } });
   const dirPipes = ['dist'];
 
   const filePipes = ['LICENSE', 'README.md', 'PRIVACY_POLICY.md'];
