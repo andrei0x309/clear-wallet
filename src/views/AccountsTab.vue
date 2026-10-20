@@ -102,6 +102,7 @@ import {
   getSelectedAccount,
   saveSelectedAccount,
   getTempPkForAccount,
+  unBlockLockout,
 } from "@/utils/platform";
 import {
   IonContent,
@@ -118,16 +119,13 @@ import {
   IonButton,
   onIonViewWillEnter,
   IonToast,
-  modalController,
   IonInput,
   IonModal,
 } from "@ionic/vue";
 
 import { addCircleOutline, copyOutline } from "ionicons/icons";
 import router from "@/router";
-import UnlockModal from "@/views/UnlockModal.vue";
-import { setUnlockModalState } from "@/utils/unlockStore";
-
+import { useUnlockModal } from "@/composables/useUnlockModal";
 import type { Account, Settings } from "@/extension/types";
 
 const accounts = ref([]) as Ref<Account[]>;
@@ -138,6 +136,8 @@ const pkModal = ref(false);
 const settings = ref({}) as Ref<Settings>;
 
 const getToastRef = () => toastState;
+
+const { openUnlockModal } = useUnlockModal();
 
 const loadData = () => {
   const pAccounts = getAccounts();
@@ -152,8 +152,9 @@ const loadData = () => {
 const deleteAccount = async (address: string) => {
   loading.value = true;
   if (settings.value.enableStorageEnctyption) {
-    const modalR = await openModal("delAcc");
+    const modalR = await openUnlockModal("delAcc");
     if (!modalR) {
+      unBlockLockout();
       return;
     }
   }
@@ -168,6 +169,7 @@ const deleteAccount = async (address: string) => {
     pArr.push(saveSelectedAccount(accounts.value[0]));
   }
   await Promise.all(pArr);
+  unBlockLockout();
   loading.value = false;
 };
 
@@ -183,30 +185,12 @@ onIonViewWillEnter(() => {
   loadData();
 });
 
-const openModal = async (type: string) => {
-  const modal = await modalController.create({
-    component: UnlockModal,
-    animated: true,
-    focusTrap: false,
-    backdropDismiss: false,
-    componentProps: {
-      unlockType: type,
-    },
-  });
-  await modal.present();
-  setUnlockModalState(true);
-  const { role } = await modal.onWillDismiss();
-  if (role === "confirm") return true;
-  setUnlockModalState(false);
-  return false;
-};
-
 const viewPk = async (addr: string) => {
   let pk = "";
   const account = accounts.value.find((a) => a.address === addr);
   if (settings.value.enableStorageEnctyption) {
     if (account?.encPk) {
-      const modalR = await openModal("viewPk");
+      const modalR = await openUnlockModal("viewPk");
       if (modalR) {
         pk = (await getTempPkForAccount(addr)) ?? "";
       }

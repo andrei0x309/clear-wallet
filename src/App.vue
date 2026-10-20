@@ -119,6 +119,12 @@ onMounted(() => {
       });
       break;
     }
+    case "import-export": {
+      router.push({
+        path: `/import-export`,
+      });
+      break;
+    }
     default: {
       router.push({ path: "/" });
     }

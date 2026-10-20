@@ -33,6 +33,10 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/RequestNetwork.vue'),
   },
   {
+    path: '/import-export',
+    component: () => import('@/views/WindowImportExport.vue'),
+  },
+  {
     path: '/farcaster-actions',
     component: () => import('@/views/FarcasterActions.vue'),
   },

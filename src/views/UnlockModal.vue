@@ -31,6 +31,9 @@
           <ion-item>Storage Encrypted, unlock to add account.</ion-item>
           <ion-item>Closing will not add the account.</ion-item>
         </ion-list>
+        <ion-list v-else-if="unlockType === 'importExport'">
+          <ion-item>Storage Encrypted, unlock to contiune.</ion-item>
+        </ion-list>
         <ion-list v-else>
           <ion-item>To continue sending the transaction, unlock wallet.</ion-item>
           <ion-item>Closing will reject sending the transaction.</ion-item>

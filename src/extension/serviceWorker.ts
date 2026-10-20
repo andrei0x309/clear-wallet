@@ -14,7 +14,8 @@ import {
     enableRightClickPasteAddr,
     setSettings,
     replaceNetworks,
-    saveSelectedNetwork
+    saveSelectedNetwork,
+    unBlockLockout
 } from '@/utils/platform';
 import {
     userApprove,
@@ -725,6 +726,7 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
                                 ...(network.explorer ? { txUrl: `${network.explorer}/tx/${tx.hash}`.replace('//', '/') } : {}),
                                 webiste: (message?.website)
                             })
+                            unBlockLockout()
                             const notificationId = crypto.randomUUID()
                             if (network?.explorer) {
                                 notificationUrl = `${network.explorer}/tx/${tx.hash}`.replace('//', '/')
@@ -844,6 +846,7 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
                                 await signTypedData(signMsgData) :
                                 await signMsg(signMsgData)
                         )
+                        unBlockLockout()
                     } catch (e) {
                         console.warn('Error: signTypedData', e)
                         sendResponse({

@@ -1,9 +1,8 @@
-const pFs = import('fs')
-const pCps = import('child_process')
+import fs from 'node:fs'
+ 
 
 async function buildSource () {
-    const fs = (await pFs).default
-
+ 
     if (!fs.existsSync('releases')) {
         fs.mkdirSync('releases');
     }
@@ -70,4 +69,4 @@ const main = async () => {
     console.info('Source archive created')
 }
 
-main();
+await main();

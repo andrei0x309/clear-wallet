@@ -1,5 +1,12 @@
 # Changelog
 
+## Manifest Version 1.5.7
+
+- removed unecessary upload field in import section of settings
+- extracted import/export logic in separate sub-view
+- used the sub-view in a separate route for Firefox which is not capable to open a file picker without closing the extension popup
+- refactered the unlock modal for better reusability
+
 ## Manifest Version 1.5.6
 
 - updated all dependencies

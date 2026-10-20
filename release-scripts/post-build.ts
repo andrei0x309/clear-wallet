@@ -1,8 +1,8 @@
 import { foxyfyManifest } from './utils/firefoxify'
 
 
-(async () => {
-
+const main = async () => {
+ 
     const isFirefox = process.argv[2] === 'firefox';
 
 
@@ -28,4 +28,6 @@ import { foxyfyManifest } from './utils/firefoxify'
 
     console.log('Post build executed');
 
-  })();
+}
+
+await main()

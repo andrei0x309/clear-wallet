@@ -1,9 +1,8 @@
-const pFs = import('fs')
-const pCps = import('child_process')
+import fs from 'fs'
+import { spawn } from 'node:child_process'
 
 async function readFirst2000Characters(filePath: string): Promise<string> {
 
-  const fs = (await pFs).default
   try {
     const fileStream = fs.createReadStream(filePath, { encoding: 'utf8' });
     let data = '';
@@ -41,7 +40,7 @@ function limitedSplit(str: string, delimiter: string, limit: number): string[] {
 
 export const getLastChangeLog = async () => {
   const mainChainLogPath = 'CHANGELOG.md';
-  const fs = (await pFs).default
+
   if (!fs.existsSync(mainChainLogPath)) {
     return '';
   }
@@ -54,7 +53,6 @@ export const getLastChangeLog = async () => {
 
  
 async function ghRelease (isRebuild: boolean, forFireFox: boolean = false) {
-   const fs = (await pFs).default
 
   if (!fs.existsSync('releases')) {
     fs.mkdirSync('releases');
@@ -107,10 +105,9 @@ async function ghRelease (isRebuild: boolean, forFireFox: boolean = false) {
       `# Latest changes - (${releaseCreationDate})\n\n
   ${await getLastChangeLog()}`,
     );
-    const cps = (await pCps)
-    console.log(
+     console.log(
       await new Promise((resolve) => {
-        const p = cps.spawn('gh', ['release', 'create', `v${pkg.version}`, `./${outputPath}`, '-F', `./${changeLogPath}`, '--target', 'main'], {
+        const p = spawn('gh', ['release', 'create', `v${pkg.version}`, `./${outputPath}`, '-F', `./${changeLogPath}`, '--target', 'main'], {
           shell: true,
         });
         let result = '';
@@ -124,11 +121,13 @@ async function ghRelease (isRebuild: boolean, forFireFox: boolean = false) {
   }
 }
 
-(async () => {
+const main = async () => {
 
   const isRebuild = process.argv[2] === 'rebuild';
 
   await ghRelease(isRebuild);
   await ghRelease(true, true);
   console.log('Release created');
-})();
+}
+
+await main();
