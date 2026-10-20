@@ -192,30 +192,20 @@
             </ion-list>
           </div>
         </ion-accordion>
-        <ion-accordion v-if="!isRuntimeFirefox">
+        <ion-accordion>
           <ion-item slot="header" color="light">
             <ion-label> Import / Export Accounts</ion-label>
           </ion-item>
           <div class="ion-padding" slot="content">
-            <ion-item class="ion-no-padding no-inner-border">
-              <ion-label>Import Additional Accounts</ion-label>
-            </ion-item>
-            <ion-item class="ion-no-padding no-inner-border">
-              <input
-                ref="importFile"
-                type="file"
-                accept=".json"
-                class="file-input-cls"
-                id="importFile"
-              />
-            </ion-item>
-            <ion-item class="ion-no-padding no-inner-border">
-              <ion-button color="warning" @click="importAcc">Import</ion-button>
-            </ion-item>
-            <ion-item class="ion-no-padding export-border">
-              <ion-label>Export All Accounts</ion-label>
-              <ion-button color="warning" @click="exportAcc">Export</ion-button>
-            </ion-item>
+            <template v-if="!isRuntimeFirefox">
+              <ImportExport :refs="getRefs" /> </template
+            ><template v-else>
+              <ion-item class="ion-no-padding no-inner-border">
+                <ion-button color="warning" @click="openImportExport"
+                  >Open Import/Eport Window</ion-button
+                >
+              </ion-item>
+            </template>
           </div>
         </ion-accordion>
         <ion-accordion>
@@ -293,13 +283,7 @@
         @didDismiss="loading = false"
       >
       </ion-loading>
-      <ion-modal
-        :is-open="mpModal"
-        @did-dismiss="
-          mpModal = false;
-          modalDismiss();
-        "
-      >
+      <ion-modal :is-open="mpModal" @did-dismiss="mpModal = false">
         <ion-header>
           <ion-toolbar>
             <ion-buttons slot="start">
@@ -406,9 +390,7 @@ import {
   isFirefox,
 } from "@/utils/platform";
 import { decrypt, encrypt, getCryptoParams } from "@/utils/webCrypto";
-import { Account } from "@/extension/types";
-import { exportFile } from "@/utils/misc";
-import type { Settings } from "@/extension/types";
+import type { ModalPromisePassword, Settings } from "@/extension/types";
 import type { IonTextareaCustomEvent, TextareaInputEventDetail } from "@ionic/core";
 import {
   IonContent,
@@ -435,6 +417,8 @@ import {
   IonToast,
 } from "@ionic/vue";
 
+import ImportExport from "@/views/sub-views/accordion/ImportExport.vue";
+
 const loading = ref(true);
 const mpModal = ref(false);
 const mpModalEnctyption = ref(false);
@@ -445,27 +429,37 @@ const alertMsg = ref("");
 const toastState = ref(false);
 const toastMsg = ref("");
 const alertHeader = ref("Error");
-const lockOutPeriod = defineModel({ default: 2 });
+const lockOutPeriod = defineModel({ default: 2 as number });
 const setEncryptToggleKey = ref(0);
-const importFile = (ref(null) as unknown) as Ref<HTMLInputElement>;
 const isRuntimeFirefox = ref(false);
 
-type ModalPromisePassword = null | {
-  resolve: (p?: unknown) => void;
-  reject: (p?: unknown) => void;
-};
 const modalGetPassword = ref(null) as Ref<ModalPromisePassword>;
 const noAccounts = ref(true);
 const radioTheme = ref("system") as Ref<"system" | "light" | "dark">;
+
+const settings = reactive({
+  s: (null as unknown) as Settings,
+}) as { s: Settings };
+
+const getRefs = () => {
+  return {
+    alertMsg,
+    alertOpen,
+    alertHeader,
+    modalGetPassword,
+    mpModal,
+    settings,
+    mpPass,
+    mpConfirm,
+    noAccounts,
+  };
+};
 
 const wipeStorage = async () => {
   loading.value = true;
   await storageWipe();
   loading.value = false;
 };
-const settings = reactive({
-  s: (null as unknown) as Settings,
-}) as { s: Settings };
 
 const saveSettings = async () => {
   loading.value = true;
@@ -593,153 +587,6 @@ const confirmModal = async () => {
   loading.value = false;
 };
 
-const validateFile = () => {
-  return new Promise((resolve) => {
-    try {
-      if (!importFile.value?.value?.length) {
-        return resolve({
-          error: "Import json file is missing",
-        });
-      }
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const json = JSON.parse(event?.target?.result as string);
-        if (!json.length) {
-          return resolve({
-            error:
-              'JSON format is wrong. Corrrect JSON format is: [{ "name": "Account Name", "pk": "Private Key", "address": "0x..." },{...}]',
-          });
-        }
-        const test = json.some(
-          (e: any) =>
-            !("pk" in e) ||
-            !("name" in e) ||
-            !("address" in e) ||
-            !(e.pk.length === 66 || e.pk.length === 64)
-        );
-        if (test) {
-          return resolve({
-            error:
-              'JSON format is wrong. Corrrect JSON format is: [{ "name": "Account Name", "pk": "Private Key", "address": "0x..."  },{...}], Also PK must be valid (66 || 64 length) !',
-          });
-        }
-        return resolve({ error: false, json });
-      };
-      reader.readAsText(importFile.value?.files?.[0] as File);
-    } catch {
-      return resolve({
-        error: "Parsing JSON file",
-      });
-    }
-  });
-};
-
-const getPassword = () => {
-  return new Promise((resolve, reject) => {
-    modalGetPassword.value = { resolve, reject };
-    mpModal.value = true;
-  });
-};
-
-const promptForPassword = async (accounts: Account[]) => {
-  let isCorectPass = false;
-  do {
-    try {
-      await getPassword();
-      modalGetPassword.value = null;
-    } catch {
-      alertHeader.value = "Error";
-      alertMsg.value = "Password is required!";
-      alertOpen.value = true;
-      mpModal.value = false;
-      return false;
-    }
-    try {
-      const cryptoParams = await getCryptoParams(mpPass.value);
-      if (accounts?.[0]?.encPk) {
-        await decrypt(accounts[0].encPk, cryptoParams);
-      }
-      isCorectPass = true;
-    } catch {
-      isCorectPass = false;
-      alertHeader.value = "Error";
-      alertMsg.value = "Password is wrong!";
-      alertOpen.value = true;
-    }
-  } while (!isCorectPass);
-  return true;
-};
-
-const importAcc = async () => {
-  const validation = (await validateFile()) as { error: any };
-  if (validation.error) {
-    alertMsg.value = validation.error;
-    alertOpen.value = true;
-    return;
-  }
-  const accounts = await getAccounts();
-  const newAccounts = ((validation as unknown) as { json: Account[] }).json;
-  if (settings.s.enableStorageEnctyption) {
-    const hasPass = await promptForPassword(accounts);
-    if (hasPass) {
-      const cryptoParams = await getCryptoParams(mpPass.value);
-      const accProm = newAccounts.map(async (a) => {
-        if (a.pk.length === 64) {
-          a.pk = `0x${a.pk}`;
-        }
-        a.encPk = await encrypt(a.pk, cryptoParams);
-        a.pk = "";
-        return a;
-      });
-      const encNewAccounts = await Promise.all(accProm);
-      await replaceAccounts([...accounts, ...encNewAccounts]);
-      alertHeader.value = "Success";
-      alertMsg.value = "Successfully imported new accounts.";
-      alertOpen.value = true;
-      noAccounts.value = false;
-      mpPass.value = "";
-      mpModal.value = false;
-    }
-    return false;
-  } else {
-    await replaceAccounts([
-      ...accounts,
-      ...newAccounts.map((a) => {
-        a.encPk = "";
-        return a;
-      }),
-    ]);
-    alertHeader.value = "Success";
-    alertMsg.value = "Successfully imported new accounts.";
-    alertOpen.value = true;
-    noAccounts.value = false;
-    mpModal.value = false;
-  }
-};
-
-const exportAcc = async () => {
-  const accounts = await getAccounts();
-  if (!accounts.length) {
-    alertMsg.value = "You need at least one account to export.";
-    alertOpen.value = true;
-  }
-  if (settings.s.enableStorageEnctyption) {
-    const hasPass = await promptForPassword(accounts);
-    if (hasPass) {
-      const cryptoParams = await getCryptoParams(mpPass.value);
-      const accProm = accounts.map(async (a) => {
-        a.pk = await decrypt(a.encPk, cryptoParams);
-        return a;
-      });
-      const encNewAccounts = await Promise.all(accProm);
-      exportFile("wallet_export.json", JSON.stringify(encNewAccounts, null, 2));
-    }
-    return false;
-  } else {
-    exportFile("wallet_export.json", JSON.stringify(accounts, null, 2));
-  }
-};
-
 onIonViewWillEnter(async () => {
   isRuntimeFirefox.value = isFirefox();
 
@@ -773,8 +620,13 @@ const setTime = async () => {
   toastState.value = true;
 };
 
-const modalDismiss = () => {
-  setEncryptToggle(mpModalEnctyption.value);
+const openImportExport = () => {
+  chrome.windows.create({
+    height: 510,
+    width: 480,
+    url: chrome.runtime.getURL(`index.html?route=import-export`),
+    type: "popup",
+  });
 };
 </script>
 

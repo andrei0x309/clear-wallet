@@ -1,9 +1,8 @@
-const pFs = import('fs')
-const pCps = import('child_process')
+import fs from 'node:fs'
+ 
 
 async function buildSource () {
-    const fs = (await pFs).default
-
+ 
     if (!fs.existsSync('releases')) {
         fs.mkdirSync('releases');
     }
@@ -14,8 +13,8 @@ async function buildSource () {
 
     const pkg = JSON.parse(fs.readFileSync('package.json').toString());
 
-    const archiver = (await import('archiver')).default
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const ZipArchive = (await import('archiver')).ZipArchive
+    const archive = new ZipArchive({ zlib: { level: 9 } });
     const dirPipes = [
         '.github',
         'public',
@@ -70,4 +69,4 @@ const main = async () => {
     console.info('Source archive created')
 }
 
-main();
+await main();

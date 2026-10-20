@@ -83,7 +83,6 @@ import {
   IonButton,
   IonAlert,
   IonLoading,
-  modalController,
   onIonViewWillEnter,
 } from "@ionic/vue";
 import { approve, walletPing } from "@/extension/userRequest";
@@ -93,10 +92,10 @@ import {
   unBlockLockout,
   blockLockout,
   hexTostr,
+  getTempPkForAccount,
 } from "@/utils/platform";
-import UnlockModal from "@/views/UnlockModal.vue";
 import type { Account } from "@/extension/types";
-import { setUnlockModalState } from "@/utils/unlockStore";
+import { useUnlockModal } from "@/composables/useUnlockModal";
 
 const route = useRoute();
 const loading = ref(false);
@@ -118,6 +117,8 @@ const alertOpen = ref(false);
 const alertMsg = ref("");
 const timerReject = ref(140);
 let interval: any;
+
+const { openUnlockModal } = useUnlockModal();
 
 const onCancel = () => {
   window.close();
@@ -146,24 +147,6 @@ onIonViewWillEnter(async () => {
   }, 1000) as any;
 });
 
-const openModal = async () => {
-  const modal = await modalController.create({
-    component: UnlockModal,
-    animated: true,
-    focusTrap: false,
-    backdropDismiss: false,
-    componentProps: {
-      unlockType: "message",
-    },
-  });
-  await modal.present();
-  setUnlockModalState(true);
-  const { role } = await modal.onWillDismiss();
-  if (role === "confirm") return true;
-  await setUnlockModalState(false);
-  return false;
-};
-
 const onSign = async () => {
   loading.value = true;
   if (interval) {
@@ -171,17 +154,17 @@ const onSign = async () => {
   }
   const selectedAccount = await getSelectedAccount();
   loading.value = false;
-  if ((selectedAccount.pk ?? "").length !== 66) {
-    const modalResult = await openModal();
+  if (
+    (selectedAccount.pk ?? getTempPkForAccount(selectedAccount.address)).length !== 66
+  ) {
+    const modalResult = await openUnlockModal("message");
     if (modalResult) {
-      unBlockLockout();
       loading.value = true;
       approve(rid);
     } else {
       onCancel();
     }
   } else {
-    unBlockLockout();
     approve(rid);
   }
   loading.value = false;

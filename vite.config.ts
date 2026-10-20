@@ -2,7 +2,26 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'url'
 import { crx } from '@crxjs/vite-plugin'
-import manifest from './src/extension/manifest.json'
+import manifest from './src/extension/manifest.json' with { type: 'json' }
+
+// Silence CRXJS direct console warnings
+const originalWarn = console.warn
+const originalLog = console.log
+
+const isCrxWarning = (msg: unknown) =>
+  typeof msg === 'string' &&
+  (msg.includes('Some document_start content scripts use the async loader') ||
+   msg.includes('[crx:manifest]'))
+
+console.warn = (...args: unknown[]) => {
+  if (isCrxWarning(args[0])) return
+  originalWarn(...args)
+}
+
+console.log = (...args: unknown[]) => {
+  if (isCrxWarning(args[0])) return
+  originalLog(...args)
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -23,24 +42,16 @@ export default defineConfig({
   build: {
     rollupOptions: {
       // plugins: [nodePolyfills()],
-      onwarn: (warning) => {
-        if (warning.message.includes('comment will be removed')) {
-          return false;
-        }
-        return true;
-      },
       input: {
         ['eval-sandbox']: 'eval-sandbox.html',
       },
     },
     sourcemap: false,
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1500,
+    cssMinify: 'esbuild', 
     commonjsOptions: {
       transformMixedEsModules: true
     },
-  },
-  esbuild: {
-    legalComments: 'none',
   },
   plugins: [
     crx({ manifest: manifest as any }),

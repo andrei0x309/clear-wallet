@@ -164,11 +164,17 @@ import router from "@/router";
 import type { Account } from "@/extension/types";
 import { copyOutline } from "ionicons/icons";
 import { clipboardOutline } from "ionicons/icons";
-import { getAccounts, getSelectedAccount, copyText } from "@/utils/platform";
+import {
+  getAccounts,
+  getSelectedAccount,
+  copyText,
+  getTempPkForAccount,
+} from "@/utils/platform";
 import { signMsg } from "@/utils/wallet";
 import UnlockModal from "@/views/UnlockModal.vue";
 import { setUnlockModalState } from "@/utils/unlockStore";
 import SelectedAccountModal from "@/views/modals/SelectAccountModal.vue";
+import { useUnlockModal } from "@/composables/useUnlockModal";
 
 const textToSig = ref("");
 const sig = ref("");
@@ -184,6 +190,8 @@ const selectedAccount = (ref(null) as unknown) as Ref<Account>;
 const toastState = ref(false);
 
 const getToastRef = () => toastState;
+
+const { openUnlockModal } = useUnlockModal();
 
 const loadData = () => {
   loading.value = true;
@@ -204,24 +212,6 @@ const onCancel = () => {
   router.push("/tabs/home");
 };
 
-const openModal = async () => {
-  const modal = await modalController.create({
-    component: UnlockModal,
-    animated: true,
-    focusTrap: false,
-    backdropDismiss: false,
-    componentProps: {
-      unlockType: "message",
-    },
-  });
-  await modal.present();
-  setUnlockModalState(true);
-  const { role } = await modal.onWillDismiss();
-  if (role === "confirm") return true;
-  setUnlockModalState(false);
-  return false;
-};
-
 const getSignature = async () => {
   if (!selectedAccount.value) {
     alertMsg.value = "Please select an account";
@@ -234,19 +224,19 @@ const getSignature = async () => {
     return;
   }
 
-  if ((selectedAccount.value.pk ?? "").length !== 66) {
-    const modalResult = await openModal();
-    if (modalResult) {
-      unBlockLockout();
-      loading.value = true;
-    } else {
+  if (
+    (selectedAccount.value.pk ?? getTempPkForAccount(selectedAccount.value.address))
+      .length !== 66
+  ) {
+    const modalResult = await openUnlockModal("message");
+    if (!modalResult) {
       onCancel();
+      return;
     }
-  } else {
-    unBlockLockout();
   }
 
   try {
+    loading.value = true;
     const signature = await signMsg(textToSig.value);
     sig.value = signature;
   } catch (e) {
@@ -254,6 +244,8 @@ const getSignature = async () => {
     alertMsg.value = "Error getting signature";
     alertOpen.value = true;
   }
+  unBlockLockout();
+  loading.value = false;
 };
 
 const dismissAlert = () => {

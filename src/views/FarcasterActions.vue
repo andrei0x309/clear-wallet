@@ -275,19 +275,16 @@ import {
   IonAlert,
   IonSegment,
   onIonViewWillEnter,
-  modalController,
   IonModal,
   IonButtons,
   IonTextarea,
   IonLoading,
-  IonSearchbar,
   IonIcon,
   IonToast,
 } from "@ionic/vue";
 import { copyText } from "@/utils/platform";
 import router from "@/router";
 import type { Account } from "@/extension/types";
-import UnlockModal from "@/views/UnlockModal.vue";
 import { copyOutline } from "ionicons/icons";
 
 import {
@@ -305,8 +302,8 @@ import {
   getTempPkForAccount,
 } from "@/utils/platform";
 import { addWarpAuthToken, generateApiToken } from "@/utils/farcaster/farcaster-auth";
-import { setUnlockModalState } from "@/utils/unlockStore";
 import SelectedAccountModal from "@/views/modals/SelectAccountModal.vue";
+import { useUnlockModal } from "@/composables/useUnlockModal";
 
 const alertOpen = ref(false);
 const alertMsg = ref("");
@@ -326,6 +323,8 @@ const accounts = ref([]) as Ref<Account[]>;
 const accountsModal = ref(false) as Ref<boolean>;
 const selectedAccount = (ref(null) as unknown) as Ref<Account>;
 const toastState = ref(false);
+
+const { openUnlockModal } = useUnlockModal();
 
 const getToastRef = () => toastState;
 
@@ -355,7 +354,9 @@ const farcasterSWIWAuthorize = async () => {
     alertOpen.value = true;
     return;
   }
+
   const linkData = validateLinkData(deepLink.value);
+
   if (!linkData) {
     alertMsg.value = "Invalid link pasted it does not contain a valid channel token";
     alertOpen.value = true;
@@ -365,23 +366,21 @@ const farcasterSWIWAuthorize = async () => {
   const pk = await getTempPkForAccount(selectedAccount.value.address);
 
   if ((pk ?? "").length !== 66) {
-    const modalResult = await openModal();
-    if (modalResult) {
-      unBlockLockout();
-    } else {
+    const modalResult = await openUnlockModal("farcaster");
+    if (!modalResult) {
       onCancel();
+      unBlockLockout();
       alertMsg.value = "Password not provided";
       alertOpen.value = true;
       return;
     }
-  } else {
-    unBlockLockout();
   }
   loading.value = true;
   try {
     const result = await doSignInWithFarcaster({
       link: deepLink.value,
     });
+    unBlockLockout();
 
     if (result === -1) {
       alertMsg.value =
@@ -412,6 +411,7 @@ const farcasterSWIWAuthorize = async () => {
     alertMsg.value = String(e);
     alertOpen.value = true;
   }
+  unBlockLockout();
   loading.value = false;
 };
 
@@ -421,21 +421,20 @@ const farcasterSWIWQRAuthorize = async () => {
   const pk = await getTempPkForAccount(selectedAccount.value.address);
 
   if ((pk ?? "").length !== 66) {
-    const modalResult = await openModal();
-    if (modalResult) {
-      unBlockLockout();
-    } else {
+    const modalResult = await openUnlockModal("farcaster");
+    if (!modalResult) {
       onCancel();
       alertMsg.value = "Password not provided";
       alertOpen.value = true;
+      unBlockLockout();
       return;
     }
-  } else {
-    unBlockLockout();
   }
   loading.value = true;
   try {
     const result = await doSignInWithFarcasterQR();
+
+    unBlockLockout();
 
     if (result === -1) {
       alertMsg.value =
@@ -477,6 +476,7 @@ const farcasterSWIWQRAuthorize = async () => {
     alertMsg.value = String(e);
     alertOpen.value = true;
   }
+  unBlockLockout();
   loading.value = false;
 };
 
@@ -506,15 +506,10 @@ const promptForSignIn = async () => {
     const pk = await getTempPkForAccount(selectedAccount.value.address);
 
     if ((pk ?? "").length !== 66) {
-      const modalResult = await openModal();
-      if (modalResult) {
-        unBlockLockout();
-        loading.value = true;
-      } else {
+      const modalResult = await openUnlockModal("farcaster");
+      if (!modalResult) {
         onCancel();
       }
-    } else {
-      unBlockLockout();
     }
 
     loading.value = true;
@@ -527,6 +522,7 @@ const promptForSignIn = async () => {
       alertMsg.value = String(e);
       alertOpen.value = true;
       loading.value = false;
+      unBlockLockout();
       return;
     }
 
@@ -535,6 +531,7 @@ const promptForSignIn = async () => {
         "Selected account does not own a FID please select an account that owns a FID";
       alertOpen.value = true;
       loading.value = false;
+      unBlockLockout();
       return;
     }
 
@@ -542,6 +539,7 @@ const promptForSignIn = async () => {
 
     try {
       const data = await generateApiToken();
+      unBlockLockout();
       if (data.success) {
         token = data.data;
       } else {
@@ -566,6 +564,7 @@ const promptForSignIn = async () => {
     });
     loading.value = false;
     window.close();
+    unBlockLockout();
   });
 };
 
@@ -575,6 +574,7 @@ const doJFS = async () => {
     alertOpen.value = true;
     return;
   }
+
   if (loading.value) {
     return;
   }
@@ -590,18 +590,12 @@ const doJFS = async () => {
   const pk = await getTempPkForAccount(selectedAccount.value.address);
 
   if ((pk ?? "").length !== 66) {
-    const modalResult = await openModal();
-    if (modalResult) {
-      unBlockLockout();
-      loading.value = true;
-    } else {
+    const modalResult = await openUnlockModal("farcaster");
+    if (!modalResult) {
       onCancel();
     }
-  } else {
-    unBlockLockout();
   }
   loading.value = true;
-
   const { compactJfs, jsonJfs } = await createJFS(
     jfsJSON.value,
     fid,
@@ -611,25 +605,9 @@ const doJFS = async () => {
   jfsFid.value = fid;
   jfsResultJson.value = JSON.stringify(jsonJfs, null, 2);
   jfsResultCompact.value = compactJfs;
-  loading.value = false;
-};
 
-const openModal = async () => {
-  const modal = await modalController.create({
-    component: UnlockModal,
-    animated: true,
-    focusTrap: false,
-    backdropDismiss: false,
-    componentProps: {
-      unlockType: "farcaster",
-    },
-  });
-  await modal.present();
-  setUnlockModalState(true);
-  const { role } = await modal.onWillDismiss();
-  if (role === "confirm") return true;
-  setUnlockModalState(false);
-  return false;
+  unBlockLockout();
+  loading.value = false;
 };
 
 const segmentChange = (e: CustomEvent) => {

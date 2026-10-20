@@ -1,8 +1,8 @@
-import { execSync } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { execSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-async function main() {
+function main() {
 
   // -1. Check if you are in the main branch
   const branch = execSync(`git branch --show-current`).toString().trim();

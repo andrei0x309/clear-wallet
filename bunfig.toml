@@ -1,4 +1,4 @@
 [install]
-minimumReleaseAge = 259200 # seconds
+minimumReleaseAge = 86400 # seconds
 
 minimumReleaseAgeExcludes = ["@types/node", "typescript"]

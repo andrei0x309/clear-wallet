@@ -222,7 +222,6 @@ import {
   IonModal,
   IonButtons,
   IonInput,
-  modalController,
 } from "@ionic/vue";
 import { ethers } from "ethers";
 import { approve, walletPing, walletSendData } from "@/extension/userRequest";
@@ -238,16 +237,16 @@ import {
   strToHex,
   hexTostr,
   getSettings,
+  getTempPkForAccount,
 } from "@/utils/platform";
 import { getBalance, getGasPrice, estimateGas } from "@/utils/wallet";
 import type { Network, Account, Settings } from "@/extension/types";
 import { allTemplateNets, chainIdToPriceId } from "@/utils/networks";
-import UnlockModal from "@/views/UnlockModal.vue";
 import router from "@/router";
-import { setUnlockModalState } from "@/utils/unlockStore";
 import AssetChanges from "./sub-views/AssetChanges.vue";
 import type { AlchemyAssetChange } from "@/extension/types";
 import { getAlchemyEndpointFromChainId, simulateTx } from "@/utils/alchemy";
+import { useUnlockModal } from "@/composables/useUnlockModal";
 
 const route = useRoute();
 const rid = (route?.params?.rid as string) ?? "";
@@ -288,6 +287,8 @@ const assetChangesLoading = ref(true);
 const assetChangesNotSupported = ref(false);
 
 let gasFeed = {} as Awaited<ReturnType<typeof getGasPrice>>["feed"];
+
+const { openUnlockModal } = useUnlockModal();
 
 let interval = 0;
 const bars = ref(0);
@@ -330,24 +331,6 @@ const setItervalFn = async () => {
   walletPing();
 };
 
-const openModal = async () => {
-  const modal = await modalController.create({
-    component: UnlockModal,
-    animated: true,
-    focusTrap: false,
-    backdropDismiss: false,
-    componentProps: {
-      unlockType: "transaction",
-    },
-  });
-  await modal.present();
-  setUnlockModalState(true);
-  const { role } = await modal.onWillDismiss();
-  if (role === "confirm") return true;
-  await setUnlockModalState(false);
-  return false;
-};
-
 const onSign = async () => {
   loading.value = true;
   if (interval) {
@@ -355,17 +338,17 @@ const onSign = async () => {
   }
   const selectedAccount = await getSelectedAccount();
   loading.value = false;
-  if ((selectedAccount.pk ?? "").length !== 66) {
-    const modalResult = await openModal();
+  if (
+    (selectedAccount.pk ?? getTempPkForAccount(selectedAccount.address)).length !== 66
+  ) {
+    const modalResult = await openUnlockModal("transaction");
     if (modalResult) {
-      unBlockLockout();
       loading.value = true;
       approve(rid);
     } else {
       onCancel();
     }
   } else {
-    unBlockLockout();
     approve(rid);
   }
   loading.value = false;

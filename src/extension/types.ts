@@ -65,6 +65,11 @@ export interface Settings {
     assetTransactionSimulationAlchemyKey: string
 }
 
+export type ModalPromisePassword = null | {
+  resolve: (p?: unknown) => void;
+  reject: (p?: unknown) => void;
+};
+
 export type listenerType = 'accountsChanged' | 'connect' | 'disconnect' | 'chainChanged'
 
 export interface HistoryItem {

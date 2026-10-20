@@ -1,8 +1,7 @@
-const pFs = import('fs')
+import fs from 'node:fs'
 
-export const foxyfyManifest = async (writeFFManifest = true) => {
-    const fs = (await pFs).default
-    const pkg = JSON.parse(fs.readFileSync('dist/manifest.json').toString());
+export const foxyfyManifest = (writeFFManifest = true) => {
+     const pkg = JSON.parse(fs.readFileSync('dist/manifest.json').toString());
 
     // Check if the manifest is already foxyfied
     if (!pkg?.background?.service_worker) {
@@ -69,9 +68,8 @@ export const foxyfyManifest = async (writeFFManifest = true) => {
 
 
 
-export const unfoxyfyManifest = async () => {
-    const fs = (await pFs).default
-    
+export const unfoxyfyManifest = () => {
+
     // check if manifest is already unfoxyfied
     if (fs.existsSync('dist/chromium-manifest.json')) {
         fs.writeFileSync('dist/manifest.json', fs.readFileSync('dist/chromium-manifest.json').toString())

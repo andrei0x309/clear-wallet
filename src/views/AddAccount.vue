@@ -120,7 +120,6 @@ import {
   IonAlert,
   IonIcon,
   onIonViewWillEnter,
-  modalController,
   IonModal,
   IonButtons,
   IonTextarea,
@@ -134,16 +133,16 @@ import {
   paste,
   getSettings,
   replaceAccounts,
+  unBlockLockout,
 } from "@/utils/platform";
 import router from "@/router";
 import { useRoute } from "vue-router";
 import type { Account, Settings } from "@/extension/types";
-import UnlockModal from "@/views/UnlockModal.vue";
 import { encrypt, getCryptoParams } from "@/utils/webCrypto";
 
 import { clipboardOutline } from "ionicons/icons";
 import { getFromMnemonic, getRandomPk } from "@/utils/wallet";
-import { setUnlockModalState } from "@/utils/unlockStore";
+import { useUnlockModal } from "@/composables/useUnlockModal";
 
 const name = ref("");
 const pk = ref("");
@@ -156,30 +155,14 @@ const mnemonicModal = ref(false);
 const mnemonic = ref("");
 const mnemonicIndex = ref(0);
 
+const { openUnlockModal } = useUnlockModal();
+
 let accountsProm: Promise<Account[] | undefined>;
 let settingsProm: Promise<Settings | undefined>;
 
 const resetFields = () => {
   name.value = "";
   pk.value = "";
-};
-
-const openModal = async () => {
-  const modal = await modalController.create({
-    component: UnlockModal,
-    animated: true,
-    focusTrap: false,
-    backdropDismiss: false,
-    componentProps: {
-      unlockType: "addAccount",
-    },
-  });
-  await modal.present();
-  setUnlockModalState(true);
-  const { role, data } = await modal.onWillDismiss();
-  if (role === "confirm") return data;
-  setUnlockModalState(false);
-  return false;
 };
 
 onIonViewWillEnter(async () => {
@@ -255,10 +238,11 @@ const onAddAccount = async () => {
   const accounts = (await accountsProm) as Account[];
   const settings = (await settingsProm) as Settings;
   if (settings.enableStorageEnctyption) {
-    const pass = await openModal();
+    const pass = (await openUnlockModal("addAccount")) as string;
     if (!pass) {
       alertMsg.value = "Cannot add account without encryption password.";
       alertOpen.value = true;
+      unBlockLockout();
       return;
     }
     const cryptoParams = await getCryptoParams(pass);
@@ -306,6 +290,9 @@ const onAddAccount = async () => {
     });
     await Promise.all([p1, p2]);
   }
+
+  unBlockLockout();
+
   if (isEdit) {
     router.push("/tabs/accounts");
   } else {

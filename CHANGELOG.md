@@ -1,8 +1,21 @@
 # Changelog
 
+## Manifest Version 1.5.7
+
+- removed unecessary upload field in import section of settings
+- extracted import/export logic in separate sub-view
+- used the sub-view in a separate route for Firefox which is not capable to open a file picker without closing the extension popup
+- refactered the unlock modal for better reusability
+
+## Manifest Version 1.5.6
+
+- updated all dependencies
+- migrated to ionic/vue 9.x.x (latest version)
+- removed some deprecated networks from templates
+
 ## Manifest Version 1.5.5
 
-- used browser session for temporal storage
+- used browser session for temporary storage
 
 ## Manifest Version 1.5.4
 

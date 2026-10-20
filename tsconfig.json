@@ -10,6 +10,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": false,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "types": [
       "chrome",
@@ -33,7 +34,8 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx"
+    "tests/**/*.tsx",
+    "release-scripts/**/*.ts"
   ],
    "exclude": [
     "node_modules",

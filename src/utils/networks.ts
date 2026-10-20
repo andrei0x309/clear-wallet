@@ -25,7 +25,7 @@ export const mainNets: {[key: number]: Network} = {
     },
     137: {
         name: 'Polygon Mainnet',
-        rpc: 'https://polygon-rpc.com',
+        rpc: 'https://polygon.drpc.org',
         chainId: 137,
         explorer: 'https://polygonscan.com',
         icon:'polygon.webp',
@@ -113,15 +113,6 @@ export const mainNets: {[key: number]: Network} = {
         symbol: 'ETH',
         priceId: 'ethereum'
     },
-    666666666: {
-        name: 'Degen',
-        rpc: 'https://rpc.degen.tips',
-        chainId: 666666666,
-        explorer: 'https://explorer.degen.tips/',
-        icon: 'degen.webp',
-        symbol: 'DEGEN',
-        priceId: 'degen'
-    },
     42220: {
         name: 'Celo Mainenet',
         rpc: 'https://forno.celo.org',
@@ -159,9 +150,9 @@ export const testNets = {
     },
     80002: {
         name: 'TESTNET Polygon Amoy',
-        rpc: 'https://rpc-amoy.polygon.technology',
+        rpc: 'https://polygon-amoy.drpc.org',
         chainId: 80002,
-        explorer: 'https://oklink.com/amoy',
+        explorer: 'https://amoy.polygonscan.com/',
         icon:'polygon_t.webp'
     },
     100200: {
@@ -200,18 +191,11 @@ export const testNets = {
         explorer: 'https://sepolia.arbiscan.io/',
         icon: 'arbitrum_t.webp'
     },
-    111557560 : {
-        name: 'Cyber',
-        rpc: 'https://rpc.testnet.cyber.co',
-        chainId: 111557560 ,
-        explorer: 'https://testnet.cyberscan.co/',
-        icon: 'cyber_t.webp'
-    },
     44787: {
         name: 'Celo TestNet',
-        rpc: 'https://alfajores-forno.celo-testnet.org',
-        chainId: 44787,
-        explorer: 'https://alfajores.celoscan.io/',
+        rpc: 'https://forno.celo-sepolia.celo-testnet.org',
+        chainId: 11142220,
+        explorer: 'https://celo-sepolia.blockscout.com',
         icon: 'celo_t.webp',
         symbol: 'CELO',
     },
@@ -233,7 +217,7 @@ export const testNets = {
     },
     534351: {
         name: 'Scroll Sepolia',
-        rpc: 'https://sepolia-rpc.scroll.io/',
+        rpc: 'https://scroll-sepolia-rpc.publicnode.com',
         chainId: 534351,
         explorer: 'https://sepolia.scrollscan.com',
         icon: 'scroll_t.webp',
