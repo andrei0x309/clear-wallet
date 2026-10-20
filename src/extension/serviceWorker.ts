@@ -271,7 +271,7 @@ chrome.windows.onRemoved.addListener(async (winId) => {
     }
 })
 
-const viewTxListener = async (id: string) => {
+const viewTxListener = (id: string) => {
     try {
         const url = new URL(notificationUrl)
         openTab(url.href)

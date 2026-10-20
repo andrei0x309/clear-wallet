@@ -24,7 +24,7 @@ const main = async () => {
         });
     });
 
-    await foxyfyManifest(isFirefox);
+    foxyfyManifest(isFirefox);
 
     console.log('Post build executed');
 

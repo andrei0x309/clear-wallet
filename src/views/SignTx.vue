@@ -222,7 +222,6 @@ import {
   IonModal,
   IonButtons,
   IonInput,
-  modalController,
 } from "@ionic/vue";
 import { ethers } from "ethers";
 import { approve, walletPing, walletSendData } from "@/extension/userRequest";

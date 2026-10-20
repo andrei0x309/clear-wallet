@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 
-export const foxyfyManifest = async (writeFFManifest = true) => {
+export const foxyfyManifest = (writeFFManifest = true) => {
      const pkg = JSON.parse(fs.readFileSync('dist/manifest.json').toString());
 
     // Check if the manifest is already foxyfied
@@ -68,7 +68,7 @@ export const foxyfyManifest = async (writeFFManifest = true) => {
 
 
 
-export const unfoxyfyManifest = async () => {
+export const unfoxyfyManifest = () => {
 
     // check if manifest is already unfoxyfied
     if (fs.existsSync('dist/chromium-manifest.json')) {

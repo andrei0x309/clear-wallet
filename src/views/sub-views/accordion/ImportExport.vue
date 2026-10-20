@@ -133,7 +133,7 @@ const importAcc = async () => {
   const accounts = await getAccounts();
   const newAccounts = ((validation as unknown) as { json: Account[] }).json;
   const filterExistingAccounts = newAccounts.filter(
-    (a) => !accounts.find((acc) => acc.address === a.address)
+    (a) => !accounts.some((acc) => acc.address === a.address)
   );
 
   if (!filterExistingAccounts.length) {
