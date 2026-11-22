@@ -242,7 +242,7 @@ const onAddAccount = async () => {
     if (!pass) {
       alertMsg.value = "Cannot add account without encryption password.";
       alertOpen.value = true;
-      unBlockLockout();
+      void unBlockLockout();
       return;
     }
     const cryptoParams = await getCryptoParams(pass);
@@ -291,7 +291,7 @@ const onAddAccount = async () => {
     await Promise.all([p1, p2]);
   }
 
-  unBlockLockout();
+  void unBlockLockout();
 
   if (isEdit) {
     router.push("/tabs/accounts");

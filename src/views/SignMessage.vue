@@ -124,7 +124,7 @@ const onCancel = () => {
   window.close();
   if (interval) {
     try {
-      unBlockLockout();
+      void unBlockLockout();
       clearInterval(interval);
     } catch {
       // ignore
@@ -132,18 +132,18 @@ const onCancel = () => {
   }
 };
 
-onIonViewWillEnter(async () => {
-  blockLockout();
-  getSelectedAccount().then((account) => {
+onIonViewWillEnter(() => {
+  void blockLockout();
+  void getSelectedAccount().then((account) => {
     intialSelectedAccount.value = account;
   });
-  interval = setInterval(async () => {
+  interval = setInterval(() => {
     if (timerReject.value <= 0) {
       onCancel();
       return;
     }
     timerReject.value -= 1;
-    walletPing();
+    void walletPing();
   }, 1000) as any;
 });
 

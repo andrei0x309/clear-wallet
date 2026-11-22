@@ -72,7 +72,7 @@ if (chrome?.runtime?.onMessage) {
 }
 
 onBeforeMount(() => {
-  getSettings().then((settings) => {
+  void getSettings().then((settings) => {
     if (settings.theme !== "system") {
       document.body.classList.remove(settings.theme === "dark" ? "light" : "dark");
       document.body.classList.add(settings.theme);

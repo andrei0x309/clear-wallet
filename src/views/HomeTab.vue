@@ -425,17 +425,21 @@ const loadData = () => {
   const pSelectedAccount = getSelectedAccount();
   const pSelectedNetwork = getSelectedNetwork();
   const pSettings = getSettings();
-  Promise.all([pAccounts, pNetworks, pSelectedAccount, pSelectedNetwork, pSettings]).then(
-    (res) => {
-      accounts.value = res[0];
-      networks.value = res[1];
-      filtredNetworks.value = res[1];
-      selectedAccount.value = res[2];
-      selectedNetwork.value = res[3];
-      settings.value = res[4];
-      loading.value = false;
-    }
-  );
+  void Promise.all([
+    pAccounts,
+    pNetworks,
+    pSelectedAccount,
+    pSelectedNetwork,
+    pSettings,
+  ]).then((res) => {
+    accounts.value = res[0];
+    networks.value = res[1];
+    filtredNetworks.value = res[1];
+    selectedAccount.value = res[2];
+    selectedNetwork.value = res[3];
+    settings.value = res[4];
+    loading.value = false;
+  });
 };
 
 onIonViewWillEnter(() => {

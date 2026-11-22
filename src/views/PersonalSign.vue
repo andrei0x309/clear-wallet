@@ -197,7 +197,7 @@ const loadData = () => {
   loading.value = true;
   const pAccounts = getAccounts();
   const pSelectedAccount = getSelectedAccount();
-  Promise.all([pAccounts, pSelectedAccount]).then((res) => {
+  void Promise.all([pAccounts, pSelectedAccount]).then((res) => {
     accounts.value = res[0];
     selectedAccount.value = res[1];
     loading.value = false;
@@ -244,7 +244,7 @@ const getSignature = async () => {
     alertMsg.value = "Error getting signature";
     alertOpen.value = true;
   }
-  unBlockLockout();
+  void unBlockLockout();
   loading.value = false;
 };
 

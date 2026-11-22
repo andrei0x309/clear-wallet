@@ -142,7 +142,7 @@ const { openUnlockModal } = useUnlockModal();
 const loadData = () => {
   const pAccounts = getAccounts();
   const pGetSettings = getSettings();
-  Promise.all([pAccounts, pGetSettings]).then((res) => {
+  void Promise.all([pAccounts, pGetSettings]).then((res) => {
     accounts.value = res[0];
     settings.value = res[1];
     loading.value = false;
@@ -154,7 +154,7 @@ const deleteAccount = async (address: string) => {
   if (settings.value.enableStorageEnctyption) {
     const modalR = await openUnlockModal("delAcc");
     if (!modalR) {
-      unBlockLockout();
+      void unBlockLockout();
       return;
     }
   }
@@ -169,7 +169,7 @@ const deleteAccount = async (address: string) => {
     pArr.push(saveSelectedAccount(accounts.value[0]));
   }
   await Promise.all(pArr);
-  unBlockLockout();
+  void unBlockLockout();
   loading.value = false;
 };
 
@@ -194,7 +194,7 @@ const viewPk = async (addr: string) => {
       if (modalR) {
         pk = (await getTempPkForAccount(addr)) ?? "";
       }
-      clearPk();
+      void clearPk();
     } else {
       pk = account?.pk ?? "";
     }

@@ -92,7 +92,7 @@ const loading = ref(true);
 
 const loadData = () => {
   const pAccounts = getNetworks();
-  Promise.all([pAccounts]).then((res) => {
+  void Promise.all([pAccounts]).then((res) => {
     networks.value = res[0];
     loading.value = false;
   });
