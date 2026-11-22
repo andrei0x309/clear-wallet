@@ -12,30 +12,38 @@ export const getBlockNumberForNetwork = async (provider: ethers.JsonRpcProvider)
     return await provider.getBlockNumber()
 }
 
-export const getRpcPerformanceForNetwork = async (provider: ethers.JsonRpcProvider, highTimeout = false): Promise<{performance: number}> => {
+export const getRpcPerformanceForNetwork = async (
+  provider: ethers.JsonRpcProvider
+): Promise<{ performance: number }> => {
     try {
-        const timeoutTime = highTimeout ? 8000 : 1400
+        const timeoutTime = 4000;
+        
         const timeoutPromise = new Promise((resolve) => {
             setTimeout(() => {
-                resolve(timeoutTime)
-            }, timeoutTime)
-        }) as Promise<number>
+                resolve(timeoutTime);
+            }, timeoutTime);
+        }) as Promise<number>;
+
         const performancePromise = new Promise((resolve) => {
-            const time = performance.now()
-            getBlockNumberForNetwork(provider).then(() => {
-                resolve(performance.now() - time)
-            }).catch(() => {
-                resolve(FAIL_PERFORMANCE_CONST)
-            })
-        }) as Promise<number>
+            setTimeout(async () => {
+                const time = performance.now();
+                try {
+                    await getBlockNumberForNetwork(provider);
+                    resolve(performance.now() - time);
+                } catch {
+                    resolve(FAIL_PERFORMANCE_CONST);
+                }
+            }, 50);
+        }) as Promise<number>;
+
         return {
             performance: await Promise.race([performancePromise, timeoutPromise])
-        }
+        };
     } catch (error) {
-        console.log(`RPC FAILED: `, error)
+        console.log(`RPC FAILED: `, error);
         return {
             performance: FAIL_PERFORMANCE_CONST
-        }
+        };
     }
 }
 

@@ -312,6 +312,15 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
     if (chrome.runtime.lastError) {
         console.info("Error receiving message:", chrome.runtime.lastError);
     }
+
+    if(message?.type === "CLWALLET_GET_RPC_PERFORMANCE") {
+        (async () => {
+            sendResponse(await getRpcPerformance())
+        })()
+        return true
+    }
+    
+    
     if (message?.type !== "CLWALLET_CONTENT_MSG") {
         return true
     }

@@ -393,7 +393,7 @@ const runSimularion = async (settings: Settings, network: Network) => {
     return;
   }
   try {
-    const changes = await simulateTx(endpoint, params);
+    const changes = await simulateTx(endpoint, params, network.symbol ?? "ETH");
     assetChangesError.value = false;
     if (!changes) {
       assetChangesLoading.value = false;

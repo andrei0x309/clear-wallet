@@ -1,9 +1,17 @@
 # Changelog
 
+## Manifest Version 1.5.8
+
+- refactored UI for RPC performance
+- moved RPC performance measurement to the service worker
+- add warmup network call to RPC performance measurement to always get the accurate RPC performance
+- refactored simulate assets transfers due to `alchemy_simulateAssetChanges` being removed
+- added additional tests
+
 ## Manifest Version 1.5.7
 
 - removed unnecessary upload field in the import section of settings
-- extracted import/export logic in a separate sub-view
+- extracted import/export logic into a separate sub-view
 - used the sub-view in a separate route for Firefox, which is not capable of opening a file picker without closing the extension popup
 - refactored the unlock modal for better reusability
 
