@@ -332,7 +332,7 @@ const loadData = () => {
   loading.value = true;
   const pAccounts = getAccounts();
   const pSelectedAccount = getSelectedAccount();
-  Promise.all([pAccounts, pSelectedAccount]).then((res) => {
+  void Promise.all([pAccounts, pSelectedAccount]).then((res) => {
     accounts.value = res[0];
     selectedAccount.value = res[1];
     loading.value = false;
@@ -369,7 +369,7 @@ const farcasterSWIWAuthorize = async () => {
     const modalResult = await openUnlockModal("farcaster");
     if (!modalResult) {
       onCancel();
-      unBlockLockout();
+      void unBlockLockout();
       alertMsg.value = "Password not provided";
       alertOpen.value = true;
       return;
@@ -380,7 +380,7 @@ const farcasterSWIWAuthorize = async () => {
     const result = await doSignInWithFarcaster({
       link: deepLink.value,
     });
-    unBlockLockout();
+    void unBlockLockout();
 
     if (result === -1) {
       alertMsg.value =
@@ -411,7 +411,7 @@ const farcasterSWIWAuthorize = async () => {
     alertMsg.value = String(e);
     alertOpen.value = true;
   }
-  unBlockLockout();
+  void unBlockLockout();
   loading.value = false;
 };
 
@@ -426,7 +426,7 @@ const farcasterSWIWQRAuthorize = async () => {
       onCancel();
       alertMsg.value = "Password not provided";
       alertOpen.value = true;
-      unBlockLockout();
+      void unBlockLockout();
       return;
     }
   }
@@ -434,7 +434,7 @@ const farcasterSWIWQRAuthorize = async () => {
   try {
     const result = await doSignInWithFarcasterQR();
 
-    unBlockLockout();
+    void unBlockLockout();
 
     if (result === -1) {
       alertMsg.value =
@@ -476,7 +476,7 @@ const farcasterSWIWQRAuthorize = async () => {
     alertMsg.value = String(e);
     alertOpen.value = true;
   }
-  unBlockLockout();
+  void unBlockLockout();
   loading.value = false;
 };
 
@@ -522,7 +522,7 @@ const promptForSignIn = async () => {
       alertMsg.value = String(e);
       alertOpen.value = true;
       loading.value = false;
-      unBlockLockout();
+      void unBlockLockout();
       return;
     }
 
@@ -531,7 +531,7 @@ const promptForSignIn = async () => {
         "Selected account does not own a FID please select an account that owns a FID";
       alertOpen.value = true;
       loading.value = false;
-      unBlockLockout();
+      void unBlockLockout();
       return;
     }
 
@@ -539,7 +539,7 @@ const promptForSignIn = async () => {
 
     try {
       const data = await generateApiToken();
-      unBlockLockout();
+      void unBlockLockout();
       if (data.success) {
         token = data.data;
       } else {
@@ -564,7 +564,7 @@ const promptForSignIn = async () => {
     });
     loading.value = false;
     window.close();
-    unBlockLockout();
+    void unBlockLockout();
   });
 };
 
@@ -606,7 +606,7 @@ const doJFS = async () => {
   jfsResultJson.value = JSON.stringify(jsonJfs, null, 2);
   jfsResultCompact.value = compactJfs;
 
-  unBlockLockout();
+  void unBlockLockout();
   loading.value = false;
 };
 

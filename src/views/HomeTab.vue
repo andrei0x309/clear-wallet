@@ -139,37 +139,48 @@
           >Select</ion-button
         >
       </ion-item>
-      <ion-item
-        style="font-size: 0.85rem; text-align: center"
-        v-if="rpcPerformance.performance > 0"
+      <template
+        v-if="rpcPerformance.performance !== -2 && (selectedNetwork?.chainId || 0) > 0"
       >
-        <p v-if="rpcPerformance.performance <= rpcPerformanceLevels.fast">
-          RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
-          <span style="color: green">fast</span>
-        </p>
-        <p v-else-if="rpcPerformance.performance <= rpcPerformanceLevels.ok">
-          RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
-          <span style="color: darkkhaki">okish</span>
-        </p>
-        <p v-else-if="rpcPerformance.performance <= rpcPerformanceLevels.slow">
-          RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
-          <span style="color: orange">slow</span>
-        </p>
-        <p v-else>
-          RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
-          <span style="color: red"
-            >RPC connection is slow or dead please check internet or replace your RPC
-            URL</span
-          >
-        </p>
-      </ion-item>
-      <ion-item
-        style="font-size: 0.85rem; text-align: center"
-        v-else-if="rpcPerformance.performance > -1"
-      >
-        <p class="blink-loading">Loading RPC pefromance...</p>
-      </ion-item>
-
+        <ion-item
+          style="font-size: 0.85rem; text-align: center"
+          v-if="rpcPerformance.performance > 0 && !loading"
+        >
+          <p v-if="rpcPerformance.performance <= rpcPerformanceLevels.fast">
+            RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
+            <span style="color: #26c21b">fast</span>
+          </p>
+          <p v-else-if="rpcPerformance.performance <= rpcPerformanceLevels.ok">
+            RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
+            <span style="color: darkkhaki">okish</span>
+          </p>
+          <p v-else-if="rpcPerformance.performance <= rpcPerformanceLevels.slow">
+            RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
+            <span style="color: #f2ae2e">slow</span>
+          </p>
+          <p v-else>
+            RPC performance: {{ Math.trunc(rpcPerformance.performance) }}ms -
+            <span style="color: #d62f2f">
+              >RPC connection is very slow considering replaceing it</span
+            >
+          </p>
+        </ion-item>
+        <ion-item style="font-size: 0.85rem; text-align: center" v-else>
+          <p class="blink-loading" style="text-align: center">
+            Checking RPC performance...
+          </p>
+        </ion-item>
+        <ion-item
+          v-if="!rpcPerformance.loading && rpcPerformance.performance === -1"
+          style="font-size: 0.85rem; text-align: center"
+        >
+          <p style="color: #d62f2f">
+            RPC is not reachable, can't communicate with
+            <span style="color: #f2ae2e"> [ </span> {{ selectedNetwork?.name
+            }}<span style="color: #f2ae2e"> ] </span>.Please check RPC URL is still valid.
+          </p>
+        </ion-item>
+      </template>
       <ion-item style="margin-top: 0.3rem; margin-bottom: 0.3rem; text-align: center">
         <ion-button
           @click="goToFarcasterActions"
@@ -329,6 +340,7 @@ import {
   IonIcon,
   IonAvatar,
   IonSearchbar,
+  onIonViewDidEnter,
 } from "@ionic/vue";
 import {
   getAccounts,
@@ -351,13 +363,12 @@ import { triggerListener } from "@/extension/listeners";
 import { copyOutline } from "ionicons/icons";
 import GitHub from "@/components/icons/GitHub.vue";
 import SelectedAccountModal from "@/views/modals/SelectAccountModal.vue";
-import { getRpcPerformance } from "@/utils/wallet";
 import GenericBlockChain from "@/components/icons/GenericBlockChain.vue";
 
 const rpcPerformanceLevels = {
-  fast: 350,
-  ok: 600,
-  slow: 850,
+  fast: 600,
+  ok: 850,
+  slow: 2050,
 };
 
 const version = getVersion();
@@ -372,7 +383,11 @@ const selectedAccount = (ref(null) as unknown) as Ref<Account>;
 const selectedNetwork = (ref(null) as unknown) as Ref<Network>;
 const toastState = ref(false);
 const settings = ref({}) as Ref<Awaited<ReturnType<typeof getSettings>>>;
-const rpcPerformance = ref({ performance: 0 }) as Ref<{ performance: number }>;
+const rpcPerformance = ref({ performance: 0, loading: true }) as Ref<{
+  performance: number;
+  loading: boolean;
+}>;
+const rpcPerformanceLoaded = ref(false);
 
 const networkSearchBar = ref<InstanceType<typeof IonSearchbar> | null>(null);
 
@@ -387,10 +402,20 @@ const getRefs = () => {
 };
 
 const loadRPCPerformance = () => {
-  rpcPerformance.value = { performance: 0 };
-  getRpcPerformance().then((res) => {
-    rpcPerformance.value = res;
-  });
+  rpcPerformance.value = { performance: 0, loading: true };
+  chrome.runtime.sendMessage(
+    {
+      type: "CLWALLET_GET_RPC_PERFORMANCE",
+    },
+    (response) => {
+      if (response) {
+        rpcPerformance.value.performance = response.performance;
+        rpcPerformance.value.loading = false;
+      } else {
+        rpcPerformance.value = { performance: -1, loading: false };
+      }
+    }
+  );
 };
 
 const loadData = () => {
@@ -400,23 +425,34 @@ const loadData = () => {
   const pSelectedAccount = getSelectedAccount();
   const pSelectedNetwork = getSelectedNetwork();
   const pSettings = getSettings();
-  Promise.all([pAccounts, pNetworks, pSelectedAccount, pSelectedNetwork, pSettings]).then(
-    (res) => {
-      accounts.value = res[0];
-      networks.value = res[1];
-      filtredNetworks.value = res[1];
-      selectedAccount.value = res[2];
-      selectedNetwork.value = res[3];
-      settings.value = res[4];
-      loading.value = false;
-    }
-  );
-
-  loadRPCPerformance();
+  void Promise.all([
+    pAccounts,
+    pNetworks,
+    pSelectedAccount,
+    pSelectedNetwork,
+    pSettings,
+  ]).then((res) => {
+    accounts.value = res[0];
+    networks.value = res[1];
+    filtredNetworks.value = res[1];
+    selectedAccount.value = res[2];
+    selectedNetwork.value = res[3];
+    settings.value = res[4];
+    loading.value = false;
+  });
 };
 
 onIonViewWillEnter(() => {
   loadData();
+});
+
+onIonViewDidEnter(() => {
+  if (!rpcPerformanceLoaded.value) {
+    setTimeout(() => {
+      loadRPCPerformance();
+    }, 100);
+    rpcPerformanceLoaded.value = true;
+  }
 });
 
 const goToAddAccount = () => {

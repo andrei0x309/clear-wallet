@@ -21,7 +21,7 @@ export function useUnlockModal() {
     const { role, data } = await modal.onWillDismiss();
     
     if (role === "confirm") {
-      blockLockout();
+      void blockLockout();
       setUnlockModalState(false);
       return data as string;
     }

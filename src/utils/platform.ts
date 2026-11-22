@@ -332,17 +332,33 @@ export const pasteTextArea = (id: string) => {
     }
 }
 
+let enableRightClickPasteAddrPromise: Promise<void> | null = null
+
 export const enableRightClickPasteAddr = async () => {
-    try {
-        await chrome.contextMenus.removeAll();
-        await chrome.contextMenus.create({
-            id: CLW_CONTEXT_MENU_ID,
-            title: "Paste Current Address",
-            contexts: ["editable"],
-        });
-    } catch (error) {
-        // ignore
+    if (enableRightClickPasteAddrPromise) {
+        await enableRightClickPasteAddrPromise
+        return
     }
+
+    enableRightClickPasteAddrPromise = (async () => {
+        try {
+            await chrome.contextMenus.remove(CLW_CONTEXT_MENU_ID)
+            await chrome.contextMenus.create({
+                id: CLW_CONTEXT_MENU_ID,
+                title: 'Paste Current Address',
+                contexts: ['editable'],
+            })
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error)
+            if (!message.includes('duplicate id')) {
+                console.warn('Failed to initialize paste-address context menu', error)
+            }
+        } finally {
+            enableRightClickPasteAddrPromise = null
+        }
+    })()
+
+    await enableRightClickPasteAddrPromise
 }
 
 export const pasteToFocused = () => {

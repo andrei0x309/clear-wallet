@@ -2,8 +2,8 @@ import { getSelectedAccount, getSelectedNetwork, numToHexStr, getTempPkForAccoun
 import { ethers } from "ethers"
 import { mainNets } from '@/utils/networks';
 
-const FAIL_PERFORMANCE_ERROR = 600000
-const FAIL_PERFORMANCE_NO_NETOWRK = -1
+const FAIL_PERFORMANCE_ERROR = -1
+const FAIL_PERFORMANCE_NO_NETOWRK = -2
 
 let provider: ethers.JsonRpcProvider | null = null
 
@@ -97,7 +97,6 @@ export const getBlockNumber = async () => {
     const { provider } = await getCurrentProvider()
     return await provider.getBlockNumber()
 }
-
 export const getRpcPerformance = async (highTimeout = false): Promise<{performance: number}> => {
     const network = await getSelectedNetwork()
     if(!(network?.chainId > 0)) {
@@ -105,23 +104,39 @@ export const getRpcPerformance = async (highTimeout = false): Promise<{performan
             performance: FAIL_PERFORMANCE_NO_NETOWRK
         }
     }
-    const time = performance.now()
-    const timeoutTime = highTimeout ? 8000 : 1400
-    const timeoutPromise = new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(timeoutTime)
-        }, timeoutTime)
-    }) as Promise<number>
-    const performancePromise = new Promise((resolve) => {
-        getBlockNumber().then(() => {
-            resolve(performance.now() - time)
-        }).catch(() => {
-            resolve(FAIL_PERFORMANCE_ERROR)
-        })
-    }) as Promise<number>
-    return {
-        performance: await Promise.race([performancePromise, timeoutPromise])
-    }
+           const timeoutTime = highTimeout ? 10000 : 4000;
+          
+          const timeoutPromise = new Promise((resolve) => {
+              setTimeout(() => {
+                  resolve(timeoutTime);
+              }, timeoutTime);
+          }) as Promise<number>;
+  
+          const performancePromise = new Promise((resolve) => {
+              setTimeout(async () => {
+                  try {
+                      const { provider } = await getCurrentProvider()
+                      const timePreload = performance.now();
+                      await provider.getBlockNumber();
+                      const timeRequest = performance.now();
+                      await provider.getBlockNumber();
+                      const now = performance.now();
+                      const perfPreload = now - timePreload
+                      const perfRequest = now - timeRequest
+                      let perf = perfPreload
+                      if( perfPreload > 600 ) perf = perfRequest
+                      else if (perfRequest < 50 ) perf = perfPreload
+                      if(perf > 0 && perf < 1) perf = 1
+                      resolve(perf);
+                  } catch {
+                      resolve(FAIL_PERFORMANCE_ERROR);
+                  }
+              }, 50);
+          }) as Promise<number>;
+  
+          return {
+              performance: await Promise.race([performancePromise, timeoutPromise])
+          };
 }
 
 export const getBlockByNumber = async (blockNum: number) => {

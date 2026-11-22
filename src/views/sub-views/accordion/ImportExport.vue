@@ -120,7 +120,7 @@ const promptForPassword = async (accounts: Account[]) => {
       showAlert("Password is incorrect!");
     }
   } while (!isCorectPass);
-  unBlockLockout();
+  void unBlockLockout();
   return true;
 };
 
@@ -164,7 +164,7 @@ const importAcc = async () => {
     showAlert("Successfully imported new accounts.", "Success");
     noAccounts.value = false;
   }
-  unBlockLockout();
+  void unBlockLockout();
 };
 
 const exportAcc = async () => {
@@ -201,6 +201,6 @@ const exportAcc = async () => {
     );
     showAlert("Successfully exported accounts.", "Success");
   }
-  unBlockLockout();
+  void unBlockLockout();
 };
 </script>

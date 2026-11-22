@@ -222,10 +222,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
             console.warn('Prices update failed', err)
         })
     }
-    getSettings().then((settings) => {
+    void getSettings().then((settings) => {
         if (((settings.lastLock + settings.lockOutPeriod * 6e4) < Date.now()) && settings.lockOutEnabled && !settings.lockOutBlocked) {
             settings.lastLock = Date.now()
-            clearPk()
+            void clearPk()
         }
         
         runMigrations(settings).catch((e) => {
@@ -312,6 +312,15 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
     if (chrome.runtime.lastError) {
         console.info("Error receiving message:", chrome.runtime.lastError);
     }
+
+    if(message?.type === "CLWALLET_GET_RPC_PERFORMANCE") {
+        (async () => {
+            sendResponse(await getRpcPerformance())
+        })()
+        return true
+    }
+    
+    
     if (message?.type !== "CLWALLET_CONTENT_MSG") {
         return true
     }
@@ -726,7 +735,7 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
                                 ...(network.explorer ? { txUrl: `${network.explorer}/tx/${tx.hash}`.replace('//', '/') } : {}),
                                 webiste: (message?.website)
                             })
-                            unBlockLockout()
+                            void unBlockLockout()
                             const notificationId = crypto.randomUUID()
                             if (network?.explorer) {
                                 notificationUrl = `${network.explorer}/tx/${tx.hash}`.replace('//', '/')
@@ -846,7 +855,7 @@ const mainListener = (message: RequestArguments, sender: any, sendResponse: (a: 
                                 await signTypedData(signMsgData) :
                                 await signMsg(signMsgData)
                         )
-                        unBlockLockout()
+                        void unBlockLockout()
                     } catch (e) {
                         console.warn('Error: signTypedData', e)
                         sendResponse({

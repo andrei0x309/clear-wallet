@@ -181,14 +181,14 @@ onIonViewWillEnter(async () => {
   }
   loading.value = false;
 
-  interval = setInterval(async () => {
+  interval = setInterval(() => {
     if (timerReject.value <= 0) {
       onCancel();
       return;
     }
 
     timerReject.value -= 1;
-    walletPing();
+    void walletPing();
   }, 1000) as any;
 });
 
@@ -213,7 +213,7 @@ const onSwitchTemplates = async () => {
   loading.value = false;
 };
 
-const onSwitchNotExisting = async () => {
+const onSwitchNotExisting = () => {
   loading.value = true;
   openTab(addChainUrl);
   onCancel();

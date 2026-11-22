@@ -328,7 +328,7 @@ const setItervalFn = async () => {
 
   timerReject.value -= 1;
   bars.value++;
-  walletPing();
+  void walletPing();
 };
 
 const onSign = async () => {
@@ -358,7 +358,7 @@ const onCancel = () => {
   window.close();
   if (interval) {
     try {
-      unBlockLockout();
+      void unBlockLockout();
       clearInterval(interval);
     } catch {
       // ignore
@@ -393,7 +393,7 @@ const runSimularion = async (settings: Settings, network: Network) => {
     return;
   }
   try {
-    const changes = await simulateTx(endpoint, params);
+    const changes = await simulateTx(endpoint, params, network.symbol ?? "ETH");
     assetChangesError.value = false;
     if (!changes) {
       assetChangesLoading.value = false;
@@ -410,16 +410,16 @@ const runSimularion = async (settings: Settings, network: Network) => {
 
 onIonViewWillEnter(async () => {
   (window as any)?.resizeTo?.(600, 860);
-  blockLockout();
+  void blockLockout();
   const pGasPrice = getGasPrice();
   const pBalance = getBalance();
   const pGetPrices = getPrices();
   const pGetSelectedAccount = getSelectedAccount();
   const pGetSelectedNetwork = getSelectedNetwork();
-  getSettings().then((settings) => {
+  void getSettings().then((settings) => {
     showRawData.value = settings.showRawTransactionData;
-    pGetSelectedNetwork.then((network) => {
-      runSimularion(settings, network);
+    void pGetSelectedNetwork.then((network) => {
+      void runSimularion(settings, network);
     });
   });
 
